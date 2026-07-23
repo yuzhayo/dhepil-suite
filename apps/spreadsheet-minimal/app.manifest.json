@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "spreadsheet-minimal",
+  "name": "Spreadsheet Minimal",
+  "runtime": "vite",
+  "description": "Editor spreadsheet minimal yang berdiri sendiri.",
+  "desktop": {
+    "enabled": false,
+    "script": "desktop:dev"
+  }
+}

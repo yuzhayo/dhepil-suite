@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "dhepil",
+  "name": "Dhepil",
+  "runtime": "vite",
+  "description": "Aplikasi utama Dhepil.",
+  "desktop": {
+    "enabled": false,
+    "script": "desktop:dev"
+  }
+}
