@@ -1,0 +1,45 @@
+.project-grid-ui {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.project-grid-ui__collection {
+  display: grid;
+  align-items: stretch;
+  gap: 12px;
+  padding: 2px;
+}
+
+.project-grid-ui__collection--grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.project-grid-ui__collection--list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.project-grid-ui__skeleton {
+  min-height: 280px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+}
+
+.project-grid-ui--empty {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+}
+
+.project-grid-ui__empty {
+  margin: 24px;
+}
+
+@media (max-width: 800px) {
+  .project-grid-ui__collection--grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
