@@ -1,0 +1,53 @@
+.control-center-layout {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;
+  background: radial-gradient(circle at 85% 0%, rgb(40 112 255 / 18%), transparent 28rem), #f4f6f9;
+}
+
+.control-center-layout__header-shell {
+  flex: 0 0 auto;
+  background: #071426;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+}
+
+.control-center-layout__workspace {
+  display: flex;
+  width: min(
+    var(--layout-max-width),
+    calc(100% - var(--layout-inline-gutter) - var(--layout-inline-gutter))
+  );
+  min-width: 0;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 12px 0;
+  overflow: hidden;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.control-center-layout__page-alert {
+  flex: 0 0 auto;
+  margin-top: var(--layout-section-gap);
+}
+
+.control-center-layout__alert-description {
+  display: grid;
+  gap: 4px;
+}
+
+.control-center-layout__grid-slot {
+  min-width: 0;
+  min-height: 0;
+  margin-top: var(--layout-section-gap);
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+.control-center-layout__grid-slot > .project-grid-ui {
+  height: 100%;
+}

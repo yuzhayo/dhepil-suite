@@ -2138,7 +2138,22 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Added `ControlCenterLayout` as the pure composition owner for Header, Toolbar, page alert, and Grid; all action IDs and payloads remain forwarded through `onAction`.
+- Added `layoutTokens.css` as the only owner of responsive breakpoints and cross-area layout values for gutters, gaps, columns, card aspect ratio, and terminal heights.
+- Header, Toolbar, Grid, Card, and Terminal CSS now consume layout variables and contain no media queries.
+- Reduced `src/styles.css` to root color/base behavior, box sizing, document/root sizing, tap behavior, and `.sr-only`.
+- Scroll ownership is explicit: body/layout/workspace do not scroll, ProjectGrid owns collection scrolling, and ProjectTerminal `<pre>` owns log scrolling.
+- Targeted layout validation **PASS**: 1 file, 4 tests.
+- Canonical phase gate **PASS**: format, lint, typecheck, 35 files/312 tests, build, and AntD lint with 0 issues.
+- Legacy screen, legacy card, controller, scripts, and apps were not modified.
+
+Handoff result:
+
+- P17 success criteria are complete; no fallback was used. P18 may begin.
 
 Objective:
 

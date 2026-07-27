@@ -1,11 +1,17 @@
 .control-center-ui-header {
   display: flex;
+  width: min(
+    var(--layout-max-width),
+    calc(100% - var(--layout-inline-gutter) - var(--layout-inline-gutter))
+  );
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  padding: 20px 24px;
+  gap: var(--layout-header-gap);
+  margin: 0 auto;
+  padding: var(--layout-header-padding);
+  flex-direction: var(--layout-header-direction);
   color: #ffffff;
-  background: #06152a;
+  background: transparent;
 }
 
 .control-center-ui-header__content {
@@ -15,7 +21,7 @@
 .control-center-ui-header__title.ant-typography {
   margin: 0;
   color: inherit;
-  font-size: clamp(24px, 4vw, 32px);
+  font-size: var(--layout-header-title-size);
   line-height: 1.2;
 }
 
@@ -29,12 +35,5 @@
   display: flex;
   flex: 0 0 auto;
   flex-wrap: wrap;
-  gap: 8px;
-}
-
-@media (max-width: 575px) {
-  .control-center-ui-header {
-    flex-direction: column;
-    padding: 16px;
-  }
+  gap: var(--layout-toolbar-gap, 8px);
 }

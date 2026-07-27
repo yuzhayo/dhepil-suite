@@ -1,12 +1,13 @@
 .project-toolbar-ui {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(170px, 220px) auto auto auto auto;
+  grid-template-columns: var(--layout-toolbar-columns);
   align-items: center;
-  gap: 8px;
+  gap: var(--layout-toolbar-gap, 8px);
   padding: 10px;
   background: #ffffff;
   border: 1px solid #d9d9d9;
   border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(16 36 70 / 6%);
 }
 
 .project-toolbar-ui__control {
@@ -17,9 +18,33 @@
   width: 100%;
 }
 
+.project-toolbar-ui__control--search {
+  grid-column: var(--layout-toolbar-search-column);
+}
+
+.project-toolbar-ui__control--select {
+  grid-column: var(--layout-toolbar-select-column);
+}
+
+.project-toolbar-ui__control--view {
+  grid-column: var(--layout-toolbar-view-column);
+}
+
+.project-toolbar-ui__control--button {
+  grid-column: var(--layout-toolbar-button-column);
+}
+
+.project-toolbar-ui__control--active-servers {
+  grid-column: var(--layout-toolbar-active-column);
+}
+
+.project-toolbar-ui__control--summary {
+  grid-column: var(--layout-toolbar-summary-column);
+}
+
 .project-toolbar-ui__summary {
   display: block;
-  text-align: right;
+  text-align: var(--layout-toolbar-summary-align);
   white-space: nowrap;
 }
 
@@ -38,8 +63,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-width: 240px;
-  gap: 16px;
+  min-width: var(--layout-toolbar-server-min-width);
+  gap: var(--layout-header-gap);
 }
 
 .project-toolbar-ui__server small {
@@ -54,30 +79,4 @@
 
 .project-toolbar-ui__kill--external {
   color: #667085;
-}
-
-@media (max-width: 900px) {
-  .project-toolbar-ui {
-    grid-template-columns: minmax(180px, 1fr) minmax(150px, 200px) auto auto;
-  }
-
-  .project-toolbar-ui__control--summary {
-    grid-column: 1 / -1;
-  }
-
-  .project-toolbar-ui__summary {
-    text-align: left;
-  }
-}
-
-@media (max-width: 575px) {
-  .project-toolbar-ui {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .project-toolbar-ui__control--search,
-  .project-toolbar-ui__control--select,
-  .project-toolbar-ui__control--summary {
-    grid-column: 1 / -1;
-  }
 }
