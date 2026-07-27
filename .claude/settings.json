@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx prettier *)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const cp=require\\('child_process'\\); const file='.claude/settings.json'; const before=JSON.parse\\(fs.readFileSync\\(file,'utf8'\\)\\); const result=cp.spawnSync\\('npx',['prettier','--write',file],{stdio:'inherit',shell:true,encoding:'utf8'}\\); if\\(result.status!==0\\) process.exit\\(result.status??1\\); const after=JSON.parse\\(fs.readFileSync\\(file,'utf8'\\)\\); const same=JSON.stringify\\(before\\)===JSON.stringify\\(after\\); if\\(!same\\){process.stderr.write\\('Semantic JSON comparison failed.\\\\n'\\);process.exit\\(2\\)} process.stdout.write\\('Semantic JSON comparison: identical.\\\\n'\\);\")",
+      "Bash(node -e \"const e=require\\('eslint'\\); console.log\\(typeof e.ESLint\\)\")",
+      "Bash(npx vitest *)",
+      "Bash(git status *)",
+      "Bash(node -e ' *)",
+      "Bash(npx --yes antd lint src --format json)",
+      "Bash(awk '/^## *10[.\\\\s]/{print NR\": \"$0}' plan.md)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(python -c \"from pathlib import Path; print\\(Path\\('src/features/control-center/data/httpProjectManagerClient.ts'\\).read_text\\(\\)\\)\")"
+    ]
+  }
+}
