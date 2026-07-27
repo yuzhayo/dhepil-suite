@@ -1,0 +1,40 @@
+.control-center-ui-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  color: #ffffff;
+  background: #06152a;
+}
+
+.control-center-ui-header__content {
+  min-width: 0;
+}
+
+.control-center-ui-header__title.ant-typography {
+  margin: 0;
+  color: inherit;
+  font-size: clamp(24px, 4vw, 32px);
+  line-height: 1.2;
+}
+
+.control-center-ui-header__subtitle.ant-typography {
+  max-width: 720px;
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.control-center-ui-header__actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 575px) {
+  .control-center-ui-header {
+    flex-direction: column;
+    padding: 16px;
+  }
+}
