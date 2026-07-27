@@ -1725,7 +1725,20 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Added declarative header title, subtitle, action order, labels, accessible names, visual kind, and stable action IDs in `ui/header/headerDefinition.ts`.
+- `ControlCenterHeader` reads only `HeaderViewModel`, reconciles handler availability through `availableActionIds`, and forwards the declared action ID through `onAction`.
+- Missing handlers and view-model-disabled actions remain visible and disabled.
+- Targeted validation **PASS**: 1 file, 4 tests.
+- Phase gate **PASS**: typecheck, lint, 30 files/290 tests, and build.
+- Legacy screen, legacy card, scripts, apps, controller, and application source were not modified.
+
+Handoff result:
+
+- P13 success criteria are complete; no fallback was used. P17 still waits for P14 and P15.
 
 Objective:
 
@@ -1814,7 +1827,21 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Added declarative search, sort, grid/list, refresh, active-server dropdown, summary, order, grouping, responsive priority, accessible labels, and stable action IDs in `ui/toolbar/toolbarDefinition.ts`.
+- `ProjectToolbar` is controlled entirely by `ToolbarViewModel`; it has no local business state, policy, fetch, window, polling, or extension-host import.
+- Search, sort, view, refresh, and quick-kill forward their unchanged action IDs and payloads; quick-kill forwards the selected project ID string.
+- Missing handlers remain visible and disabled, including the active-server dropdown.
+- Targeted validation **PASS**: 1 file, 5 tests.
+- Phase gate **PASS**: typecheck, lint, 31 files/295 tests, and build.
+- Legacy screen, legacy card, scripts, apps, controller, and application source were not modified.
+
+Handoff result:
+
+- P14 success criteria are complete; no fallback was used. P17 still waits for P15.
 
 Objective:
 
@@ -1902,7 +1929,21 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Added definition-owned skeleton count, loading/empty copy, accessible layout labels, available layout modes, and the `view-model-order` presentation contract in `ui/grid/gridDefinition.ts`.
+- `ProjectGrid` renders only the discriminated loading, empty, or ready branch supplied by `ProjectGridViewModel`.
+- Ready state renders the peer pure `ui/card/ProjectCard` and forwards `availableActionIds`, action IDs, and payloads unchanged.
+- Grid owns collection scrolling and supports both grid and list CSS modes without raw `ProjectSummary` or policy access.
+- Targeted validation **PASS**: 1 file, 5 tests.
+- Phase gate **PASS**: typecheck, lint, 34 files/308 tests, and build.
+- Legacy screen, legacy card, scripts, apps, controller, and application source were not modified.
+
+Handoff result:
+
+- P15 success criteria are complete; no fallback was used. P17 may begin because P13, P14, P15, and P16 are PASS.
 
 Objective:
 
@@ -1988,7 +2029,21 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Added definition-owned action order and labels, exhaustive status badges, tag copy, alert copy/tone mapping, and terminal copy in `ui/card/cardDefinition.ts`.
+- `ProjectCard` reads only `ProjectCardViewModel`; domain-disabled state comes from action view models, while handler availability comes only from `availableActionIds`.
+- Card actions forward the stable action ID and project ID string; missing semantic state or missing handler leaves the definition action visible and disabled.
+- `ProjectTerminal` receives only `TerminalViewModel`, renders an accessible keyboard-focusable `<pre aria-live="polite">`, and is the log scroll owner. It does not slice or truncate logs.
+- Targeted validation **PASS**: 2 files, 8 tests.
+- Phase gate **PASS**: typecheck, lint, 33 files/303 tests, and build.
+- Legacy screen, legacy card, scripts, apps, controller, presenter limits, and application source were not modified.
+
+Handoff result:
+
+- P16 success criteria are complete; no fallback was used. P15 subsequently completed.
 
 Objective:
 
