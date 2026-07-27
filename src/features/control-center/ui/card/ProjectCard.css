@@ -1,0 +1,102 @@
+.project-card-ui.ant-card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+}
+
+.project-card-ui > .ant-card-head {
+  flex: 0 0 auto;
+}
+
+.project-card-ui > .ant-card-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-card-ui__title.ant-typography {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.project-card-ui__actions,
+.project-card-ui__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-card-ui__alerts {
+  display: grid;
+  gap: 8px;
+}
+
+.project-card-ui__alert-description {
+  display: grid;
+  gap: 6px;
+}
+
+.project-terminal {
+  display: flex;
+  min-height: 0;
+  margin-top: auto;
+  overflow: hidden;
+  flex-direction: column;
+  color: #d6e4ff;
+  background: #071a33;
+  border-radius: 8px;
+}
+
+.project-terminal__heading {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #24466d;
+}
+
+.project-terminal__heading .ant-typography {
+  color: inherit;
+}
+
+.project-terminal__truncated {
+  font-size: 12px;
+  text-align: right;
+}
+
+.project-terminal__content {
+  min-height: 92px;
+  max-height: 160px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  color: #b7d7ff;
+  font:
+    12px/1.5 Consolas,
+    'Courier New',
+    monospace;
+  white-space: pre;
+  scrollbar-gutter: stable;
+}
+
+.project-terminal__content:focus-visible {
+  outline: 2px solid #69b1ff;
+  outline-offset: -2px;
+}
+
+@media (max-width: 575px) {
+  .project-terminal__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .project-terminal__truncated {
+    text-align: left;
+  }
+}
