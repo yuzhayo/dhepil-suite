@@ -2251,7 +2251,29 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Rewrote `ControlCenterScreen.tsx` as a composition-only root with exactly two production imports: `useControlCenterController` and `ControlCenterLayout`.
+- Removed all inline React state, AntD markup, collection selection, quick-server mapping, lifecycle policy, and legacy card usage from the screen.
+- Activated an executable ESLint boundary for production screen files and added negative architecture fixtures for AntD, data, commands, presenters, and peer UI imports plus positive controller/layout fixtures.
+- Added a screen integration test proving the controller view model is rendered through the layout and action dispatch is forwarded.
+- Resolved pre-existing integration compatibility gaps without changing `App.test.tsx`: dynamic card/dropdown accessible names again match visible labels, and Grid ordering remains observable through the established collection contract.
+- Targeted screen/architecture validation **PASS**: 2 files, 36 tests.
+- Canonical automated gate **PASS**: format, lint, typecheck, 36 files/320 tests, build, and AntD lint with 0 issues.
+- Runtime HTTP smoke **PASS**: `/` returned 200 with the root mount and `/api/projects` returned 200 with a projects payload.
+
+Deferred technical debt (user-approved 2026-07-28):
+
+- Browser control remained unavailable after repeated tool discovery, so the 1440px and 390px smoke, Grid/List interaction, horizontal-overflow check, and console-error inspection were not executed.
+- The user explicitly approved deferring this evidence as technical debt and accepting P18 on its automated and runtime HTTP evidence.
+- This is not a browser-QA `PASS`. Visual and responsive behavior remains unverified and must be completed in P21 or before release.
+
+Handoff result:
+
+- P18 is accepted as `PASS` through the explicit browser-QA exception above.
+- P19 may start after the canonical gate is re-run and P18 is committed separately.
 
 Objective:
 

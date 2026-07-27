@@ -124,4 +124,27 @@ export default tseslint.config(
       'no-restricted-imports': ['error', { patterns: ['../../ui/**', '../../screens/**'] }],
     },
   },
+  {
+    files: ['src/features/control-center/screens/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(?!\\.\\./application/controller/|\\.\\./ui/layout/).+$',
+              message:
+                'Control-center screens may import only the controller and layout composition boundaries.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/features/control-center/screens/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
 );

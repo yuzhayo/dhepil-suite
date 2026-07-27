@@ -111,6 +111,31 @@ describe('control-center import boundaries', () => {
       'src/features/control-center/application/composition/fixture.ts',
       "import '../../screens/ControlCenterScreen';",
     ],
+    [
+      'screen → AntD',
+      'src/features/control-center/screens/fixture.tsx',
+      "import { Button } from 'antd';",
+    ],
+    [
+      'screen → data',
+      'src/features/control-center/screens/fixture.tsx',
+      "import '../data/httpProjectManagerClient';",
+    ],
+    [
+      'screen → commands',
+      'src/features/control-center/screens/fixture.tsx',
+      "import '../application/commands/refreshProjects';",
+    ],
+    [
+      'screen → presenter',
+      'src/features/control-center/screens/fixture.tsx',
+      "import '../application/presenters/createControlCenterViewModel';",
+    ],
+    [
+      'screen → peer UI',
+      'src/features/control-center/screens/fixture.tsx',
+      "import '../ui/toolbar/ProjectToolbar';",
+    ],
   ] as const;
 
   it.each(forbiddenCases)(
@@ -139,6 +164,20 @@ describe('control-center import boundaries', () => {
   ])('allows an extension module to import its %s', async (_name, source) => {
     const messages = await lintVirtualFile(
       'src/features/control-center/application/extensions/modules/project-refresh/index.ts',
+      source,
+    );
+    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
+  });
+
+  it.each([
+    [
+      'controller boundary',
+      "import { useControlCenterController } from '../application/controller/useControlCenterController';",
+    ],
+    ['layout boundary', "import { ControlCenterLayout } from '../ui/layout/ControlCenterLayout';"],
+  ])('allows a screen to import the %s', async (_name, source) => {
+    const messages = await lintVirtualFile(
+      'src/features/control-center/screens/fixture.tsx',
       source,
     );
     expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
