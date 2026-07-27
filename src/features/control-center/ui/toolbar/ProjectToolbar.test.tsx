@@ -105,7 +105,7 @@ describe('ProjectToolbar', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Daftar server aktif' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Server aktif (1) ▾' }));
     const menuItem = await screen.findByRole('menuitem', { name: /Manga Reader/ });
     fireEvent.click(menuItem);
 
@@ -125,6 +125,6 @@ describe('ProjectToolbar', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Daftar server aktif' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Server aktif (1) ▾' })).toBeDisabled();
   });
 });

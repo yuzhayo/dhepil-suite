@@ -68,9 +68,7 @@ describe('ProjectGrid', () => {
       'data-card-ordering-policy',
       gridDefinition.cardOrderingPolicyName,
     );
-    expect(region.querySelector('.project-grid-ui__collection')).toHaveClass(
-      `project-grid-ui__collection--${viewMode}`,
-    );
+    expect(region).toHaveClass(`project-grid-ui__collection--${viewMode}`);
     expect(screen.getByRole('article', { name: 'Project Manga Reader' })).toBeInTheDocument();
   });
 

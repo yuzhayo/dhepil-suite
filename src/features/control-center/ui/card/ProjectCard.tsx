@@ -82,7 +82,7 @@ function renderAction(
   return (
     <Button
       key={definition.id}
-      aria-label={definition.accessibleName}
+      aria-label={label}
       danger={definition.kind === 'danger'}
       disabled={disabled}
       loading={Boolean(state?.loading)}

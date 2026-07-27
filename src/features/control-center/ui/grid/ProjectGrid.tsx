@@ -15,20 +15,18 @@ export function ProjectGrid({ viewModel, availableActionIds, onAction }: Project
   if (viewModel.state === 'loading') {
     return (
       <section
-        className="project-grid-ui project-grid-ui--loading"
+        className="project-grid-ui project-grid-ui__collection project-grid-ui__collection--grid project-grid-ui--loading"
         aria-label={gridDefinition.loadingAccessibleLabel}
       >
-        <div className="project-grid-ui__collection project-grid-ui__collection--grid">
-          {Array.from({ length: gridDefinition.skeletonCount }, (_, index) => (
-            <div
-              key={`project-skeleton-${index + 1}`}
-              className="project-grid-ui__skeleton"
-              data-grid-skeleton
-            >
-              <Skeleton active />
-            </div>
-          ))}
-        </div>
+        {Array.from({ length: gridDefinition.skeletonCount }, (_, index) => (
+          <div
+            key={`project-skeleton-${index + 1}`}
+            className="project-grid-ui__skeleton"
+            data-grid-skeleton
+          >
+            <Skeleton active />
+          </div>
+        ))}
       </section>
     );
   }
@@ -54,22 +52,18 @@ export function ProjectGrid({ viewModel, availableActionIds, onAction }: Project
 
   return (
     <section
-      className="project-grid-ui"
+      className={`project-grid-ui project-grid-ui__collection project-grid-ui__collection--${viewModel.viewMode}`}
       aria-label={layout.accessibleLabel}
       data-card-ordering-policy={gridDefinition.cardOrderingPolicyName}
     >
-      <div
-        className={`project-grid-ui__collection project-grid-ui__collection--${viewModel.viewMode}`}
-      >
-        {viewModel.projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            viewModel={project}
-            availableActionIds={availableActionIds}
-            onAction={onAction}
-          />
-        ))}
-      </div>
+      {viewModel.projects.map((project) => (
+        <ProjectCard
+          key={project.id}
+          viewModel={project}
+          availableActionIds={availableActionIds}
+          onAction={onAction}
+        />
+      ))}
     </section>
   );
 }

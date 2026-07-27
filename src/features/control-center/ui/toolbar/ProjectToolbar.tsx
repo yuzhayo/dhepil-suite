@@ -147,7 +147,10 @@ function renderActiveServers(
 
   return (
     <Dropdown menu={{ items, onClick: onMenuClick }} placement="bottomRight" trigger={['click']}>
-      <Button aria-label={control.accessibleName} disabled={!handlerAvailable}>
+      <Button
+        aria-label={`${control.label} (${context.viewModel.summary.activeCount}) ▾`}
+        disabled={!handlerAvailable}
+      >
         {control.label} ({context.viewModel.summary.activeCount}) ▾
       </Button>
     </Dropdown>

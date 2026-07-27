@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import type { ProjectCardViewModel } from '../../application/view-models';
-import { cardDefinition } from './cardDefinition';
+import { cardDefinition, type CardActionDefinition } from './cardDefinition';
 import { ProjectCard } from './ProjectCard';
 
 const viewModel: ProjectCardViewModel = {
@@ -63,11 +63,14 @@ describe('ProjectCard', () => {
       .map((button) => button.getAttribute('aria-label'));
     const expectedNames = [...cardDefinition.actions]
       .sort((left, right) => left.order - right.order)
-      .map((action) => action.accessibleName);
+      .map(
+        (action: CardActionDefinition) =>
+          action.labelByStatus?.[viewModel.status.key] ?? action.defaultLabel,
+      );
 
     expect(renderedNames).toEqual(expectedNames);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start atau buka project' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Buka project' }));
 
     expect(onAction).toHaveBeenCalledWith('project.start-open', 'manga-reader');
   });

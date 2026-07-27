@@ -9,7 +9,6 @@ export interface CardActionDefinition {
   actionId: string;
   order: number;
   kind: CardActionKind;
-  accessibleName: string;
   defaultLabel: string;
   labelByStatus?: Partial<Record<StatusKey, string>>;
 }
@@ -37,7 +36,6 @@ export const cardDefinition = {
       actionId: 'project.start-open',
       order: 10,
       kind: 'primary',
-      accessibleName: 'Start atau buka project',
       defaultLabel: 'Tidak tersedia',
       labelByStatus: {
         stopped: 'Start & buka',
@@ -51,7 +49,6 @@ export const cardDefinition = {
       actionId: 'project.stop',
       order: 20,
       kind: 'danger',
-      accessibleName: 'Stop server',
       defaultLabel: 'Stop server',
     },
     {
@@ -59,7 +56,6 @@ export const cardDefinition = {
       actionId: 'project.quick-kill',
       order: 30,
       kind: 'danger',
-      accessibleName: 'Kill process',
       defaultLabel: 'Kill process',
     },
   ] satisfies readonly CardActionDefinition[],
