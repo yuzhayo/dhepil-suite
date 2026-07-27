@@ -7,8 +7,8 @@ menggabungkan dua track yang saling berurutan:
 
 1. **Discovery dan stable port lock** — baseline runtime yang sudah diimplementasikan
    dan harus dipertahankan.
-2. **Modular control-center UI dan plug-and-play logic** — fase refactor berikutnya
-   yang belum diimplementasikan.
+2. **Modular control-center UI dan plug-and-play logic** — implementasi inti Fase 0–8
+   sudah selesai; warning audit dan final QA tetap mengikuti `execution-plan.md`.
 
 Jangan membuat plan architecture kedua untuk feature yang sama. Jika keputusan baru
 dibuat, tambahkan atau revisi bagian yang relevan di dokumen ini agar status dan
@@ -33,9 +33,9 @@ yang plug-and-play:
 - process yang masih berjalan ketika folder app dihapus tetap dapat dihentikan dengan aman;
 - root tidak pernah menjalankan command arbitrer dari browser atau manifest.
 
-Bagian discovery, stable port lock, process lifecycle, dan tombstone sudah tersedia
-di runtime. Bagian modular UI, presenter, command boundary, dan extension host masih
-merupakan rencana implementasi dan belum boleh dianggap selesai.
+Bagian discovery, stable port lock, process lifecycle, tombstone, modular UI, presenter,
+command boundary, controller, adapter, dan extension host sudah tersedia di runtime.
+Browser QA responsif tetap merupakan technical debt sampai P21 atau sebelum rilis.
 
 ## 2. Snapshot Baseline Sebelum Discovery/Port Lock
 
@@ -611,8 +611,10 @@ Bagian berikut adalah hasil full merge rencana modular ke plan canonical. Nomor
 subbagian tetap dipertahankan di bawah section 15 agar tidak bertabrakan dengan bagian
 discovery dan stable port lock di atas.
 
-> Status aktual: bagian modular ini masih berupa rencana. Discovery, stable port lock,
-> process lifecycle, dan tombstone pada bagian sebelumnya sudah tersedia di runtime.
+> Status aktual (28 Juli 2026): implementasi modular Fase 0–8 sudah selesai melalui
+> P00–P19. Warning audit P20 dan final gate P21 masih pending. Browser QA 1440px/390px,
+> Grid/List, horizontal overflow, dan console inspection belum dijalankan karena browser
+> control tidak tersedia; pengguna menyetujui penundaan ini sebagai technical debt.
 
 ### 1. Tujuan
 
@@ -627,8 +629,8 @@ Merombak feature `control-center` agar:
 - behavior yang sudah bekerja—discovery, stable port, start, stop, quick kill, search, sort,
   grid/list, error, dan tombstone—tidak berubah selama refactor.
 
-Dokumen ini hanya rencana implementasi. Penambahan dokumen ini tidak mengubah behavior
-runtime.
+Bagian ini sekarang mendokumentasikan arsitektur runtime yang telah diimplementasikan.
+Perubahan lanjutan tetap harus mengikuti ownership, contract, dan gate di bawah.
 
 ### 2. Non-Goal
 
@@ -647,11 +649,15 @@ Refactor ini tidak mencakup:
 - penambahan CI workflow atau pre-commit hook tanpa persetujuan scope terpisah;
 - optimasi probe/cache di `scripts/` tanpa pengukuran yang membuktikan bottleneck.
 
-### 3. Kondisi Sekarang
+### 3. Baseline Historis Sebelum Refactor Modular
+
+Bagian ini merekam kondisi source sebelum P00 dimulai. Nama file dan kekurangan di bawah
+adalah evidence historis yang memotivasi refactor, bukan deskripsi runtime aktif setelah
+P19.
 
 #### `ControlCenterScreen.tsx`
 
-Saat ini screen memiliki terlalu banyak tanggung jawab:
+Pada baseline, screen memiliki terlalu banyak tanggung jawab:
 
 - state search, sort, dan view mode;
 - pemilihan project aktif;
@@ -669,7 +675,7 @@ dalam file yang sama.
 
 #### `useProjectManager.ts`
 
-Hook saat ini memiliki:
+Pada baseline, hook memiliki:
 
 - HTTP access;
 - polling;
@@ -681,11 +687,12 @@ Hook saat ini memiliki:
 - startup retry loop;
 - error normalization.
 
-Logic tersebut sudah bekerja, tetapi belum mempunyai adapter atau command boundary.
+Logic tersebut sudah bekerja, tetapi saat itu belum mempunyai adapter atau command
+boundary.
 
 #### `ProjectCard.tsx`
 
-Card masih menghitung:
+Pada baseline, card masih menghitung:
 
 - `canStart`;
 - `canStop`;
@@ -695,11 +702,11 @@ Card masih menghitung:
 - status presentation;
 - log truncation.
 
-UI card belum murni presentational.
+Pada baseline, UI card belum murni presentational.
 
 #### `src/styles.css`
 
-Global stylesheet saat ini memiliki:
+Pada baseline, global stylesheet memiliki:
 
 - document reset;
 - control-center shell;
@@ -715,8 +722,8 @@ Perubahan layout satu area berisiko memengaruhi area lain.
 
 #### Test
 
-Behavior dasar sudah diuji, tetapi test masih dominan pada screen besar. Belum ada test
-khusus untuk:
+Behavior dasar sudah diuji, tetapi test saat itu masih dominan pada screen besar dan
+belum mempunyai test khusus untuk:
 
 - view-model contract;
 - action policy;
@@ -726,9 +733,9 @@ khusus untuk:
 - import boundary;
 - layout invariant per viewport.
 
-#### Temuan terverifikasi yang menjadi input refinement
+#### Temuan baseline terverifikasi yang menjadi input refinement
 
-Audit source aktual mengonfirmasi celah berikut:
+Audit source baseline 23 Juli 2026 mengonfirmasi celah berikut:
 
 1. **Status policy terduplikasi.** Klasifikasi `running`, `external`, terminal failure,
    active server, start, stop, dan quick-kill masih berupa literal berbeda di
@@ -871,7 +878,7 @@ Gunakan:
 - Ant Design 6;
 - Vitest.
 
-### 5. Struktur Target
+### 5. Struktur Implementasi
 
 ```text
 src/features/control-center/
@@ -906,15 +913,14 @@ src/features/control-center/
 │  │  ├─ createToolbarViewModel.ts
 │  │  ├─ createGridViewModel.ts
 │  │  ├─ createProjectCardViewModel.ts
-│  │  └─ presentationLimits.ts
-│  ├─ view-models.ts
-│  └─ useProjectManager.ts
+│  │  └─ statusViewModel.ts
+│  ├─ presentationLimits.ts
+│  └─ view-models.ts
 ├─ data/
 │  ├─ httpProjectManagerClient.ts
 │  ├─ projectManagerResponse.ts
 │  └─ browserProjectWindow.ts
 ├─ domain/
-│  ├─ project.ts
 │  ├─ projectActionPolicy.ts
 │  ├─ projectCollection.ts
 │  └─ projectStatus.ts
@@ -1685,6 +1691,8 @@ Exit criteria:
 
 #### Fase 8 — Screen cleanup dan legacy removal
 
+Status: **Implemented** pada 28 Juli 2026 melalui P18–P19.
+
 - Ubah screen menjadi composition root.
 - Hapus component/application lama yang sudah tidak dipakai.
 - Hapus stale imports.
@@ -1955,22 +1963,26 @@ Mitigasi:
 - error boundary pada dispatcher;
 - module tidak mendapat process/PID API langsung.
 
-### 21. File Lama yang Dipertahankan Sementara
+### 21. Legacy Cleanup
 
-Selama migrasi:
+Status: **Selesai** pada P19.
 
-- `useProjectManager.ts` dipertahankan sampai controller baru lulus integration test;
-- `ProjectCard.tsx` lama dipertahankan sampai pure card lulus behavior test;
-- `src/styles.css` dikurangi bertahap setelah setiap owner CSS aktif.
+- `application/useProjectManager.ts` sudah dihapus setelah controller dan screen
+  integration test lulus.
+- `components/ProjectCard.tsx` lama sudah dihapus setelah pure card behavior test lulus.
+- Duplicate `application/projectCollection.ts` sudah tidak ada; owner tunggal berada di
+  `domain/projectCollection.ts`.
+- `src/styles.css` sudah dikurangi menjadi global reset; layout dan area CSS dimiliki
+  folder UI masing-masing.
 
-File lama hanya dihapus ketika:
+Cleanup dilakukan setelah:
 
 - pengganti mempunyai test;
 - import telah dipindah;
 - tidak ada runtime reference;
 - phase validation lulus.
 
-Tidak boleh ada dua implementasi aktif permanen.
+Tidak ada compatibility wrapper atau implementasi runtime legacy yang tersisa.
 
 ### 22. Deferred Hardening dan Keputusan Scope
 

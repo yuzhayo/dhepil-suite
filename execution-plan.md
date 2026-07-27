@@ -2375,7 +2375,27 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- Verified that no runtime or test import referenced the legacy hook or card before deletion.
+- Deleted `application/useProjectManager.ts` and `components/ProjectCard.tsx`, then removed the empty legacy `components/` directory.
+- Verified that `application/projectCollection.ts` remains absent and `domain/projectCollection.ts` is the only active collection owner.
+- Verified that `ControlCenterScreen.tsx` remains composition-only and no obsolete presenter path exists.
+- Updated `AGENTS.md` to the implemented modular structure and corrected the canonical `plan.md` status, implementation tree, historical baseline labeling, and legacy-cleanup record.
+- Canonical automated gate **PASS**: format, lint, typecheck, 36 files/320 tests, build, and AntD lint with 0 issues.
+- Post-cleanup runtime HTTP smoke **PASS**: `/` returned 200 with the root mount and `/api/projects` returned 200 with 2 projects; port 1999 was released afterward.
+
+Deferred technical debt (user-approved 2026-07-28):
+
+- Browser control remains unavailable, so the required 1440px/390px, Grid/List, horizontal-overflow, and console-error smoke was not executed.
+- The user explicitly approved treating this browser evidence as technical debt. This is not a browser-QA `PASS`; it remains required in P21 or before release.
+
+Handoff result:
+
+- P19 is accepted as `PASS` through the explicit browser-QA exception above.
+- No active legacy or duplicate runtime path remains. P20 may start.
 
 Objective:
 

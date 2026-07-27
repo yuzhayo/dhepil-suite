@@ -37,26 +37,40 @@ npx --yes antd lint src --format json   # antd v6 API lint
 - `DHEPIL_GATE_NO_OPEN=1` env var prevents browser auto-open on dev start.
 - `projects.config.json` is deleted. Port registry is `config/app-ports.lock.json` only.
 
-## Feature Structure (Current)
+## Feature Structure (Implemented)
 
-`src/features/control-center/` is partially modularized:
+`src/features/control-center/` uses the modular ownership structure from `plan.md`:
 
-```
+```text
 application/
-  projectCollection.ts / .test.ts  # pure filter/sort
-  useProjectManager.ts             # monolithic: fetch + polling + tab mgmt + actions
-components/
-  ProjectCard.tsx                  # stateless, prop-driven
+  commands/          # user-action orchestration
+  composition/       # concrete runtime wiring
+  controller/        # polling, cancellation, and UI state flow
+  extensions/        # stable extension host and lifecycle modules
+  ports/             # application-facing adapter contracts
+  presenters/        # domain/application state → semantic view models
+  presentationLimits.ts
+  view-models.ts
+data/                # HTTP and browser-window adapters
+domain/              # status/action policy and project collection rules
 screens/
-  ControlCenterScreen.tsx          # composition root with inline toolbar/header/quick-kill
-types.ts                           # pure domain types (9-status union)
+  ControlCenterScreen.tsx  # controller + layout composition only
+ui/
+  card/
+  grid/
+  header/
+  layout/
+  toolbar/
+types.ts             # shared control-center runtime contracts
 ```
 
-### Target Architecture (planned per `plan.md`)
+The old monolithic `application/useProjectManager.ts`, duplicate application collection
+path, and legacy `components/ProjectCard.tsx` no longer exist.
 
-Per `plan.md` sections 4–15, the target is `src/features/<feature>/` with `screens/`,
-`components/`, `ui/`, `application/` (controller/commands/presenters/extensions),
-`data/`, and `domain/`. For `control-center`:
+### Implemented Architecture
+
+Per `plan.md` sections 4–15, `control-center` now separates UI, application,
+data, and domain ownership:
 
 - `ui/header/`, `ui/toolbar/`, `ui/grid/`, `ui/card/`, `ui/layout/` own markup and local styles.
 - `application/controller/` owns state flow.
