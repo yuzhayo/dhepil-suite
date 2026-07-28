@@ -13,6 +13,7 @@ import {
   canStopProject,
 } from '../../domain/projectActionPolicy';
 import type { ProjectSortMode, ProjectViewMode } from '../../domain/projectCollection';
+import { isProjectSortMode, isProjectViewMode } from '../../domain/projectCollection';
 import { isOpenReadyProject } from '../../domain/projectStatus';
 import type { ProjectSummary } from '../../types';
 
@@ -213,9 +214,9 @@ export function useControlCenterController(
         return;
       }
 
-      await runProjectAction(projectId, (selected, signal) =>
+      await runProjectAction(projectId, (_, signal) =>
         runtime.startAndOpen({
-          project: selected,
+          project,
           pending: false,
           signal,
           refresh: (refreshSignal) => requestRefresh({ signal: refreshSignal }),
@@ -399,17 +400,4 @@ function isCancellation(error: unknown): boolean {
     'kind' in error &&
     (error as { kind?: unknown }).kind === 'cancelled'
   );
-}
-
-function isProjectSortMode(value: unknown): value is ProjectSortMode {
-  return (
-    value === 'name-asc' ||
-    value === 'name-desc' ||
-    value === 'port-asc' ||
-    value === 'active-first'
-  );
-}
-
-function isProjectViewMode(value: unknown): value is ProjectViewMode {
-  return value === 'grid' || value === 'list';
 }

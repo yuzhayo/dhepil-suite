@@ -1,10 +1,10 @@
 .control-center-layout {
-  --layout-max-width: 1180px;
+  --layout-max-width: 100%;
   --layout-inline-gutter: 16px;
   --layout-section-gap: 10px;
   --layout-grid-gap: 12px;
   --layout-toolbar-gap: 8px;
-  --layout-grid-columns: 2;
+  --layout-grid-card-min-width: 320px;
   --layout-grid-card-aspect: 1 / 1;
   --layout-grid-terminal-flex: 1 1 auto;
   --layout-grid-terminal-height: auto;
@@ -36,48 +36,9 @@
 
 @media (max-width: 900px) {
   .control-center-layout {
-    --layout-grid-columns: 1;
-    --layout-grid-card-aspect: 16 / 10;
     --layout-list-card-columns: minmax(230px, 0.7fr) minmax(300px, 1fr);
     --layout-toolbar-columns: minmax(180px, 1fr) minmax(150px, 200px) auto auto;
     --layout-toolbar-summary-column: 1 / -1;
     --layout-toolbar-summary-align: left;
-  }
-}
-
-@media (max-width: 700px) {
-  .control-center-layout {
-    --layout-grid-card-aspect: auto;
-    --layout-grid-terminal-flex: 0 0 180px;
-    --layout-grid-terminal-height: 180px;
-    --layout-list-terminal-height: 150px;
-    --layout-list-card-columns: minmax(0, 1fr);
-    --layout-list-terminal-column: 1;
-    --layout-list-terminal-row: auto;
-    --layout-header-direction: column;
-    --layout-header-padding: 14px 0;
-    --layout-toolbar-columns: minmax(0, 1fr) auto;
-    --layout-toolbar-search-column: 1 / -1;
-    --layout-toolbar-summary-column: 1 / -1;
-    --layout-card-head-direction: column;
-    --layout-card-head-padding-top: 14px;
-    --layout-card-extra-margin: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .control-center-layout {
-    --layout-inline-gutter: 10px;
-    --layout-toolbar-columns: minmax(0, 1fr);
-    --layout-toolbar-search-column: 1 / -1;
-    --layout-toolbar-select-column: 1 / -1;
-    --layout-toolbar-view-column: 1 / -1;
-    --layout-toolbar-button-column: 1 / -1;
-    --layout-toolbar-active-column: 1 / -1;
-    --layout-toolbar-summary-column: 1 / -1;
-    --layout-toolbar-server-min-width: 0;
-    --layout-terminal-heading-direction: column;
-    --layout-terminal-heading-align: flex-start;
-    --layout-terminal-truncated-align: left;
   }
 }

@@ -35,7 +35,7 @@ yang plug-and-play:
 
 Bagian discovery, stable port lock, process lifecycle, tombstone, modular UI, presenter,
 command boundary, controller, adapter, dan extension host sudah tersedia di runtime.
-Browser QA responsif tetap merupakan technical debt sampai P21 atau sebelum rilis.
+Browser QA desktop dengan layout fluid tetap merupakan technical debt sampai P21 atau sebelum rilis.
 
 ## 2. Snapshot Baseline Sebelum Discovery/Port Lock
 
@@ -554,8 +554,8 @@ Runtime smoke test:
 
 Browser QA:
 
-- desktop grid dan list;
-- viewport sempit untuk toolbar/card overflow;
+- PC/desktop grid dan list pada lebar minimum, umum, dan wide yang didukung;
+- continuous resize sweep di rentang desktop untuk toolbar/card overflow;
 - keyboard focus untuk Start, Stop, dropdown, search, sort, dan segmented control;
 - status stopped, running, external/conflict, invalid, serta not-found;
 - tidak ada console error.
@@ -612,9 +612,10 @@ subbagian tetap dipertahankan di bawah section 15 agar tidak bertabrakan dengan 
 discovery dan stable port lock di atas.
 
 > Status aktual (28 Juli 2026): implementasi modular Fase 0–8 dan warning audit P20
-> sudah selesai. Final gate P21 masih pending. Browser QA 1440px/390px, Grid/List,
-> horizontal overflow, dan console inspection belum dijalankan karena browser control
-> tidak tersedia; pengguna menyetujui penundaan ini sebagai technical debt.
+> sudah selesai. Final gate P21 masih pending. Matrix lama 390/768/1024/1440
+> disupersede oleh kontrak PC-only desktop fluid di bawah. Browser QA desktop,
+> Grid/List, horizontal overflow, dan console inspection belum dijalankan karena
+> browser control tidak tersedia; pengguna menyetujui penundaan ini sebagai technical debt.
 
 ### 1. Tujuan
 
@@ -625,7 +626,9 @@ Merombak feature `control-center` agar:
 - file UI tidak memiliki business rule, data access, polling, filtering, atau lifecycle logic;
 - logic baru dapat dipasang sebagai module terisolasi tanpa mengubah logic matang;
 - screen hanya menjadi composition root;
-- layout konsisten pada semua viewport melalui satu kontrak layout;
+- root control center ditujukan untuk browser PC/desktop, bukan mobile atau tablet;
+- content memakai seluruh lebar desktop yang tersedia dikurangi gutter, tanpa fixed max-width cap;
+- layout konsisten pada seluruh rentang desktop yang didukung melalui satu kontrak layout;
 - behavior yang sudah bekerja—discovery, stable port, start, stop, quick kill, search, sort,
   grid/list, error, dan tombstone—tidak berubah selama refactor.
 
@@ -641,6 +644,7 @@ Refactor ini tidak mencakup:
 - perubahan discovery app atau stable port lock;
 - perubahan source app di `apps/*`;
 - penambahan Electron;
+- dukungan layout mobile/tablet sebagai release target;
 - redesign visual besar;
 - penambahan state-management dependency;
 - pemindahan control center menjadi package terpisah;
@@ -1073,7 +1077,7 @@ ui/toolbar/
 - Summary;
 - control baru pada masa depan;
 - order dan grouping control;
-- responsive priority.
+- desktop width dan overflow priority.
 
 Definition bersifat deklaratif dan tidak memiliki callback implementation.
 
@@ -1194,8 +1198,8 @@ Semua style control center keluar dari global stylesheet.
 `ui/layout/layoutTokens.css` menjadi satu-satunya tempat untuk nilai layout lintas-area:
 
 ```css
-.control-center {
-  --layout-max-width: 1180px;
+.control-center-layout {
+  --layout-content-width: 100%;
   --layout-inline-gutter: 16px;
   --layout-section-gap: 10px;
   --toolbar-gap: 8px;
@@ -1207,17 +1211,20 @@ Semua style control center keluar dari global stylesheet.
 }
 ```
 
-Breakpoint hanya didefinisikan di file ini. CSS Header/Toolbar/Grid/Card hanya mengonsumsi
-variables.
+Content memakai `width: 100%` atau available width dikurangi gutter dan tidak boleh dibatasi
+oleh fixed `max-width`. CSS Header/Toolbar/Grid/Card hanya mengonsumsi variables. Jika
+adaptasi desktop berbasis breakpoint benar-benar diperlukan di masa depan, definisinya tetap
+berada di file token ini; component CSS tidak membuat breakpoint sendiri.
 
-Target viewport contract:
+Target PC/desktop contract:
 
-| Viewport  | Grid columns | Card       | Terminal                    |
-| --------- | ------------ | ---------- | --------------------------- |
-| ≥901px    | 2            | 1:1        | Mengisi sisa card           |
-| 701–900px | 1            | Terkontrol | Mengisi sisa card           |
-| ≤700px    | 1            | Auto       | Grid 180px, internal scroll |
-| ≤480px    | 1            | Auto       | Grid 180px, compact gutter  |
+| Lebar desktop | Grid columns | Card | Terminal |
+| ------------- | ------------ | ---- | -------- |
+| ≥1280px (supported) | 2 | 1:1 | Mengisi sisa card |
+| <1280px | Di luar release gate PC-only | Best effort | Tidak menjadi acceptance target |
+
+Ukuran 1280, 1366/1440, 1920, dan 2560 hanyalah sampling QA, bukan empat mode layout.
+Layout harus tetap fluid saat window di-resize di antara ukuran tersebut.
 
 #### 8.3 Scroll ownership
 
@@ -1692,7 +1699,7 @@ Exit criteria:
 
 Exit criteria:
 
-- breakpoint hanya berada di layout token contract;
+- aturan lebar desktop hanya berada di layout token contract;
 - component CSS tidak mendefinisikan viewport breakpoint sendiri;
 - scroll ownership sesuai kontrak.
 

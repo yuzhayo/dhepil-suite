@@ -4,6 +4,19 @@ import { ACTIVE_STATUSES } from './projectStatus';
 export type ProjectSortMode = 'name-asc' | 'name-desc' | 'port-asc' | 'active-first';
 export type ProjectViewMode = 'grid' | 'list';
 
+export function isProjectSortMode(value: unknown): value is ProjectSortMode {
+  return (
+    value === 'name-asc' ||
+    value === 'name-desc' ||
+    value === 'port-asc' ||
+    value === 'active-first'
+  );
+}
+
+export function isProjectViewMode(value: unknown): value is ProjectViewMode {
+  return value === 'grid' || value === 'list';
+}
+
 function compareNames(first: ProjectSummary, second: ProjectSummary) {
   return first.name.localeCompare(second.name, 'id', { sensitivity: 'base' });
 }
