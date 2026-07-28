@@ -30,7 +30,8 @@
 ### Git safety
 
 - Baseline commit: `45fd598 chore: establish dhepil suite baseline`.
-- Working tree is not clean. Intentional untracked WIP: `AGENTS.md`, `eslint.config.ts`, `execution-plan-prompt.md`, `execution-plan.md`, `plan.md`, `scripts/project-discovery.test.ts`, `scripts/project-manager.test.ts`, `scripts/project-port-registry.test.ts`, `scripts/project-process.test.ts`, `src/App.test.tsx`, `src/features/`, `src/styles.css`.
+- The original untracked-WIP list described P00 only and is no longer current. Inspect
+  live `git status` before every phase and preserve unrelated changes.
 - No reset, clean, or force-checkout ever.
 - All changes are additive or refactor-in-place. Never delete a file without replacement tested.
 - No commit unless explicitly requested.
@@ -79,7 +80,7 @@
 
 ---
 
-## 1. Current Baseline
+## 1. Runtime and Historical Migration Baseline
 
 ### Runtime aktual (berjalan)
 
@@ -91,7 +92,10 @@
 - Process lifecycle: managed spawn/kill/log, tombstone `not-found` for deleted-running apps, external/port-conflict detection.
 - `DHEPIL_GATE_NO_OPEN=1` env var prevents auto-open.
 
-### Struktur file aktual (`src/features/control-center/`)
+### Struktur historis sebelum modular refactor (`src/features/control-center/`)
+
+Snapshot berikut menjelaskan alasan P00–P19 dijalankan; path legacy di bawah sudah
+dihapus atau dipindahkan dan bukan struktur runtime aktif.
 
 ```
 application/
@@ -113,14 +117,17 @@ types.ts                            # 9-status union + ProjectSummary + Projects
 - UI integration: status invalid/conflict/not-found in card ✓
 - Migration cleanup + AGENTS.md updated ✓
 
-### Target pending (plan.md §15 — modular)
+### Modular target implemented through P20 (plan.md §15)
 
-- `ui/header/`, `ui/toolbar/`, `ui/grid/`, `ui/card/`, `ui/layout/`
-- `application/controller/`, `composition/`, `commands/`, `presenters/`, `extensions/`, `ports/`
-- `domain/` (projectActionPolicy, projectStatus, projectCollection dipindah)
-- `data/` adapters (`httpProjectManagerClient`, `browserProjectWindow`)
-- CSS migration to layout token contract per-area
-- Screen → composition-only (`controller + layout`)
+- `ui/header/`, `ui/toolbar/`, `ui/grid/`, `ui/card/`, `ui/layout/` ✓
+- `application/controller/`, `composition/`, `commands/`, `presenters/`, `extensions/`,
+  `ports/` ✓
+- `domain/` (`projectActionPolicy`, `projectStatus`, `projectCollection`) ✓
+- `data/` adapters (`httpProjectManagerClient`, `browserProjectWindow`) ✓
+- CSS migration to layout token contract per-area ✓
+- Screen → composition-only (`controller + layout`) ✓
+- Modular executable boundary owner in
+  `tooling/eslint/controlCenterBoundaryConfigs.ts` ✓
 
 ### Commit baseline
 
@@ -128,9 +135,13 @@ types.ts                            # 9-status union + ProjectSummary + Projects
 45fd598 chore: establish dhepil suite baseline
 ```
 
-Working tree has intentional untracked WIP; see Git safety. This is not a failure.
+The untracked-WIP note belonged to the historical baseline. Continuations must use live
+`git status`; they must not infer current ownership from the P00 snapshot.
 
-### File protected
+### Historical scope protection during migration
+
+Daftar berikut merekam protection scope saat fase implementasi berjalan. Status fase
+dan allowed files yang aktif tetap ditentukan oleh section phase masing-masing.
 
 - `apps/*` — never modify
 - `scripts/project-manager.ts` — only add tests or fix bugs, not part of UI refactor
@@ -138,7 +149,7 @@ Working tree has intentional untracked WIP; see Git safety. This is not a failur
 - `AGENTS.md` — update only in P19 after all phases pass
 - `plan.md` — update only in P19 after all phases pass
 
-### File yang akan disentuh dalam refactor
+### Historical migration touch set
 
 - `src/features/control-center/*` — all files under this folder are subject to refactor
 - `eslint.config.ts` — add `no-restricted-imports` in P01
@@ -2499,7 +2510,48 @@ Handoff:
 
 Status:
 
-- PENDING
+- PASS
+
+Validation evidence (2026-07-28):
+
+- `npm run format:check` **PASS**: all files use Prettier formatting.
+- `npm run lint` **PASS**: ESLint completed without errors or warnings.
+- `npm run typecheck` **PASS**: web and node TypeScript projects completed without diagnostics.
+- `npm run test -- --maxWorkers=2` **PASS**: 36 files, 333 tests.
+- `npm run build` **PASS**: Vite transformed 1639 modules and produced the production bundle.
+- `npx --yes antd lint src --format json` **PASS**: 0 issues, 0 skipped files, non-partial result.
+- Read-only residual scan found no runtime/test legacy imports, suppression comments, TODO/FIXME markers, deprecated annotations, or direct console warning/error calls.
+
+Existing warning audit and approved disposition:
+
+- Command: `npm run build`.
+- Exact warning: `Some chunks are larger than 500 kB after minification.`
+- Generated source: `dist/assets/index-CMy3h6ox.js` is 801.53 kB (258.27 kB gzip). Vite's configured source is the root static entry; `vite.config.ts` does not override the default 500 kB warning threshold.
+- Disposition: approved as existing low-severity technical debt for P20. The build succeeds, the warning predates this phase, and no functional or architecture gate fails.
+- Follow-up: do not suppress the warning by raising `chunkSizeWarningLimit`. Bundle analysis and measured code-splitting may be handled in a separately authorized performance phase.
+- No new warning was observed in format, lint, typecheck, test, build, or AntD lint output.
+
+Resolved remediation (P20-R1, user-authorized 2026-07-28):
+
+- Extracted all concrete control-center flat-config boundaries into
+  `tooling/eslint/controlCenterBoundaryConfigs.ts`; root `eslint.config.ts` now only
+  composes the feature-owned module.
+- The UI guardrail lists only internal layers that currently exist. It intentionally
+  allows `application/view-models`, AntD, CSS, local UI, and peer UI; no generic
+  dependency-graph framework or speculative alias rule was added.
+- Independent architecture fixtures now reject UI imports from data, domain, raw feature
+  types, screens, scripts, controller, commands, extensions, presenters, composition,
+  ports, and presentation limits. A nested UI fixture proves depth-independent matching.
+- Positive fixtures prove view models, AntD, CSS, local UI, and peer UI remain valid.
+- Targeted architecture validation **PASS**: 1 file, 48 tests.
+- Corrected the canonical `presentationLimits.ts` path and documented the modular
+  guardrail owner. No dependency or production runtime behavior changed.
+
+Handoff result:
+
+- P20 automated validation and its authorized boundary remediation are complete.
+- The existing Vite warning remains audited low-severity technical debt. P21 may start
+  and still owns final runtime/browser QA.
 
 Objective:
 

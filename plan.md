@@ -611,10 +611,10 @@ Bagian berikut adalah hasil full merge rencana modular ke plan canonical. Nomor
 subbagian tetap dipertahankan di bawah section 15 agar tidak bertabrakan dengan bagian
 discovery dan stable port lock di atas.
 
-> Status aktual (28 Juli 2026): implementasi modular Fase 0–8 sudah selesai melalui
-> P00–P19. Warning audit P20 dan final gate P21 masih pending. Browser QA 1440px/390px,
-> Grid/List, horizontal overflow, dan console inspection belum dijalankan karena browser
-> control tidak tersedia; pengguna menyetujui penundaan ini sebagai technical debt.
+> Status aktual (28 Juli 2026): implementasi modular Fase 0–8 dan warning audit P20
+> sudah selesai. Final gate P21 masih pending. Browser QA 1440px/390px, Grid/List,
+> horizontal overflow, dan console inspection belum dijalankan karena browser control
+> tidak tersedia; pengguna menyetujui penundaan ini sebagai technical debt.
 
 ### 1. Tujuan
 
@@ -1005,6 +1005,13 @@ Larangan:
 Boundary harus menjadi executable guardrail, bukan dokumentasi saja:
 
 - gunakan ESLint built-in `no-restricted-imports`; tidak perlu dependency baru;
+- `tooling/eslint/controlCenterBoundaryConfigs.ts` menjadi owner konkret untuk boundary
+  control-center; root `eslint.config.ts` hanya mengomposisikan module tersebut;
+- jangan membuat dependency-graph framework generik. Tambahkan restricted edge baru pada
+  module owner hanya ketika layer dan kasusnya benar-benar ada, lalu tambahkan fixture
+  independen di `test/architecture/import-boundary.test.ts`;
+- `application/view-models.ts` adalah contract application yang sengaja boleh dibaca UI;
+  internal application layer lain harus mempunyai rule eksplisit ketika tersedia;
 - pasang rule untuk folder target `ui/`, `domain/`, `data/`, dan
   `application/extensions/` pada Fase 0 sebelum folder tersebut mulai dipakai;
 - rule screen yang hanya mengizinkan controller + layout diaktifkan setelah import legacy
@@ -1151,7 +1158,7 @@ Policy `canStart` dan `canStop` tidak berada di definition. Policy tersebut teta
 logic dan hasilnya dimasukkan ke view model.
 
 Maximum rendered log lines tetap dimiliki
-`application/presenters/presentationLimits.ts` karena pemotongan terjadi sebelum data
+`application/presentationLimits.ts` karena pemotongan terjadi sebelum data
 masuk UI; `cardDefinition.ts` tidak menduplikasi angka tersebut.
 
 `ProjectCard.tsx` hanya menerima:

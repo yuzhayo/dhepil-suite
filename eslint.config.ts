@@ -4,6 +4,8 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+import { controlCenterBoundaryConfigs } from './tooling/eslint/controlCenterBoundaryConfigs';
+
 export default tseslint.config(
   {
     ignores: ['dist', 'coverage', 'node_modules'],
@@ -30,121 +32,5 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
-  {
-    files: ['src/features/control-center/ui/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            '../data/**',
-            '../../data/**',
-            '../application/controller/**',
-            '../../application/controller/**',
-            '../application/commands/**',
-            '../../application/commands/**',
-            '../application/extensions/**',
-            '../../application/extensions/**',
-            '../../../scripts/**',
-            '../../../../scripts/**',
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/domain/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: ['react', 'antd'],
-          patterns: ['../data/**', '../ui/**', '../application/**', '../../../scripts/**'],
-        },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/application/extensions/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        { patterns: ['./modules/**', '../../ui/**', '../../../../scripts/**'] },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/application/extensions/modules/*/index.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              regex: '^\\.\\./(?!\\.)[^/]+(?:/.*)?$',
-              message: 'Extension modules must not import sibling extension modules.',
-            },
-            { group: ['../../../../ui/**'] },
-            { group: ['../../../../../../scripts/**'] },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/data/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            '../ui/**',
-            '../application/controller/**',
-            '../application/commands/**',
-            '../application/extensions/**',
-            '../application/composition/**',
-            '../../../scripts/**',
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/application/controller/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        { patterns: ['../../data/**', '../../ui/**', '../../../../scripts/**'] },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/application/composition/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': ['error', { patterns: ['../../ui/**', '../../screens/**'] }],
-    },
-  },
-  {
-    files: ['src/features/control-center/screens/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              regex: '^(?!\\.\\./application/controller/|\\.\\./ui/layout/).+$',
-              message:
-                'Control-center screens may import only the controller and layout composition boundaries.',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['src/features/control-center/screens/**/*.test.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': 'off',
-    },
-  },
+  ...controlCenterBoundaryConfigs,
 );

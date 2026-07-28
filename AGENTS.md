@@ -18,6 +18,10 @@ npx --yes antd lint src --format json   # antd v6 API lint
 - **Root** (`src/`): React dashboard on port **1999** (strictPort, `vite.config.ts`). Only manages discovery, status, logs, start, stop, open.
 - **Scripts** (`scripts/`): Vite middleware plugin. Five modules with strict one-way deps: `project-contracts` → `project-discovery`/`project-port-registry`/`project-process` → `project-manager`. Process spawning only here, never in React.
 - **Apps** (`apps/<id>/`): Isolated workspaces. Each has `app.manifest.json` + `package.json` with `dev` script.
+- **Boundary tooling** (`tooling/eslint/controlCenterBoundaryConfigs.ts`): owns the
+  executable control-center import rules. Root `eslint.config.ts` only composes this
+  concrete feature module; add a rule and independent architecture fixture when a real
+  internal edge is introduced.
 
 ## Discovery & Port Lock
 

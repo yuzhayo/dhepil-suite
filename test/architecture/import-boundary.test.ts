@@ -10,26 +10,66 @@ async function lintVirtualFile(filePath: string, source: string) {
 
 describe('control-center import boundaries', () => {
   const forbiddenCases = [
-    ['ui', 'src/features/control-center/ui/fixture.ts', "import '../data/client';"],
+    ['ui → data', 'src/features/control-center/ui/grid/fixture.ts', "import '../../data/client';"],
+    [
+      'ui → domain',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../domain/projectStatus';",
+    ],
+    [
+      'nested ui → domain',
+      'src/features/control-center/ui/card/internal/fixture.ts',
+      "import '../../../domain/projectStatus';",
+    ],
+    [
+      'ui → raw feature types',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import type { ProjectSummary } from '../../types';",
+    ],
     [
       'ui → controller',
-      'src/features/control-center/ui/fixture.ts',
-      "import '../application/controller/client';",
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../application/controller/client';",
     ],
     [
       'ui → commands',
-      'src/features/control-center/ui/fixture.ts',
-      "import '../application/commands/client';",
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../application/commands/client';",
     ],
     [
       'ui → extensions',
-      'src/features/control-center/ui/fixture.ts',
-      "import '../application/extensions/client';",
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../application/extensions/client';",
+    ],
+    [
+      'ui → presenters',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../application/presenters/createGridViewModel';",
+    ],
+    [
+      'ui → composition',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../application/composition/createControlCenterRuntime';",
+    ],
+    [
+      'ui → ports',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import type { ProjectManagerClient } from '../../application/ports/ProjectManagerClient';",
+    ],
+    [
+      'ui → presentation limits',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import { MAX_RENDERED_LOG_LINES } from '../../application/presentationLimits';",
+    ],
+    [
+      'ui → screens',
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../screens/ControlCenterScreen';",
     ],
     [
       'ui → scripts',
-      'src/features/control-center/ui/fixture.ts',
-      "import '../../../scripts/project-manager';",
+      'src/features/control-center/ui/grid/fixture.ts',
+      "import '../../../../../scripts/project-manager';",
     ],
     ['domain → react', 'src/features/control-center/domain/fixture.ts', "import 'react';"],
     ['domain → antd', 'src/features/control-center/domain/fixture.ts', "import 'antd';"],
@@ -154,6 +194,23 @@ describe('control-center import boundaries', () => {
     const messages = await lintVirtualFile(
       'src/features/control-center/application/composition/fixture.ts',
       "import '../../data/httpProjectManagerClient';",
+    );
+    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
+  });
+
+  it.each([
+    [
+      'application view-model contract',
+      "import type { ProjectGridViewModel } from '../../application/view-models';",
+    ],
+    ['AntD', "import { Empty } from 'antd';"],
+    ['local UI owner', "import { gridDefinition } from './gridDefinition';"],
+    ['peer UI owner', "import { ProjectCard } from '../card/ProjectCard';"],
+    ['local CSS', "import './ProjectGrid.css';"],
+  ])('allows UI to import its %s', async (_name, source) => {
+    const messages = await lintVirtualFile(
+      'src/features/control-center/ui/grid/fixture.ts',
+      source,
     );
     expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
   });
