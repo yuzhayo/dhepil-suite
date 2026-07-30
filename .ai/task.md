@@ -67,11 +67,11 @@ Hapus subfolder di dalam engine, jadikan flat files.
 - [x] Update `src/App.tsx` → import dari `src/ControlCenterScreen.tsx`
 - [x] Verify: `npm run typecheck`
 
-## Phase D — Hapus `features/` Seluruhnya
+## Phase D — Hapus `features/` Seluruhnya ✅
 
-- [ ] Pastikan `src/features/` kosong
-- [ ] Hapus folder `src/features/`
-- [ ] Verify: tidak ada import yang masih referensi `features/`
+- [x] Pastikan `src/features/` kosong
+- [x] Hapus folder `src/features/`
+- [x] Verify: tidak ada import yang masih referensi `features/`
 
 ## Phase E — Pindah + Update Tests
 

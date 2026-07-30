@@ -77,7 +77,7 @@ src/engine/               ← ✅ SELESAI (Phase A) — flat, no subfolders kecu
   │  ├─ projectLifecycle.ts   ← merged dari 3 file
   │  ├─ projectRefresh.ts
   │  └─ quickKill.ts
-  ├─ contracts.ts
+  ├─ contracts.ts             ← includes view-model types (Phase C)
   ├─ createEngine.ts          ← tanpa extensions
   ├─ index.ts
   ├─ projectActionPolicy.ts
@@ -95,15 +95,14 @@ ui/                       ← ✅ SELESAI (Phase B) — flat, 22 files
   ├─ ProjectCard.tsx + test + css
   ├─ ProjectTerminal.tsx + test
   ├─ *Definition.ts (card, grid, header, toolbar)
-  └─ layoutTokens.css
+  └─ layoutTokens.css         ← all imports now use engine/contracts
 
-src/features/control-center/  ← MASIH ADA, harus dihapus setelah Phase C+D
-  ├─ application/
-  │  ├─ controller/useControlCenterController.ts  ← absorb ke Screen (Phase C)
-  │  ├─ presenters/*.ts                           ← inline ke Screen (Phase C)
-  │  ├─ view-models.ts                            ← types → engine/contracts.ts (Phase C)
-  │  └─ presentationLimits.ts                     ← inline ke Screen (Phase C)
-  └─ screens/ControlCenterScreen.tsx              ← rewrite ke src/ root (Phase C)
+src/ControlCenterScreen.tsx  ← ✅ SELESAI (Phase C) — composition root, 628 lines
+  - Absorbs controller state + polling + dispatch
+  - Inlines all presenter mapping logic
+  - Renders ControlCenterLayout from ui/
+
+src/features/control-center/  ← EMPTY folder, Phase D will delete
 ```
 
 ---
@@ -117,12 +116,17 @@ src/features/control-center/  ← MASIH ADA, harus dihapus setelah Phase C+D
 ### Phase B
 - **Extra files moved**: Plan table listed 7 `.tsx` files. Actually moved 22 files (including CSS, tests, definition files). These were necessary — components import them.
 - **`tsconfig.web.json` updated**: Added `"ui"` to `"include"` array. Not in plan but required for typecheck to find moved files.
-- **`ui/` files temporarily import from `src/features/.../view-models`**: This coupling will be resolved in Phase C when view-model types move to `engine/contracts.ts`.
+- **`ui/` files temporarily import from `src/features/.../view-models`**: Resolved in Phase C.
+
+### Phase C
+- **`React` import unused**: Line 1 imports `React` — not needed with React 19 JSX transform. Minor lint issue for Phase F.
+- **Presenter tests deleted without replacement**: 7 test files (`createControlCenterViewModel.test.ts`, `createGridViewModel.test.ts`, etc.) were deleted. Phase E will address test coverage for the new Screen.
+- **Screen is 628 lines**: Large but expected — replaces 5 separate files (~600 lines combined). Matches the "no separate presenter" architecture intent.
 
 ---
 
 ## File yang Harus Dibaca
 
-1. `.ai/task.md` — checklist phases lengkap (A ✅, B ✅, C–G pending)
+1. `.ai/task.md` — checklist phases lengkap (A ✅, B ✅, C ✅, D–G pending)
 2. `.ai/implementation_plan.md` — detail teknis migration per file
 3. `.ai/plan.md` — arsitektur canonical + system design
