@@ -45,16 +45,16 @@ Hapus subfolder di dalam engine, jadikan flat files.
 - [x] Update `engine/index.ts` → barrel exports semua flat files
 - [x] Verify: `npm run typecheck`
 
-## Phase B — Pindah UI ke Monorepo Root
+## Phase B — Pindah UI ke Monorepo Root ✅
 
-- [ ] Buat folder `ui/` di root monorepo
-- [ ] Pindah `src/features/control-center/ui/layout/*.tsx|css` → `ui/`
-- [ ] Pindah `src/features/control-center/ui/header/*.tsx|css` → `ui/`
-- [ ] Pindah `src/features/control-center/ui/toolbar/*.tsx|css` → `ui/`
-- [ ] Pindah `src/features/control-center/ui/grid/*.tsx|css` → `ui/`
-- [ ] Pindah `src/features/control-center/ui/card/*.tsx|css` → `ui/`
-- [ ] Update semua import yang mengacu ke lokasi lama
-- [ ] Verify: `npm run typecheck`
+- [x] Buat folder `ui/` di root monorepo
+- [x] Pindah `src/features/control-center/ui/layout/*.tsx|css` → `ui/`
+- [x] Pindah `src/features/control-center/ui/header/*.tsx|css` → `ui/`
+- [x] Pindah `src/features/control-center/ui/toolbar/*.tsx|css` → `ui/`
+- [x] Pindah `src/features/control-center/ui/grid/*.tsx|css` → `ui/`
+- [x] Pindah `src/features/control-center/ui/card/*.tsx|css` → `ui/`
+- [x] Update semua import yang mengacu ke lokasi lama
+- [x] Verify: `npm run typecheck`
 
 ## Phase C — Collapse Presenter/Controller ke Screen
 

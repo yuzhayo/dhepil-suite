@@ -1,4 +1,4 @@
-import type { AlertKey, SemanticTone, StatusKey, TagKey } from '../../application/view-models';
+import type { AlertKey, SemanticTone, StatusKey, TagKey } from '../src/features/control-center/application/view-models';
 
 export type CardActionKind = 'default' | 'primary' | 'danger';
 export type StatusBadgeKind = 'success' | 'processing' | 'default' | 'error' | 'warning';

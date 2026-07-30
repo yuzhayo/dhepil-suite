@@ -1,5 +1,5 @@
 import { useControlCenterController } from '../application/controller/useControlCenterController';
-import { ControlCenterLayout } from '../ui/layout/ControlCenterLayout';
+import { ControlCenterLayout } from '../../../../ui/ControlCenterLayout';
 
 export function ControlCenterScreen() {
   const controller = useControlCenterController();

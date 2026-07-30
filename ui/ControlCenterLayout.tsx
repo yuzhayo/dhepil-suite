@@ -1,11 +1,11 @@
 import { Alert, Button } from 'antd';
 
-import type { ControlCenterViewModel } from '../../application/view-models';
-import { cardDefinition } from '../card/cardDefinition';
-import { ProjectGrid } from '../grid/ProjectGrid';
-import { ControlCenterHeader } from '../header/ControlCenterHeader';
-import { ProjectToolbar } from '../toolbar/ProjectToolbar';
-import { toolbarDefinition, type ToolbarButtonDefinition } from '../toolbar/toolbarDefinition';
+import type { ControlCenterViewModel } from '../src/features/control-center/application/view-models';
+import { cardDefinition } from './cardDefinition';
+import { ProjectGrid } from './ProjectGrid';
+import { ControlCenterHeader } from './ControlCenterHeader';
+import { ProjectToolbar } from './ProjectToolbar';
+import { toolbarDefinition, type ToolbarButtonDefinition } from './toolbarDefinition';
 import './layoutTokens.css';
 import './controlCenterLayout.css';
 

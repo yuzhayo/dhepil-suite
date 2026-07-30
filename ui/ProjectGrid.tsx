@@ -1,7 +1,7 @@
 import { Empty, Skeleton } from 'antd';
 
-import type { ProjectGridViewModel } from '../../application/view-models';
-import { ProjectCard } from '../card/ProjectCard';
+import type { ProjectGridViewModel } from '../src/features/control-center/application/view-models';
+import { ProjectCard } from './ProjectCard';
 import { gridDefinition } from './gridDefinition';
 import './ProjectGrid.css';
 

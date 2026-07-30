@@ -1,6 +1,6 @@
 import { Typography } from 'antd';
 
-import type { TerminalViewModel } from '../../application/view-models';
+import type { TerminalViewModel } from '../src/features/control-center/application/view-models';
 import { cardDefinition } from './cardDefinition';
 import './ProjectCard.css';
 

@@ -5,7 +5,7 @@ import type {
   CardActionViewModel,
   ProjectCardViewModel,
   TagViewModel,
-} from '../../application/view-models';
+} from '../src/features/control-center/application/view-models';
 import { cardDefinition, type CardActionDefinition } from './cardDefinition';
 import { ProjectTerminal } from './ProjectTerminal';
 import './ProjectCard.css';

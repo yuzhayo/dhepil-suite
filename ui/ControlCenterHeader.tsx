@@ -1,6 +1,6 @@
 import { Button, Typography } from 'antd';
 
-import type { HeaderViewModel } from '../../application/view-models';
+import type { HeaderViewModel } from '../src/features/control-center/application/view-models';
 import { headerDefinition, type HeaderActionKind } from './headerDefinition';
 import './ControlCenterHeader.css';
 
