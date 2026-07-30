@@ -1,116 +1,28 @@
-# Dhepil Suite
+# Dhepil Suite - Agent Directives
 
-Root control center for managing local Vite sub-apps. npm workspaces monorepo (`apps/*`).
+**CRITICAL INSTRUCTION FOR ALL AI AGENTS:**
+You MUST read `PLAYBOOK.md` located in the root directory before modifying ANY files, planning ANY architecture, or editing this workspace. 
+
+`PLAYBOOK.md` is the **Single Source of Truth** for the Dhepil Suite architecture, including how the Control Center Engine works and the strict CoreUI Parent-Child boundaries.
+
+---
+
+## TL;DR Golden Rules
+1. **Never write logic in Parent Components**: Files like `src/ControlCenterScreen.tsx` and `ui/CoreLayout.tsx` are dumb orchestrators. **All visual behavior and logic must be encapsulated in the leaf Child components** (e.g., `ui/card-grid/Terminal.tsx`).
+2. **Engine Flat Children**: The `src/engine/children/` folder must remain completely flat. No subfolders.
+3. **No Presenters**: We do not use a presenter layer. `ControlCenterScreen.tsx` maps raw engine data to ViewModels directly.
+4. **.ai Folder Tracking**: The `.ai` folder is ONLY used for transient session tracking (`implementation_plan.md` and `handoff.md`). Do NOT store long-term architecture docs here. When finishing a task, update the handoff document.
+5. **Creating New Apps**: To add an app, create a folder in `apps/<id>/`, add `app.manifest.json` and a `package.json` with a `dev` script. It will be discovered automatically.
 
 ## Commands (run from root, in order)
 
 ```bash
 npm run format:check     # Prettier
-npm run lint             # ESLint (typescript-eslint, react-hooks, react-refresh)
-npm run typecheck        # tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.node.json
-npm run test             # vitest run (jsdom, @testing-library/react)
-npm run build            # typecheck + vite build
-npx --yes antd lint src --format json   # antd v6 API lint
+npm run lint             # ESLint
+npm run typecheck        # TypeScript
+npm run test             # Vitest
+npm run build            # Vite build
+npx --yes antd lint src --format json
 ```
 
-## Architecture
-
-- **Root** (`src/`): React dashboard on port **1999** (strictPort, `vite.config.ts`). Only manages discovery, status, logs, start, stop, open.
-- **Scripts** (`scripts/`): Vite middleware plugin. Five modules with strict one-way deps: `project-contracts` → `project-discovery`/`project-port-registry`/`project-process` → `project-manager`. Process spawning only here, never in React.
-- **Apps** (`apps/<id>/`): Isolated workspaces. Each has `app.manifest.json` + `package.json` with `dev` script.
-- **Boundary tooling** (`tooling/eslint/controlCenterBoundaryConfigs.ts`): owns the
-  executable control-center import rules. Root `eslint.config.ts` only composes this
-  concrete feature module; add a rule and independent architecture fixture when a real
-  internal edge is introduced.
-
-## Discovery & Port Lock
-
-- Root scans `apps/*` direct children on every `GET /api/projects`. Symlinks, path escapes, non-direct children rejected.
-- Apps need `app.manifest.json` (`schemaVersion: 1`, `runtime: "vite"`, `id` = folder name) and `package.json` with `dev` script.
-- Ports `2000-2999` are assigned once and stored in the tracked root registry
-  `config/app-ports.lock.json`. Never auto-reassign a locked port on conflict.
-- Root always spawns `npm run dev -- --host 127.0.0.1 --port <locked-port> --strictPort`.
-- Env set in spawned process: `PORT`, `DHEPIL_PROJECT_ID`.
-
-## Key Constraints
-
-- App code must not import root or other apps. Root must not contain app business logic.
-- Working in `apps/<name>`: do not modify root or other apps.
-- Working in root: do not modify app source code.
-- Electron is optional per-app, declared in `app.manifest.json.desktop`. Not a root dependency.
-- `DHEPIL_GATE_NO_OPEN=1` env var prevents browser auto-open on dev start.
-- `projects.config.json` is deleted. Port registry is `config/app-ports.lock.json` only.
-
-## Feature Structure (Implemented)
-
-`src/features/control-center/` uses the modular ownership structure from `plan.md`:
-
-```text
-application/
-  commands/          # user-action orchestration
-  composition/       # concrete runtime wiring
-  controller/        # polling, cancellation, and UI state flow
-  extensions/        # stable extension host and lifecycle modules
-  ports/             # application-facing adapter contracts
-  presenters/        # domain/application state → semantic view models
-  presentationLimits.ts
-  view-models.ts
-data/                # HTTP and browser-window adapters
-domain/              # status/action policy and project collection rules
-screens/
-  ControlCenterScreen.tsx  # controller + layout composition only
-ui/
-  card/
-  grid/
-  header/
-  layout/
-  toolbar/
-types.ts             # shared control-center runtime contracts
-```
-
-The old monolithic `application/useProjectManager.ts`, duplicate application collection
-path, and legacy `components/ProjectCard.tsx` no longer exist.
-
-### Implemented Architecture
-
-Per `plan.md` sections 4–15, `control-center` now separates UI, application,
-data, and domain ownership:
-
-- `ui/header/`, `ui/toolbar/`, `ui/grid/`, `ui/card/`, `ui/layout/` own markup and local styles.
-- `application/controller/` owns state flow.
-- `application/commands/` owns user actions.
-- `application/presenters/` owns view models.
-- `application/extensions/` owns plug-and-play logic modules.
-- `data/` owns HTTP and browser adapters; UI must not call `fetch` or `window.open`.
-- `domain/` owns pure action policy and project transformations.
-
-### UI and logic boundary
-
-- `ControlCenterScreen` is composition only: controller output → layout → UI components.
-- UI components receive view models and callbacks through props. They must not own
-  polling, filtering, sorting, process policy, persistence, or data access.
-- Application/data/domain modules must not import UI modules. UI must not import
-  `scripts/`, repositories, or other feature internals.
-- New logic modules must use the extension contract and remain local to the feature;
-  they cannot execute arbitrary shell commands or access process APIs.
-
-`.ai/plan.md` is the single canonical implementation plan. Do not create a second
-parallel architecture plan for the same control-center feature.
-
-## Testing
-
-- Vitest 4 + jsdom + @testing-library/react.
-- Test setup (`test/setup.ts`): mocks `matchMedia` and `ResizeObserver` for antd.
-- Tests use `vi.stubGlobal`/`vi.unstubAllGlobals` for fetch mocking.
-- Script tests live in `scripts/` (Vitest picks them up via tsconfig.node.json). No special command needed — `npm run test` discovers them automatically.
-
-## Tech Stack
-
-React 19, antd 6.5.1, TypeScript 6, Vite 7, Vitest 4, Prettier 3, ESLint 9. `"type": "module"`. Node >=24, npm 11.
-
-## References
-
-- `.ai/plan.md` — canonical implementation plan (architecture, status model, phases, acceptance tests)
-- `apps/<name>/AGENTS.md` — per-app ownership rules
-- Adding an app: create `apps/<id>/app.manifest.json` + `package.json` with `dev` script; no registry edit needed. Card appears on next poll.
-- `scripts/` module deps: `project-contracts` (types) → `project-discovery`/`project-port-registry`/`project-process` → `project-manager` (orchestrator). No circular imports. No imports from `src/` or `apps/`.
+*For detailed explanations of these rules, architecture, and diagrams, read `PLAYBOOK.md`.*

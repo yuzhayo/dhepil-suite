@@ -10,6 +10,7 @@
 
 .project-grid-ui__collection {
   display: grid;
+  align-content: start;
   align-items: stretch;
   gap: var(--layout-grid-gap);
   padding: 2px;

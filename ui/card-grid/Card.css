@@ -125,7 +125,9 @@
 .project-grid-ui__collection--list .project-card-ui > .ant-card-body {
   display: grid;
   grid-template-columns: var(--layout-list-card-columns);
-  align-items: center;
+  grid-template-rows: auto auto auto 1fr;
+  align-items: start;
+  column-gap: 24px;
 }
 
 .project-grid-ui__collection--list .project-terminal {

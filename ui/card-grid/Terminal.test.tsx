@@ -7,6 +7,7 @@ describe('ProjectTerminal', () => {
     render(
       <ProjectTerminal
         viewModel={{
+          status: 'running',
           lines: ['server starting', 'server ready'],
           truncated: false,
           maxLines: 80,
@@ -25,13 +26,13 @@ describe('ProjectTerminal', () => {
   });
 
   it('renders the empty copy without inventing log data', () => {
-    render(<ProjectTerminal viewModel={{ lines: [], truncated: false, maxLines: 80 }} />);
+    render(<ProjectTerminal viewModel={{ status: 'stopped', lines: [], truncated: false, maxLines: 80 }} />);
 
     expect(screen.getByLabelText('Output process')).toHaveTextContent('Belum ada output process.');
   });
 
   it('announces presenter-owned truncation metadata', () => {
-    render(<ProjectTerminal viewModel={{ lines: ['latest'], truncated: true, maxLines: 80 }} />);
+    render(<ProjectTerminal viewModel={{ status: 'running', lines: ['a', 'b'], truncated: true, maxLines: 80 }} />);
 
     expect(
       screen.getByText('Hanya baris log terbaru yang ditampilkan. Maksimum 80 baris.'),

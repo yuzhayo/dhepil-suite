@@ -16,7 +16,8 @@ const card: ProjectCardViewModel = {
     { actionId: 'project.quick-kill', disabled: false, loading: false },
   ],
   terminal: {
-    lines: ['ready'],
+    status: 'running',
+    lines: ['log-1'],
     truncated: false,
     maxLines: 80,
   },

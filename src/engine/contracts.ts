@@ -95,6 +95,7 @@ export interface TagViewModel {
 }
 
 export interface TerminalViewModel {
+  status: ProjectStatus;
   lines: readonly string[];
   truncated: boolean;
   maxLines: number;

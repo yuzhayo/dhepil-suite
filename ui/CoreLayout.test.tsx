@@ -45,7 +45,12 @@ const viewModel: ControlCenterViewModel = {
           { actionId: 'project.stop', disabled: false, loading: false },
           { actionId: 'project.quick-kill', disabled: false, loading: false },
         ],
-        terminal: { lines: ['ready'], truncated: false, maxLines: 80 },
+        terminal: {
+        status: 'running',
+        lines: ['log-1'],
+        truncated: false,
+        maxLines: 80,
+      },
       },
     ],
   },

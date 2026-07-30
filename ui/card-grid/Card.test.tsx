@@ -20,7 +20,8 @@ const viewModel: ProjectCardViewModel = {
     { actionId: 'project.quick-kill', disabled: false, loading: false },
   ],
   terminal: {
-    lines: ['ready on port 2000'],
+    status: 'running',
+    lines: ['log-1'],
     truncated: false,
     maxLines: 80,
   },

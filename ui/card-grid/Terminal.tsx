@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Typography } from 'antd';
 
 import type { TerminalViewModel } from '../../src/engine/contracts';
@@ -12,7 +13,15 @@ export interface ProjectTerminalProps {
 
 export function ProjectTerminal({ viewModel }: ProjectTerminalProps) {
   const terminal = cardDefinition.terminal;
-  const content = viewModel.lines.length === 0 ? terminal.emptyCopy : viewModel.lines.join('\n');
+  const displayLines = viewModel.status === 'stopped' ? [] : viewModel.lines;
+  const content = displayLines.length === 0 ? terminal.emptyCopy : displayLines.join('\n');
+  const preRef = useRef<HTMLPreElement>(null);
+
+  useEffect(() => {
+    if (preRef.current) {
+      preRef.current.scrollTop = preRef.current.scrollHeight;
+    }
+  }, [content]);
 
   return (
     <section className="project-terminal">
@@ -25,6 +34,7 @@ export function ProjectTerminal({ viewModel }: ProjectTerminalProps) {
         ) : null}
       </div>
       <pre
+        ref={preRef}
         className="project-terminal__content"
         aria-label={terminal.accessibleName}
         aria-live="polite"

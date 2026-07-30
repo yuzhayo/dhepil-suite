@@ -1,66 +1,18 @@
-# Handoff — Dhepil Suite
+# Handoff Document
 
-Dokumen ini untuk new account / new session. Baca ini DULU sebelum membuka file lain.
+**Status Terakhir**: 
+Fitur terminal *auto-clear* dan *auto-scroll* telah selesai diimplementasikan dengan sempurna dan mematuhi arsitektur CoreUI Encapsulation.
 
----
+**Pekerjaan Selesai**:
+1. Memperbaiki logika presentasi: memindahkan logika pembersihan array terminal dari Parent (`ControlCenterScreen.tsx`) murni ke Child (`ui/card-grid/Terminal.tsx`).
+2. Menambahkan fitur auto-scroll menggunakan `useRef` dan `useEffect` di `Terminal.tsx`.
+3. Menulis ulang dokumentasi arsitektur menjadi **`PLAYBOOK.md`** di *root directory*.
+4. Memperbarui **`AGENTS.md`** dengan peringatan keras mengenai peletakan logika di *parent components*.
 
-## Status Sekarang (2026-07-30)
+**Kondisi Codebase Saat Ini**:
+- **Dilarang keras menaruh logika presentasi/kondisional di Parent Orchestrator**. Selalu taruh logika visual (seperti filter log, *scroll*, manipulasi DOM) di dalam komponen *Child* terkecil.
+- Seluruh arsitektur, panduan *tech stack*, dan cara menambahkan app baru kini telah dikompilasi secara terpusat di `PLAYBOOK.md`. Silakan baca file tersebut jika Anda bingung mengenai arsitektur.
+- `.ai/` folder kini murni hanya berisi file pelacakan temporer (`implementation_plan.md` & `handoff.md`).
 
-Project telah **SELESAI 100%** direstrukturisasi arsitekturnya.
-- **Engine Layer** (`src/engine/`): Sudah 100% modular, *flat children*, dan semua data/domain terpusat.
-- **UI Layer** (`ui/` di monorepo root): Sudah 100% mengadopsi pola **CoreUI Parent-Children Orchestration**. Semua komponen dipisahkan ke dalam folder mandiri (`header/`, `toolbar/`, `card-grid/`) dan dienkapsulasi rapat dari komponen lain melalui *ESLint boundary rules*.
-- **Semua Test & Typecheck Lulus**.
-
-Fokus pengerjaan selanjutnya HANYALAH pengembangan *feature* baru atau penulisan kode app-specific di dalam target `apps/`.
-Struktur inti (engine maupun UI responsive) saat ini sudah sangat stabil dan tidak butuh perombakan lagi.
----
-
-## Arsitektur Saat Ini (Final)
-
-```text
-dhepil-suite/                 ← monorepo root
-│
-├─ ui/                        ← shared UI, diisolasi per komponen
-│  ├─ CoreLayout.tsx          ← Parent Orchestrator
-│  ├─ CoreLayout.css          
-│  ├─ CoreLayout.tokens.css   ← CSS tokens (single source of truth for breakpoints)
-│  ├─ header/                 ← Child (independen)
-│  ├─ toolbar/                ← Child (independen)
-│  └─ card-grid/              ← Child (Card + Grid + Terminal + Definition)
-│
-├─ src/                       ← root control center app
-│  ├─ engine/                 ← SEMUA logic (domain, data, process orchestration)
-│  │  ├─ index.ts             ← parent orchestrator
-│  │  ├─ contracts.ts         ← shared types
-│  │  ├─ children/            ← feature children (FLAT FILES ONLY)
-│  │  │  ├─ projectLifecycle.ts
-│  │  │  ├─ projectRefresh.ts
-│  │  │  └─ quickKill.ts
-│  │  └─ [domain/data flat files...]
-│  ├─ ControlCenterScreen.tsx ← Composition root (compose engine → ui props)
-│  └─ App.tsx
-│
-├─ apps/                      ← Target workspaces managed by root
-├─ config/                    ← app-ports.lock.json
-└─ scripts/                   ← Vite middleware plugin (project-manager, process, dll)
-```
-
----
-
-## Prinsip Arsitektur Wajib
-
-1. **Flat Logic di Engine**: Semua module feature di `src/engine/children/` adalah FLAT FILE (`.ts`). Tidak boleh ada subfolder.
-2. **UI Component Encapsulation**: 
-   - `ui/header/`, `ui/toolbar/`, dan `ui/card-grid/` tidak saling mengetahui. 
-   - Komponen UI dilarang keras meng-import antar *children sibling*.
-   - Semua *definition file* hanya boleh dipakai oleh komponen *child* di folder yang sama.
-   - Semua rules di-enforce oleh `tooling/eslint/controlCenterBoundaryConfigs.ts`.
-3. **No Presenter**: `ControlCenterScreen.tsx` bertugas memanggil engine, melakukan polling, memegang *state*, dan mengirimkan *props* langsung ke `ui/CoreLayout`.
-4. **Build Gate Validation**: `npm run typecheck`, `npm run lint`, dan `npm run test` dijamin selalu hijau.
-
----
-
-## File yang Harus Dibaca (Canonical Documentation)
-
-1. `.ai/plan.md` — Arsitektur canonical sistem, system design (scripts vs root vs apps).
-2. `.ai/coreui_analysis.md` — Desain detail untuk lapisan antarmuka UI (CoreUI encapsulation).
+**Fokus Selanjutnya**:
+Pengembangan *feature* baru di dalam target `apps/`, atau perbaikan UI spesifik lainnya yang dibebankan kepada komponen *child* masing-masing. Arsitektur *engine* dan layout saat ini sangat stabil.

@@ -1,3 +1,10 @@
+/**
+ * ARCHITECTURE RULE:
+ * This is the Parent UI Orchestrator. DO NOT WRITE PRESENTATION LOGIC HERE.
+ * This component's sole responsibility is grid layout and composition of its Children
+ * (Header, Toolbar, CardGrid). It MUST NOT inspect the ViewModel to perform logical
+ * transformations. All such feature logic belongs inside the respective Child component.
+ */
 import { Alert, Button } from 'antd';
 
 import type { ControlCenterViewModel } from '../src/engine/contracts';

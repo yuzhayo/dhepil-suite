@@ -1,3 +1,10 @@
+/**
+ * ARCHITECTURE RULE:
+ * This is the Parent Composition Root. DO NOT WRITE PRESENTATION LOGIC HERE.
+ * This file should only act as a dumb pass-through mapping Engine state to ViewModels.
+ * All feature logic (such as filtering, formatting, or conditional UI behavior) 
+ * MUST be encapsulated inside the respective Child components (e.g. ui/card-grid/Terminal.tsx).
+ */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ControlCenterRuntime,
@@ -115,9 +122,13 @@ function createTags(project: ProjectSummary): readonly TagViewModel[] {
   return tags;
 }
 
-function createTerminalViewModel(logs: readonly string[]): TerminalViewModel {
+function createTerminalViewModel(
+  logs: readonly string[],
+  status: ProjectStatus,
+): TerminalViewModel {
   const lines = logs.slice(-MAX_RENDERED_LOG_LINES);
   return {
+    status,
     lines,
     truncated: logs.length > MAX_RENDERED_LOG_LINES,
     maxLines: MAX_RENDERED_LOG_LINES,
@@ -167,7 +178,7 @@ function createProjectCardViewModel(
     alerts: createAlerts(project),
     tags: createTags(project),
     actions,
-    terminal: createTerminalViewModel(project.logs),
+    terminal: createTerminalViewModel(project.logs, project.status),
     url: project.url,
   };
 }

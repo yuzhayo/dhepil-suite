@@ -10,9 +10,9 @@
   --layout-grid-terminal-flex: 1 1 auto;
   --layout-grid-terminal-height: auto;
   --layout-list-terminal-height: 126px;
-  --layout-list-card-columns: minmax(280px, 0.65fr) minmax(320px, 1fr);
+  --layout-list-card-columns: minmax(300px, max-content) 1fr;
   --layout-list-terminal-column: 2;
-  --layout-list-terminal-row: 1 / 4;
+  --layout-list-terminal-row: 1 / 5;
   --layout-header-direction: row;
   --layout-header-gap: 16px;
   --layout-header-padding: 16px 0 14px;
@@ -37,7 +37,7 @@
 
 @media (max-width: 900px) {
   .control-center-layout {
-    --layout-list-card-columns: minmax(230px, 0.7fr) minmax(300px, 1fr);
+    --layout-list-card-columns: minmax(240px, 0.5fr) 1fr;
     --layout-toolbar-columns: minmax(180px, 1fr) minmax(150px, 200px) auto auto;
     --layout-toolbar-summary-column: 1 / -1;
     --layout-toolbar-summary-align: left;
