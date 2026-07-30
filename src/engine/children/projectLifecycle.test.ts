@@ -4,7 +4,6 @@ import {
   startAndOpenProject,
   stopProject,
   StartupReadinessTimeoutError,
-  StartupReadinessCancelledError,
 } from './projectLifecycle';
 import type { ProjectSummary, ProjectManagerClient, ProjectWindow } from '../contracts';
 

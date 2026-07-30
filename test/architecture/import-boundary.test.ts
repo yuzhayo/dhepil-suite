@@ -8,179 +8,92 @@ async function lintVirtualFile(filePath: string, source: string) {
   return result.messages;
 }
 
-describe('control-center import boundaries', () => {
+describe('architecture import boundaries', () => {
   // ESLint lazily loads the TypeScript flat config (via jiti) on the first lint,
   // which can take tens of seconds. Warm it up once so individual cases stay fast.
   beforeAll(async () => {
-    await lintVirtualFile('src/features/control-center/ui/grid/warmup.ts', 'export const x = 1;');
+    await lintVirtualFile('src/engine/warmup.ts', 'export const x = 1;');
   }, 120_000);
 
+  // ── Forbidden imports ──
+
   const forbiddenCases = [
-    ['ui → data', 'src/features/control-center/ui/grid/fixture.ts', "import '../../data/client';"],
+    // engine/ must not import ui/, App.tsx, apps/, scripts/
     [
-      'ui → domain',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../domain/projectStatus';",
+      'engine → ui',
+      'src/engine/fixture.ts',
+      "import '../../ui/ProjectCard';",
     ],
     [
-      'nested ui → domain',
-      'src/features/control-center/ui/card/internal/fixture.ts',
-      "import '../../../domain/projectStatus';",
+      'engine → App.tsx',
+      'src/engine/fixture.ts',
+      "import '../App';",
     ],
     [
-      'ui → raw feature types',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import type { ProjectSummary } from '../../types';",
+      'engine → apps',
+      'src/engine/fixture.ts',
+      "import '../../apps/dhepil/main';",
     ],
     [
-      'ui → controller',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../application/controller/client';",
+      'engine → scripts',
+      'src/engine/fixture.ts',
+      "import '../../scripts/project-manager';",
     ],
     [
-      'ui → commands',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../application/commands/client';",
+      'engine → ControlCenterScreen',
+      'src/engine/fixture.ts',
+      "import '../ControlCenterScreen';",
+    ],
+
+    // engine/children/ must not import sibling children
+    [
+      'child → sibling child',
+      'src/engine/children/projectLifecycle.ts',
+      "import './projectRefresh';",
     ],
     [
-      'ui → extensions',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../application/extensions/client';",
+      'child → sibling quickKill',
+      'src/engine/children/projectRefresh.ts',
+      "import './quickKill';",
+    ],
+
+    // engine/children/ inherits engine restrictions
+    [
+      'child → ui',
+      'src/engine/children/fixture.ts',
+      "import '../../../ui/ProjectCard';",
     ],
     [
-      'ui → presenters',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../application/presenters/createGridViewModel';",
+      'child → apps',
+      'src/engine/children/fixture.ts',
+      "import '../../../apps/dhepil/main';",
     ],
     [
-      'ui → composition',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../application/composition/createControlCenterRuntime';",
+      'child → scripts',
+      'src/engine/children/fixture.ts',
+      "import '../../../scripts/project-manager';",
+    ],
+
+    // ui/ must not import engine modules (except contracts)
+    [
+      'ui → engine httpClient',
+      'ui/fixture.ts',
+      "import '../src/engine/httpClient';",
     ],
     [
-      'ui → ports',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import type { ProjectManagerClient } from '../../application/ports/ProjectManagerClient';",
+      'ui → engine index',
+      'ui/fixture.ts',
+      "import '../src/engine/index';",
     ],
     [
-      'ui → presentation limits',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import { MAX_RENDERED_LOG_LINES } from '../../application/presentationLimits';",
-    ],
-    [
-      'ui → screens',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../screens/ControlCenterScreen';",
+      'ui → engine children',
+      'ui/fixture.ts',
+      "import '../src/engine/children/projectLifecycle';",
     ],
     [
       'ui → scripts',
-      'src/features/control-center/ui/grid/fixture.ts',
-      "import '../../../../../scripts/project-manager';",
-    ],
-    ['domain → react', 'src/features/control-center/domain/fixture.ts', "import 'react';"],
-    ['domain → antd', 'src/features/control-center/domain/fixture.ts', "import 'antd';"],
-    ['domain → data', 'src/features/control-center/domain/fixture.ts', "import '../data/client';"],
-    ['domain → ui', 'src/features/control-center/domain/fixture.ts', "import '../ui/client';"],
-    [
-      'domain → application',
-      'src/features/control-center/domain/fixture.ts',
-      "import '../application/client';",
-    ],
-    [
-      'domain → scripts',
-      'src/features/control-center/domain/fixture.ts',
-      "import '../../../scripts/project-manager';",
-    ],
-    [
-      'extensions → sibling module',
-      'src/features/control-center/application/extensions/modules/project-refresh/index.ts',
-      "import '../quick-kill';",
-    ],
-    [
-      'extensions → ui',
-      'src/features/control-center/application/extensions/fixture.ts',
-      "import '../../ui/client';",
-    ],
-    [
-      'extensions → scripts',
-      'src/features/control-center/application/extensions/fixture.ts',
-      "import '../../../../scripts/project-manager';",
-    ],
-    ['data → ui', 'src/features/control-center/data/fixture.ts', "import '../ui/client';"],
-    [
-      'data → controller',
-      'src/features/control-center/data/fixture.ts',
-      "import '../application/controller/client';",
-    ],
-    [
-      'data → commands',
-      'src/features/control-center/data/fixture.ts',
-      "import '../application/commands/client';",
-    ],
-    [
-      'data → extensions',
-      'src/features/control-center/data/fixture.ts',
-      "import '../application/extensions/client';",
-    ],
-    [
-      'data → composition',
-      'src/features/control-center/data/fixture.ts',
-      "import '../application/composition/client';",
-    ],
-    [
-      'data → scripts',
-      'src/features/control-center/data/fixture.ts',
-      "import '../../../scripts/project-manager';",
-    ],
-    [
-      'controller → data',
-      'src/features/control-center/application/controller/fixture.ts',
-      "import '../../data/client';",
-    ],
-    [
-      'controller → ui',
-      'src/features/control-center/application/controller/fixture.ts',
-      "import '../../ui/client';",
-    ],
-    [
-      'controller → scripts',
-      'src/features/control-center/application/controller/fixture.ts',
-      "import '../../../../scripts/project-manager';",
-    ],
-    [
-      'composition → ui',
-      'src/features/control-center/application/composition/fixture.ts',
-      "import '../../ui/client';",
-    ],
-    [
-      'composition → screens',
-      'src/features/control-center/application/composition/fixture.ts',
-      "import '../../screens/ControlCenterScreen';",
-    ],
-    [
-      'screen → AntD',
-      'src/features/control-center/screens/fixture.tsx',
-      "import { Button } from 'antd';",
-    ],
-    [
-      'screen → data',
-      'src/features/control-center/screens/fixture.tsx',
-      "import '../data/httpProjectManagerClient';",
-    ],
-    [
-      'screen → commands',
-      'src/features/control-center/screens/fixture.tsx',
-      "import '../application/commands/refreshProjects';",
-    ],
-    [
-      'screen → presenter',
-      'src/features/control-center/screens/fixture.tsx',
-      "import '../application/presenters/createControlCenterViewModel';",
-    ],
-    [
-      'screen → peer UI',
-      'src/features/control-center/screens/fixture.tsx',
-      "import '../ui/toolbar/ProjectToolbar';",
+      'ui/fixture.ts',
+      "import '../scripts/project-manager';",
     ],
   ] as const;
 
@@ -196,53 +109,68 @@ describe('control-center import boundaries', () => {
     },
   );
 
-  it('allows the composition → data edge', async () => {
-    const messages = await lintVirtualFile(
-      'src/features/control-center/application/composition/fixture.ts',
-      "import '../../data/httpProjectManagerClient';",
-    );
-    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
+  // ── Allowed imports ──
+
+  it.each([
+    // engine may import its own modules
+    ['engine internal (contracts)', "import type { ProjectSummary } from './contracts';"],
+    ['engine internal (domain)', "import { deriveActionPolicy } from './projectActionPolicy';"],
+    ['engine internal (data)', "import { createHttpClient } from './httpClient';"],
+  ])('allows engine to import %s', async (_name, source) => {
+    const messages = await lintVirtualFile('src/engine/fixture.ts', source);
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
   it.each([
-    [
-      'application view-model contract',
-      "import type { ProjectGridViewModel } from '../../application/view-models';",
-    ],
+    // engine/children may import parent engine modules
+    ['parent contracts', "import type { ProjectSummary } from '../contracts';"],
+    ['parent httpClient', "import { createHttpClient } from '../httpClient';"],
+    ['parent domain', "import { deriveActionPolicy } from '../projectActionPolicy';"],
+  ])('allows a child to import %s', async (_name, source) => {
+    const messages = await lintVirtualFile(
+      'src/engine/children/projectLifecycle.ts',
+      source,
+    );
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
+  });
+
+  it('allows contracts.ts to import from projectCollection.ts', async () => {
+    const messages = await lintVirtualFile(
+      'src/engine/contracts.ts',
+      "import type { ProjectSortMode } from './projectCollection';",
+    );
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
+  });
+
+  it.each([
+    // ui may import peer UI, local CSS, antd, and engine/contracts (shared types)
     ['AntD', "import { Empty } from 'antd';"],
-    ['local UI owner', "import { gridDefinition } from './gridDefinition';"],
-    ['peer UI owner', "import { ProjectCard } from '../card/ProjectCard';"],
+    ['peer UI component', "import { ProjectCard } from './ProjectCard';"],
     ['local CSS', "import './ProjectGrid.css';"],
-  ])('allows UI to import its %s', async (_name, source) => {
-    const messages = await lintVirtualFile(
-      'src/features/control-center/ui/grid/fixture.ts',
-      source,
-    );
-    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
+    ['local definition', "import { gridDefinition } from './gridDefinition';"],
+    ['engine contracts (shared types)', "import type { ProjectCardViewModel } from '../src/engine/contracts';"],
+  ])('allows ui to import %s', async (_name, source) => {
+    const messages = await lintVirtualFile('ui/fixture.ts', source);
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
   it.each([
-    ['internal extension file', "import './internal';"],
-    ['public extension contract', "import '../../contracts';"],
-  ])('allows an extension module to import its %s', async (_name, source) => {
-    const messages = await lintVirtualFile(
-      'src/features/control-center/application/extensions/modules/project-refresh/index.ts',
-      source,
-    );
-    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
+    // ControlCenterScreen may import engine and ui (composition root)
+    ['engine index', "import { useEngine } from './engine';"],
+    ['engine contracts', "import type { ProjectSummary } from './engine/contracts';"],
+    ['ui layout', "import { ControlCenterLayout } from '../ui/ControlCenterLayout';"],
+    ['ui toolbar', "import { ProjectToolbar } from '../ui/ProjectToolbar';"],
+  ])('allows ControlCenterScreen to import %s', async (_name, source) => {
+    const messages = await lintVirtualFile('src/ControlCenterScreen.tsx', source);
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
-  it.each([
-    [
-      'controller boundary',
-      "import { useControlCenterController } from '../application/controller/useControlCenterController';",
-    ],
-    ['layout boundary', "import { ControlCenterLayout } from '../ui/layout/ControlCenterLayout';"],
-  ])('allows a screen to import the %s', async (_name, source) => {
+  // Test files should not be restricted
+  it('allows test files in engine/children/ to import siblings', async () => {
     const messages = await lintVirtualFile(
-      'src/features/control-center/screens/fixture.tsx',
-      source,
+      'src/engine/children/projectLifecycle.test.ts',
+      "import './projectRefresh';",
     );
-    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([]);
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 });

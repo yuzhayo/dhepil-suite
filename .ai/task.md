@@ -83,11 +83,13 @@ Hapus subfolder di dalam engine, jadikan flat files.
 
 ## Phase F — Update ESLint Boundaries
 
-- [ ] Update `tooling/eslint/controlCenterBoundaryConfigs.ts`
+- [x] Update `tooling/eslint/controlCenterBoundaryConfigs.ts`
   - engine → tidak boleh import dari `ui/`, `src/App.tsx`, atau `apps/`
-  - `ui/` → tidak boleh import dari `engine/` langsung
+  - `ui/` → tidak boleh import dari `engine/` langsung (except contracts for shared types)
   - `ControlCenterScreen.tsx` → boleh import dari `engine/` dan `ui/`
-- [ ] Verify: `npm run lint`
+- [x] Rewrite `test/architecture/import-boundary.test.ts` — 31 fixture assertions for new architecture
+- [x] Verify: `npm run lint`
+- [x] Verify: `npm run test` — 104/104 passed
 
 ## Phase G — Full Validation Gate
 
