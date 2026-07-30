@@ -24,26 +24,26 @@ Lihat target lengkap: [implementation_plan.md](./implementation_plan.md)
 
 ---
 
-## Phase A — Flatten `src/engine/`
+## Phase A — Flatten `src/engine/` ✅
 
 Hapus subfolder di dalam engine, jadikan flat files.
 
-- [ ] Flatten `engine/children/project-lifecycle/` → `engine/children/projectLifecycle.ts`
+- [x] Flatten `engine/children/project-lifecycle/` → `engine/children/projectLifecycle.ts`
   - Merge: `projectLifecycleChild.ts` + `startupReadinessPolicy.ts` + `stopProject.ts`
-- [ ] Flatten `engine/children/project-refresh/` → `engine/children/projectRefresh.ts`
-- [ ] Flatten `engine/children/quick-kill/` → `engine/children/quickKill.ts`
-- [ ] Flatten `engine/data/*.ts` → flat di `engine/` (rename sesuai target)
+- [x] Flatten `engine/children/project-refresh/` → `engine/children/projectRefresh.ts`
+- [x] Flatten `engine/children/quick-kill/` → `engine/children/quickKill.ts`
+- [x] Flatten `engine/data/*.ts` → flat di `engine/` (rename sesuai target)
   - `httpProjectManagerClient.ts` → `engine/httpClient.ts`
   - `browserProjectWindow.ts` → `engine/browserWindow.ts`
   - `projectManagerResponse.ts` → `engine/responseParser.ts`
-- [ ] Flatten `engine/domain/*.ts` → flat di `engine/`
+- [x] Flatten `engine/domain/*.ts` → flat di `engine/`
   - `projectActionPolicy.ts` → `engine/projectActionPolicy.ts`
   - `projectCollection.ts` → `engine/projectCollection.ts`
   - `projectStatus.ts` → `engine/projectStatus.ts`
-- [ ] Hapus `engine/extensions/` seluruhnya (ganti dengan children flat)
-- [ ] Update `engine/createEngine.ts` → tidak lagi pakai extensions host
-- [ ] Update `engine/index.ts` → barrel exports semua flat files
-- [ ] Verify: `npm run typecheck`
+- [x] Hapus `engine/extensions/` seluruhnya (ganti dengan children flat)
+- [x] Update `engine/createEngine.ts` → tidak lagi pakai extensions host
+- [x] Update `engine/index.ts` → barrel exports semua flat files
+- [x] Verify: `npm run typecheck`
 
 ## Phase B — Pindah UI ke Monorepo Root
 

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ControlCenterRuntime,
   createControlCenterRuntime,
-  type ControlCenterActionContext,
   canQuickKillProject,
   canStartProject,
   canStopProject,
@@ -19,11 +18,15 @@ import type { ControlCenterViewModel } from '../view-models';
 
 export const CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS = 1500;
 
-const localActionIds = [
+const availableActionIds = [
+  'project.quick-kill',
+  'project.refresh',
   'project.search.change',
   'project.sort.change',
+  'project.start-open',
+  'project.stop',
   'project.view.change',
-] as const;
+];
 
 interface RefreshOptions {
   signal?: AbortSignal;
@@ -266,32 +269,6 @@ export function useControlCenterController(
     [runProjectAction, runtime],
   );
 
-  const actionContext = useMemo<ControlCenterActionContext>(
-    () => ({
-      refresh: refreshCapability,
-      startAndOpen: startAndOpenCapability,
-      stop: stopCapability,
-      quickKill: quickKillCapability,
-      setPending,
-      reportError,
-    }),
-    [
-      quickKillCapability,
-      refreshCapability,
-      reportError,
-      setPending,
-      startAndOpenCapability,
-      stopCapability,
-    ],
-  );
-  // `actionContext` is memoized from stable callbacks, so the host is created
-  // once. `react-hooks/refs` flags this because the context's `setPending` /
-  // `reportError` callbacks read refs, but those refs are only read when an
-  // extension action is dispatched (event time), never during render, which is
-  // exactly the invariant the rule protects.
-  // eslint-disable-next-line react-hooks/refs -- context callbacks read refs at dispatch time, not during render
-  const host = useMemo(() => runtime.createHost(actionContext), [actionContext, runtime]);
-
   useEffect(() => {
     mountedRef.current = true;
     const actionControllers = actionControllersRef.current;
@@ -336,17 +313,35 @@ export function useControlCenterController(
             reportError(new Error('View mode tidak dikenal.'));
           }
           return;
-        default:
-          void host.dispatch(actionId, payload);
+        case 'project.refresh':
+          void refreshCapability().catch(reportError);
+          return;
+        case 'project.start-open':
+          if (typeof payload === 'string') {
+            void startAndOpenCapability(payload).catch(reportError);
+          }
+          return;
+        case 'project.stop':
+          if (typeof payload === 'string') {
+            void stopCapability(payload).catch(reportError);
+          }
+          return;
+        case 'project.quick-kill':
+          if (typeof payload === 'string') {
+            void quickKillCapability(payload).catch(reportError);
+          }
+          return;
       }
     },
-    [host, reportError],
+    [
+      quickKillCapability,
+      refreshCapability,
+      reportError,
+      startAndOpenCapability,
+      stopCapability,
+    ],
   );
 
-  const availableActionIds = useMemo(
-    () => [...new Set([...host.actionIds, ...localActionIds])].sort(),
-    [host.actionIds],
-  );
   const viewModel = useMemo(
     () =>
       createControlCenterViewModel({
@@ -360,7 +355,6 @@ export function useControlCenterController(
         refreshPending,
       }),
     [
-      availableActionIds,
       loading,
       pageError,
       pendingActions,

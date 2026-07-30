@@ -1,11 +1,11 @@
-import type { ProjectManagerClient } from '../contracts';
+import type { ProjectManagerClient } from './contracts';
 import {
   parseActionResponse,
   parseProjectsResponse,
   ProjectManagerRequestError,
   type ProjectManagerAction,
   type ProjectManagerRequestErrorKind,
-} from './projectManagerResponse';
+} from './responseParser';
 
 export function httpProjectManagerClient(): ProjectManagerClient {
   return {

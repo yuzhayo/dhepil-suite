@@ -1,5 +1,5 @@
-import { canQuickKillProject } from '../../domain/projectActionPolicy';
-import type { ProjectSummary, ProjectManagerClient } from '../../contracts';
+import { canQuickKillProject } from '../projectActionPolicy';
+import type { ProjectSummary, ProjectManagerClient } from '../contracts';
 
 export interface QuickKillProjectInput {
   project: ProjectSummary;

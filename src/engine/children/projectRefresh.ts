@@ -1,4 +1,4 @@
-import type { ProjectManagerClient } from '../../contracts';
+import type { ProjectManagerClient } from '../contracts';
 
 export async function refreshProjects(
   client: ProjectManagerClient,

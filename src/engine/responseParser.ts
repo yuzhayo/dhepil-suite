@@ -1,4 +1,4 @@
-import type { ProjectStatus, ProjectSummary } from '../contracts';
+import type { ProjectStatus, ProjectSummary } from './contracts';
 
 export type ProjectManagerAction = 'list' | 'start' | 'stop';
 export type ProjectManagerRequestErrorKind =

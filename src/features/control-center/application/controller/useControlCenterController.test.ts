@@ -1,17 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import type { ProjectSummary, ControlCenterRuntime, ControlCenterActionContext } from '../../../../engine';
+import type { ProjectSummary, ControlCenterRuntime } from '../../../../engine';
 import { StartupReadinessTimeoutError } from '../../../../engine';
-import { createExtensionHost } from '../../../../engine/extensions/createExtensionHost';
-import projectLifecycleExtension from '../../../../engine/extensions/modules/project-lifecycle';
-import projectRefreshExtension from '../../../../engine/extensions/modules/project-refresh';
-import quickKillExtension from '../../../../engine/extensions/modules/quick-kill';
 import {
   CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS,
   useControlCenterController,
 } from './useControlCenterController';
-
-const coreExtensions = [projectLifecycleExtension, projectRefreshExtension, quickKillExtension];
 
 function project(id: string, overrides: Partial<ProjectSummary> = {}): ProjectSummary {
   return {
@@ -43,8 +37,6 @@ function fakeRuntime(overrides: Partial<ControlCenterRuntime> = {}): ControlCent
     startAndOpen: vi.fn(async () => undefined),
     stop: vi.fn(async () => undefined),
     quickKill: vi.fn(async () => undefined),
-    createHost: (context: ControlCenterActionContext) =>
-      createExtensionHost(coreExtensions, context),
     ...overrides,
   };
 }

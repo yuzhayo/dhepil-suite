@@ -1,4 +1,4 @@
-import type { ProjectStatus } from '../contracts';
+import type { ProjectStatus } from './contracts';
 import {
   STOPPABLE_STATUSES,
   isActiveProject as classifyActiveProject,

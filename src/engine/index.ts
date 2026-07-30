@@ -14,13 +14,6 @@ export {
   type ControlCenterRuntimeDependencies,
 } from './createEngine';
 
-export type {
-  ControlCenterActionContext,
-  ControlCenterExtension,
-  ExtensionHost,
-  ExtensionDispatchResult,
-} from './extensions/contracts';
-
 // Domain re-exports
 export {
   canStartProject,
@@ -30,7 +23,7 @@ export {
   isActiveProject,
   isOpenReadyProject,
   type ProjectActionContext,
-} from './domain/projectActionPolicy';
+} from './projectActionPolicy';
 
 export {
   isStartupTerminalFailure,
@@ -40,9 +33,9 @@ export {
   STOPPABLE_STATUSES,
   STATUS_CLASSIFICATION,
   type StatusClassification,
-} from './domain/projectStatus';
+} from './projectStatus';
 
-export { StartupReadinessTimeoutError } from './children/project-lifecycle/startupReadinessPolicy';
+export { StartupReadinessTimeoutError } from './children/projectLifecycle';
 
 export {
   selectProjects,
@@ -50,4 +43,4 @@ export {
   isProjectViewMode,
   type ProjectSortMode,
   type ProjectViewMode,
-} from './domain/projectCollection';
+} from './projectCollection';

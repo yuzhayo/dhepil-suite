@@ -1,21 +1,14 @@
-import { browserProjectWindow } from './data/browserProjectWindow';
-import { httpProjectManagerClient } from './data/httpProjectManagerClient';
+import { browserProjectWindow } from './browserWindow';
+import { httpProjectManagerClient } from './httpClient';
 import type { ProjectSummary, ProjectManagerClient, ProjectWindow } from './contracts';
-import { quickKillProject } from './children/quick-kill/quickKillChild';
-import { refreshProjects } from './children/project-refresh/projectRefreshChild';
+import { quickKillProject } from './children/quickKill';
+import { refreshProjects } from './children/projectRefresh';
 import {
   startAndOpenProject,
+  stopProject,
   createStartupReadinessRunner,
   type StartupReadinessRunner,
-} from './children/project-lifecycle/projectLifecycleChild';
-import { stopProject } from './children/project-lifecycle/stopProject';
-import type {
-  ControlCenterActionContext,
-  ControlCenterExtension,
-  ExtensionHost,
-} from './extensions/contracts';
-import { createExtensionHost } from './extensions/createExtensionHost';
-import { loadExtensions } from './extensions/loadExtensions';
+} from './children/projectLifecycle';
 
 export interface ControlCenterRuntime {
   refresh(signal?: AbortSignal): Promise<ProjectSummary[]>;
@@ -31,14 +24,12 @@ export interface ControlCenterRuntime {
     pending: boolean;
     signal?: AbortSignal;
   }): Promise<void>;
-  createHost(context: ControlCenterActionContext): ExtensionHost;
 }
 
 export interface ControlCenterRuntimeDependencies {
   client?: ProjectManagerClient;
   projectWindow?: ProjectWindow;
   readiness?: StartupReadinessRunner;
-  extensions?: readonly ControlCenterExtension[];
 }
 
 export function createControlCenterRuntime(
@@ -47,7 +38,6 @@ export function createControlCenterRuntime(
   const client = dependencies.client ?? httpProjectManagerClient();
   const projectWindow = dependencies.projectWindow ?? browserProjectWindow();
   const readiness = dependencies.readiness ?? createStartupReadinessRunner();
-  const extensions = dependencies.extensions ?? loadExtensions();
 
   return {
     refresh(signal) {
@@ -66,9 +56,6 @@ export function createControlCenterRuntime(
     },
     quickKill(input) {
       return quickKillProject({ ...input, client });
-    },
-    createHost(context) {
-      return createExtensionHost(extensions, context);
     },
   };
 }

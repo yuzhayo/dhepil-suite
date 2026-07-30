@@ -1,4 +1,4 @@
-import type { ProjectSummary } from '../contracts';
+import type { ProjectSummary } from './contracts';
 import { ACTIVE_STATUSES } from './projectStatus';
 
 export type ProjectSortMode = 'name-asc' | 'name-desc' | 'port-asc' | 'active-first';

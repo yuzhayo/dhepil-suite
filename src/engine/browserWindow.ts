@@ -1,4 +1,4 @@
-import type { ProjectWindow, PreparedProjectWindow } from '../contracts';
+import type { ProjectWindow, PreparedProjectWindow } from './contracts';
 
 export function browserProjectWindow(): ProjectWindow {
   return {
