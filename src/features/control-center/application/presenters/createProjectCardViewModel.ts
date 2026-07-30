@@ -1,10 +1,10 @@
-import type { ProjectSummary } from '../../types';
 import {
+  type ProjectSummary,
   canOpenProject,
   canQuickKillProject,
   canStartProject,
   canStopProject,
-} from '../../domain/projectActionPolicy';
+} from '../../../../engine';
 import type {
   AlertViewModel,
   CardActionViewModel,

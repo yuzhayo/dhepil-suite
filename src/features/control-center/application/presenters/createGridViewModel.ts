@@ -1,5 +1,4 @@
-import type { ProjectViewMode } from '../../domain/projectCollection';
-import type { ProjectSummary } from '../../types';
+import { type ProjectViewMode, type ProjectSummary } from '../../../../engine';
 import type { ProjectGridViewModel } from '../view-models';
 import { createProjectCardViewModel } from './createProjectCardViewModel';
 

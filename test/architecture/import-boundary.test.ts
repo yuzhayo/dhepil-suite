@@ -1,5 +1,5 @@
 import { ESLint } from 'eslint';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const eslint = new ESLint({ cwd: process.cwd() });
 
@@ -9,6 +9,12 @@ async function lintVirtualFile(filePath: string, source: string) {
 }
 
 describe('control-center import boundaries', () => {
+  // ESLint lazily loads the TypeScript flat config (via jiti) on the first lint,
+  // which can take tens of seconds. Warm it up once so individual cases stay fast.
+  beforeAll(async () => {
+    await lintVirtualFile('src/features/control-center/ui/grid/warmup.ts', 'export const x = 1;');
+  }, 120_000);
+
   const forbiddenCases = [
     ['ui → data', 'src/features/control-center/ui/grid/fixture.ts', "import '../../data/client';"],
     [

@@ -1,4 +1,4 @@
-import type { ProjectStatus } from '../../types';
+import type { ProjectStatus } from '../../../../engine';
 import type { SemanticTone, StatusViewModel } from '../view-models';
 
 const STATUS_PRESENTATION = {

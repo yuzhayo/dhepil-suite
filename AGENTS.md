@@ -94,7 +94,7 @@ data, and domain ownership:
 - New logic modules must use the extension contract and remain local to the feature;
   they cannot execute arbitrary shell commands or access process APIs.
 
-`plan.md` is the single canonical implementation plan. Do not create a second
+`.ai/plan.md` is the single canonical implementation plan. Do not create a second
 parallel architecture plan for the same control-center feature.
 
 ## Testing
@@ -110,7 +110,7 @@ React 19, antd 6.5.1, TypeScript 6, Vite 7, Vitest 4, Prettier 3, ESLint 9. `"ty
 
 ## References
 
-- `plan.md` — canonical implementation plan (architecture, status model, phases, acceptance tests)
+- `.ai/plan.md` — canonical implementation plan (architecture, status model, phases, acceptance tests)
 - `apps/<name>/AGENTS.md` — per-app ownership rules
 - Adding an app: create `apps/<id>/app.manifest.json` + `package.json` with `dev` script; no registry edit needed. Card appears on next poll.
 - `scripts/` module deps: `project-contracts` (types) → `project-discovery`/`project-port-registry`/`project-process` → `project-manager` (orchestrator). No circular imports. No imports from `src/` or `apps/`.

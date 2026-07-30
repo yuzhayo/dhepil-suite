@@ -3,19 +3,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ControlCenterRuntime,
   createControlCenterRuntime,
-} from '../composition/createControlCenterRuntime';
-import type { ControlCenterActionContext } from '../extensions/contracts';
-import { createControlCenterViewModel } from '../presenters/createControlCenterViewModel';
-import type { ControlCenterViewModel } from '../view-models';
-import {
+  type ControlCenterActionContext,
   canQuickKillProject,
   canStartProject,
   canStopProject,
-} from '../../domain/projectActionPolicy';
-import type { ProjectSortMode, ProjectViewMode } from '../../domain/projectCollection';
-import { isProjectSortMode, isProjectViewMode } from '../../domain/projectCollection';
-import { isOpenReadyProject } from '../../domain/projectStatus';
-import type { ProjectSummary } from '../../types';
+  type ProjectSortMode,
+  type ProjectViewMode,
+  isProjectSortMode,
+  isProjectViewMode,
+  isOpenReadyProject,
+  type ProjectSummary,
+} from '../../../../engine';
+import { createControlCenterViewModel } from '../presenters/createControlCenterViewModel';
+import type { ControlCenterViewModel } from '../view-models';
 
 export const CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS = 1500;
 
@@ -44,9 +44,9 @@ export interface ControlCenterController {
 export function useControlCenterController(
   runtimeOverride?: ControlCenterRuntime,
 ): ControlCenterController {
-  const runtimeRef = useRef<ControlCenterRuntime | undefined>(undefined);
-  runtimeRef.current ??= runtimeOverride ?? createControlCenterRuntime();
-  const runtime = runtimeRef.current;
+  const [runtime] = useState<ControlCenterRuntime>(
+    () => runtimeOverride ?? createControlCenterRuntime(),
+  );
 
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -284,6 +284,12 @@ export function useControlCenterController(
       stopCapability,
     ],
   );
+  // `actionContext` is memoized from stable callbacks, so the host is created
+  // once. `react-hooks/refs` flags this because the context's `setPending` /
+  // `reportError` callbacks read refs, but those refs are only read when an
+  // extension action is dispatched (event time), never during render, which is
+  // exactly the invariant the rule protects.
+  // eslint-disable-next-line react-hooks/refs -- context callbacks read refs at dispatch time, not during render
   const host = useMemo(() => runtime.createHost(actionContext), [actionContext, runtime]);
 
   useEffect(() => {

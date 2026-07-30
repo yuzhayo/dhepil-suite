@@ -1,7 +1,10 @@
-import type { ProjectSortMode, ProjectViewMode } from '../../domain/projectCollection';
-import { canQuickKillProject } from '../../domain/projectActionPolicy';
-import { isActiveProject } from '../../domain/projectStatus';
-import type { ProjectSummary } from '../../types';
+import {
+  type ProjectSortMode,
+  type ProjectViewMode,
+  canQuickKillProject,
+  isActiveProject,
+  type ProjectSummary,
+} from '../../../../engine';
 import type {
   ActiveServerItemViewModel,
   CardActionViewModel,

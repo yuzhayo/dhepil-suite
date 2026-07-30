@@ -1,6 +1,6 @@
 import { createProjectCardViewModel } from './createProjectCardViewModel';
 import { MAX_RENDERED_LOG_LINES } from '../presentationLimits';
-import type { ProjectStatus, ProjectSummary } from '../../types';
+import type { ProjectStatus, ProjectSummary } from '../../../../engine';
 
 const statuses: ProjectStatus[] = [
   'stopped',

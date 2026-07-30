@@ -2,8 +2,8 @@ import {
   selectProjects,
   type ProjectSortMode,
   type ProjectViewMode,
-} from '../../domain/projectCollection';
-import type { ProjectSummary } from '../../types';
+  type ProjectSummary,
+} from '../../../../engine';
 import type { AlertViewModel, ControlCenterViewModel, UiActionViewModel } from '../view-models';
 import { createGridViewModel } from './createGridViewModel';
 import { createHeaderViewModel } from './createHeaderViewModel';

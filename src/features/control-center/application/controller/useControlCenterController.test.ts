@@ -1,13 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import type { ProjectSummary } from '../../types';
-import { StartupReadinessTimeoutError } from '../commands/startupReadinessPolicy';
-import type { ControlCenterRuntime } from '../composition/createControlCenterRuntime';
-import type { ControlCenterActionContext } from '../extensions/contracts';
-import { createExtensionHost } from '../extensions/createExtensionHost';
-import projectLifecycleExtension from '../extensions/modules/project-lifecycle';
-import projectRefreshExtension from '../extensions/modules/project-refresh';
-import quickKillExtension from '../extensions/modules/quick-kill';
+import type { ProjectSummary, ControlCenterRuntime, ControlCenterActionContext } from '../../../../engine';
+import { StartupReadinessTimeoutError } from '../../../../engine';
+import { createExtensionHost } from '../../../../engine/extensions/createExtensionHost';
+import projectLifecycleExtension from '../../../../engine/extensions/modules/project-lifecycle';
+import projectRefreshExtension from '../../../../engine/extensions/modules/project-refresh';
+import quickKillExtension from '../../../../engine/extensions/modules/quick-kill';
 import {
   CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS,
   useControlCenterController,

@@ -1,5 +1,5 @@
 import { createControlCenterViewModel } from './createControlCenterViewModel';
-import type { ProjectSummary } from '../../types';
+import type { ProjectSummary } from '../../../../engine';
 
 const projects: ProjectSummary[] = [
   {

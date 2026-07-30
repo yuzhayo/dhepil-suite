@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import App from './App';
-import type { ProjectStatus } from './features/control-center/types';
+import type { ProjectStatus } from './engine';
 
 const projectsResponse = {
   projects: [

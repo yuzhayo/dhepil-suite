@@ -1,5 +1,5 @@
 import { createGridViewModel } from './createGridViewModel';
-import type { ProjectSummary } from '../../types';
+import type { ProjectSummary } from '../../../../engine';
 
 const project: ProjectSummary = {
   id: 'project-1',

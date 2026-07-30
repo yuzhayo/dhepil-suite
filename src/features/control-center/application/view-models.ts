@@ -1,5 +1,5 @@
-import type { ProjectSortMode, ProjectViewMode } from '../domain/projectCollection';
-import type { ProjectStatus } from '../types';
+import type { ProjectSortMode, ProjectViewMode } from '../../../engine';
+import type { ProjectStatus } from '../../../engine';
 
 export type SemanticTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
