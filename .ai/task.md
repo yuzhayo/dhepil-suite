@@ -73,13 +73,13 @@ Hapus subfolder di dalam engine, jadikan flat files.
 - [x] Hapus folder `src/features/`
 - [x] Verify: tidak ada import yang masih referensi `features/`
 
-## Phase E — Pindah + Update Tests
+## Phase E — Pindah + Update Tests ✅
 
-- [ ] Pindah test children ke `engine/children/*.test.ts`
-- [ ] Pindah test domain/data ke `engine/*.test.ts`
-- [ ] Update/hapus test presenter dan controller (digabung ke screen test jika perlu)
-- [ ] Update test UI → import dari `ui/` bukan `features/`
-- [ ] Verify: `npm run test`
+- [x] Pindah test children ke `engine/children/*.test.ts`
+- [x] Pindah test domain/data ke `engine/*.test.ts`
+- [x] Update/hapus test presenter dan controller (digabung ke screen test jika perlu)
+- [x] Update test UI → import dari `ui/` bukan `features/`
+- [x] Verify: `npm run test`
 
 ## Phase F — Update ESLint Boundaries
 
