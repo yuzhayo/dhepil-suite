@@ -68,9 +68,9 @@ graph TD
 
 ---
 
-## Next Action: Responsive & Pixel Audit
+## Status Aktual: Responsive & Pixel Fix (Selesai)
 
-Arsitektur foldernya sudah solid. Sisa pekerjaan di UI adalah **mengubah nilai-nilai hardcoded pixel dan memperbaiki overflow/stacking** yang dilaporkan user. 
-Implementasi harus difokuskan hanya pada:
-- Menambahkan media queries (`@media (max-width: 768px)` dan `480px`) secara terpusat di `CoreLayout.tokens.css`.
-- Mengonversi `padding: 16px` menjadi `padding: var(--layout-padding)` di dalam komponen agar responsif-nya bisa diatur otomatis oleh orchestrator.
+Arsitektur folder dan isu responsivitas (pixel overflow/stacking) telah diatasi sepenuhnya melalui *CSS Tokens*:
+1. **Flexbox Toolbar**: Toolbar menggunakan `flex-wrap` sehingga elemen tidak lagi ter-squish di layar sempit.
+2. **Strict 1:1 Grid dengan Batas**: Komponen `Card` menerapkan `aspect-ratio: 1/1` dan `max-height: 480px`. Hal ini menjaga grid tetap terlihat simetris berbentuk kotak-kotak rapi, dengan terminal box hitam (yang memiliki batas rentang dan `overflow: auto`) mengisi ruang dan *scrollable* dengan mandiri.
+3. **Pencegahan Overlap**: Menyematkan `width: 100%` pada `.project-card-ui` untuk mencegah anomali di mana tinggi konten (terminal text) memaksakan lebar kartu di luar kolom grid CSS, sehingga kartu tidak lagi saling menumpuk.

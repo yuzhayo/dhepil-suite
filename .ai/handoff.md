@@ -11,8 +11,8 @@ Project telah **SELESAI 100%** direstrukturisasi arsitekturnya.
 - **UI Layer** (`ui/` di monorepo root): Sudah 100% mengadopsi pola **CoreUI Parent-Children Orchestration**. Semua komponen dipisahkan ke dalam folder mandiri (`header/`, `toolbar/`, `card-grid/`) dan dienkapsulasi rapat dari komponen lain melalui *ESLint boundary rules*.
 - **Semua Test & Typecheck Lulus**.
 
-Fokus pengerjaan selanjutnya HANYALAH pengembangan *feature* baru atau penyesuaian UI *responsive design* (CSS tokens).
-
+Fokus pengerjaan selanjutnya HANYALAH pengembangan *feature* baru atau penulisan kode app-specific di dalam target `apps/`.
+Struktur inti (engine maupun UI responsive) saat ini sudah sangat stabil dan tidak butuh perombakan lagi.
 ---
 
 ## Arsitektur Saat Ini (Final)
