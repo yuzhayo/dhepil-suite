@@ -81,7 +81,7 @@ export const controlCenterBoundaryConfigs = [
               message: 'Engine children must not import root runtime scripts.',
             },
             {
-              regex: '^\\./' ,
+              regex: '^\\./',
               message:
                 'Engine children must not import sibling children — only the parent orchestrator may wire children together.',
             },

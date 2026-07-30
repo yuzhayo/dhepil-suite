@@ -541,21 +541,16 @@ export function ControlCenterScreen({
           return;
       }
     },
-    [
-      quickKillCapability,
-      refreshCapability,
-      reportError,
-      startAndOpenCapability,
-      stopCapability,
-    ],
+    [quickKillCapability, refreshCapability, reportError, startAndOpenCapability, stopCapability],
   );
 
   const viewModel = useMemo<ControlCenterViewModel>(() => {
     const rawProjects = loading && projects === null ? null : projects;
-    
+
     // Grid Model
-    const visibleProjects = rawProjects === null ? null : selectProjects(rawProjects, searchQuery, sortMode);
-    
+    const visibleProjects =
+      rawProjects === null ? null : selectProjects(rawProjects, searchQuery, sortMode);
+
     let grid: ProjectGridViewModel;
     if (visibleProjects === null) {
       grid = { state: 'loading' };
@@ -570,7 +565,7 @@ export function ControlCenterScreen({
         ),
       };
     }
-    
+
     // Toolbar Model
     const activeServers = (rawProjects ?? [])
       .filter((project) => isActiveProject(project.status))
@@ -592,7 +587,7 @@ export function ControlCenterScreen({
       sortMode,
       viewMode,
       summary: {
-        visibleCount: visibleProjects?.length ?? (rawProjects?.length ?? 0),
+        visibleCount: visibleProjects?.length ?? rawProjects?.length ?? 0,
         totalCount: rawProjects?.length ?? 0,
         activeCount: activeServers.length,
       },

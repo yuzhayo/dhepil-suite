@@ -1,6 +1,7 @@
 # Task — Architecture Restructure: Modular Engine + Root UI
 
 **Tujuan:** Mengubah struktur dari nested `features/control-center/` ke arsitektur modular:
+
 - `src/engine/` = parent orchestrator + flat children (logic only)
 - `ui/` = shared UI di monorepo root (bisa dipakai semua apps)
 - `src/ControlCenterScreen.tsx` = compose langsung, tanpa presenter layer terpisah
@@ -12,11 +13,13 @@ Lihat target lengkap: [implementation_plan.md](./implementation_plan.md)
 ## Changelog
 
 ### 2026-07-30 (sebelumnya — conversation a240e9ea)
+
 - Phase 1: copy runtime code ke `src/engine/` ✅
 - Phase 2: rewire consumers → engine imports ✅
 - Phase 3: hapus duplikat dari `application/` ✅
 
 ### 2026-07-30 (conversation b3b93037 — sekarang)
+
 - Audit arsitektur → ditemukan `engine/` masih over-engineered (subfolder dalam children, extensions layer, data/domain subfolder)
 - Diskusi arsitektur target baru: flat children, UI di root monorepo, compose langsung
 - Plan, task, implementation_plan, handoff ditulis ulang untuk mencerminkan target baru
@@ -91,11 +94,11 @@ Hapus subfolder di dalam engine, jadikan flat files.
 - [x] Verify: `npm run lint`
 - [x] Verify: `npm run test` — 104/104 passed
 
-## Phase G — Full Validation Gate
+## Phase G — Full Validation Gate ✅
 
-- [ ] `npm run format:check`
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] `npx --yes antd lint src --format json`
+- [x] `npm run format:check` — all files pass
+- [x] `npm run lint` — 0 errors
+- [x] `npm run typecheck` — clean (web + node)
+- [x] `npm run test` — 104/104 passed (19 test files)
+- [x] `npm run build` — success (788 kB bundle)
+- [x] `npx --yes antd lint src --format json` — 0 issues

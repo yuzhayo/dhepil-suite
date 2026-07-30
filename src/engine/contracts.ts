@@ -160,4 +160,3 @@ export interface ControlCenterViewModel {
   availableActionIds: readonly string[];
   pageAlert?: AlertViewModel;
 }
-

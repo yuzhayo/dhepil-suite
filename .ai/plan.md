@@ -92,6 +92,7 @@ ui/
 ## 5. Screen Composition (`src/ControlCenterScreen.tsx`)
 
 Tidak ada presenter layer atau controller hook terpisah. Screen adalah satu-satunya tempat yang:
+
 - Memanggil engine
 - Mengelola React state + polling
 - Memetakan engine output ke UI props
@@ -106,6 +107,7 @@ Tidak ada presenter layer atau controller hook terpisah. Screen adalah satu-satu
 - Dilarang: import dari `src/` root atau app lain
 
 ### `app.manifest.json` minimal:
+
 ```json
 {
   "schemaVersion": 1,
@@ -116,6 +118,7 @@ Tidak ada presenter layer atau controller hook terpisah. Screen adalah satu-satu
 ```
 
 ### Menambah App Baru:
+
 1. Buat folder di `apps/<id>/`
 2. Tulis `app.manifest.json` dan `package.json`
 3. App otomatis muncul di dashboard pada polling berikutnya — tidak perlu edit registry
@@ -127,6 +130,7 @@ Tidak ada presenter layer atau controller hook terpisah. Screen adalah satu-satu
 Vite plugin — bukan standalone server. Hanya aktif selama `npm run dev`.
 
 Module dependency order (one-way, no cycles):
+
 ```
 project-contracts (types only)
        ↓
@@ -140,11 +144,12 @@ project-manager (orchestrator + Vite middleware)
 - `project-process` tidak boleh pilih port
 
 ### API Endpoints:
-| Method | Path | Deskripsi |
-|---|---|---|
-| `GET` | `/api/projects` | Rescan `apps/*`, return `ProjectSummary[]` |
-| `POST` | `/api/projects/:id/start` | Start managed process |
-| `POST` | `/api/projects/:id/stop` | Stop managed process |
+
+| Method | Path                      | Deskripsi                                  |
+| ------ | ------------------------- | ------------------------------------------ |
+| `GET`  | `/api/projects`           | Rescan `apps/*`, return `ProjectSummary[]` |
+| `POST` | `/api/projects/:id/start` | Start managed process                      |
+| `POST` | `/api/projects/:id/stop`  | Stop managed process                       |
 
 ---
 
@@ -159,17 +164,17 @@ project-manager (orchestrator + Vite middleware)
 
 ## 9. Project Status Model
 
-| Status | Makna | Start | Stop |
-|---|---|---|---|
-| `stopped` | Folder valid, server mati | ✅ | — |
-| `starting` | Process ada, HTTP belum siap | — | ✅ |
-| `running` | HTTP responding | Open | ✅ |
-| `stopping` | Kill in progress | — | Loading |
-| `error` | Spawn gagal | Retry | per process |
-| `invalid` | Manifest/package.json invalid | — | — |
-| `external` | Port responding, bukan milik root | Open (warn) | — |
-| `port-conflict` | Port terpakai, tidak terverifikasi | — | — |
-| `not-found` | Folder dihapus, process masih hidup | — | Kill ✅ |
+| Status          | Makna                               | Start       | Stop        |
+| --------------- | ----------------------------------- | ----------- | ----------- |
+| `stopped`       | Folder valid, server mati           | ✅          | —           |
+| `starting`      | Process ada, HTTP belum siap        | —           | ✅          |
+| `running`       | HTTP responding                     | Open        | ✅          |
+| `stopping`      | Kill in progress                    | —           | Loading     |
+| `error`         | Spawn gagal                         | Retry       | per process |
+| `invalid`       | Manifest/package.json invalid       | —           | —           |
+| `external`      | Port responding, bukan milik root   | Open (warn) | —           |
+| `port-conflict` | Port terpakai, tidak terverifikasi  | —           | —           |
+| `not-found`     | Folder dihapus, process masih hidup | —           | Kill ✅     |
 
 - App deleted + dead: card disembunyikan
 - App deleted + running: card tampil sebagai `not-found` tombstone sampai di-Kill
@@ -206,17 +211,17 @@ npx --yes antd lint src --format json
 
 ## 12. Tech Stack
 
-| Tool | Version |
-|---|---|
-| React | 19 |
-| antd | 6.5.1 |
-| TypeScript | 6 |
-| Vite | 7 |
-| Vitest | 4 |
-| ESLint | 9 |
-| Prettier | 3 |
-| Node | ≥ 24 |
-| npm | 11 |
+| Tool       | Version |
+| ---------- | ------- |
+| React      | 19      |
+| antd       | 6.5.1   |
+| TypeScript | 6       |
+| Vite       | 7       |
+| Vitest     | 4       |
+| ESLint     | 9       |
+| Prettier   | 3       |
+| Node       | ≥ 24    |
+| npm        | 11      |
 
 ESM only (`"type": "module"`). No CommonJS.
 

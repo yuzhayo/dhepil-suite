@@ -19,31 +19,11 @@ describe('architecture import boundaries', () => {
 
   const forbiddenCases = [
     // engine/ must not import ui/, App.tsx, apps/, scripts/
-    [
-      'engine → ui',
-      'src/engine/fixture.ts',
-      "import '../../ui/ProjectCard';",
-    ],
-    [
-      'engine → App.tsx',
-      'src/engine/fixture.ts',
-      "import '../App';",
-    ],
-    [
-      'engine → apps',
-      'src/engine/fixture.ts',
-      "import '../../apps/dhepil/main';",
-    ],
-    [
-      'engine → scripts',
-      'src/engine/fixture.ts',
-      "import '../../scripts/project-manager';",
-    ],
-    [
-      'engine → ControlCenterScreen',
-      'src/engine/fixture.ts',
-      "import '../ControlCenterScreen';",
-    ],
+    ['engine → ui', 'src/engine/fixture.ts', "import '../../ui/ProjectCard';"],
+    ['engine → App.tsx', 'src/engine/fixture.ts', "import '../App';"],
+    ['engine → apps', 'src/engine/fixture.ts', "import '../../apps/dhepil/main';"],
+    ['engine → scripts', 'src/engine/fixture.ts', "import '../../scripts/project-manager';"],
+    ['engine → ControlCenterScreen', 'src/engine/fixture.ts', "import '../ControlCenterScreen';"],
 
     // engine/children/ must not import sibling children
     [
@@ -51,23 +31,11 @@ describe('architecture import boundaries', () => {
       'src/engine/children/projectLifecycle.ts',
       "import './projectRefresh';",
     ],
-    [
-      'child → sibling quickKill',
-      'src/engine/children/projectRefresh.ts',
-      "import './quickKill';",
-    ],
+    ['child → sibling quickKill', 'src/engine/children/projectRefresh.ts', "import './quickKill';"],
 
     // engine/children/ inherits engine restrictions
-    [
-      'child → ui',
-      'src/engine/children/fixture.ts',
-      "import '../../../ui/ProjectCard';",
-    ],
-    [
-      'child → apps',
-      'src/engine/children/fixture.ts',
-      "import '../../../apps/dhepil/main';",
-    ],
+    ['child → ui', 'src/engine/children/fixture.ts', "import '../../../ui/ProjectCard';"],
+    ['child → apps', 'src/engine/children/fixture.ts', "import '../../../apps/dhepil/main';"],
     [
       'child → scripts',
       'src/engine/children/fixture.ts',
@@ -75,26 +43,10 @@ describe('architecture import boundaries', () => {
     ],
 
     // ui/ must not import engine modules (except contracts)
-    [
-      'ui → engine httpClient',
-      'ui/fixture.ts',
-      "import '../src/engine/httpClient';",
-    ],
-    [
-      'ui → engine index',
-      'ui/fixture.ts',
-      "import '../src/engine/index';",
-    ],
-    [
-      'ui → engine children',
-      'ui/fixture.ts',
-      "import '../src/engine/children/projectLifecycle';",
-    ],
-    [
-      'ui → scripts',
-      'ui/fixture.ts',
-      "import '../scripts/project-manager';",
-    ],
+    ['ui → engine httpClient', 'ui/fixture.ts', "import '../src/engine/httpClient';"],
+    ['ui → engine index', 'ui/fixture.ts', "import '../src/engine/index';"],
+    ['ui → engine children', 'ui/fixture.ts', "import '../src/engine/children/projectLifecycle';"],
+    ['ui → scripts', 'ui/fixture.ts', "import '../scripts/project-manager';"],
   ] as const;
 
   it.each(forbiddenCases)(
@@ -127,10 +79,7 @@ describe('architecture import boundaries', () => {
     ['parent httpClient', "import { createHttpClient } from '../httpClient';"],
     ['parent domain', "import { deriveActionPolicy } from '../projectActionPolicy';"],
   ])('allows a child to import %s', async (_name, source) => {
-    const messages = await lintVirtualFile(
-      'src/engine/children/projectLifecycle.ts',
-      source,
-    );
+    const messages = await lintVirtualFile('src/engine/children/projectLifecycle.ts', source);
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
@@ -148,7 +97,10 @@ describe('architecture import boundaries', () => {
     ['peer UI component', "import { ProjectCard } from './ProjectCard';"],
     ['local CSS', "import './ProjectGrid.css';"],
     ['local definition', "import { gridDefinition } from './gridDefinition';"],
-    ['engine contracts (shared types)', "import type { ProjectCardViewModel } from '../src/engine/contracts';"],
+    [
+      'engine contracts (shared types)',
+      "import type { ProjectCardViewModel } from '../src/engine/contracts';",
+    ],
   ])('allows ui to import %s', async (_name, source) => {
     const messages = await lintVirtualFile('ui/fixture.ts', source);
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);

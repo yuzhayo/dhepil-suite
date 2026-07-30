@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isProjectSortMode,
-  isProjectViewMode,
-  selectProjects,
-} from './projectCollection';
+import { isProjectSortMode, isProjectViewMode, selectProjects } from './projectCollection';
 import type { ProjectSummary } from './contracts';
 
 describe('projectCollection', () => {
