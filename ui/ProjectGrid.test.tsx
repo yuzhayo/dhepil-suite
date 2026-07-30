@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { ProjectCardViewModel, ProjectGridViewModel } from '../src/features/control-center/application/view-models';
+import type { ProjectCardViewModel, ProjectGridViewModel } from '../src/engine/contracts';
 import { gridDefinition } from './gridDefinition';
 import { ProjectGrid } from './ProjectGrid';
 

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { HeaderViewModel } from '../src/features/control-center/application/view-models';
+import type { HeaderViewModel } from '../src/engine/contracts';
 import { ControlCenterHeader } from './ControlCenterHeader';
 import { headerDefinition } from './headerDefinition';
 

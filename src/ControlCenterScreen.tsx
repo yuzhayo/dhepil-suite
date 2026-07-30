@@ -1,24 +1,45 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ControlCenterRuntime,
   createControlCenterRuntime,
   canQuickKillProject,
   canStartProject,
   canStopProject,
+  canOpenProject,
   type ProjectSortMode,
   type ProjectViewMode,
   isProjectSortMode,
   isProjectViewMode,
   isOpenReadyProject,
   type ProjectSummary,
-} from '../../../../engine';
-import { createControlCenterViewModel } from '../presenters/createControlCenterViewModel';
-import type { ControlCenterViewModel } from '../view-models';
+  selectProjects,
+  isActiveProject,
+  type ProjectStatus,
+} from './engine';
+import type {
+  AlertViewModel,
+  ActiveServerItemViewModel,
+  CardActionViewModel,
+  ControlCenterViewModel,
+  HeaderViewModel,
+  ProjectCardViewModel,
+  ProjectGridViewModel,
+  SemanticTone,
+  StatusViewModel,
+  TagViewModel,
+  TerminalViewModel,
+  ToolbarViewModel,
+  UiActionViewModel,
+} from './engine/contracts';
+import { ControlCenterLayout } from '../ui/ControlCenterLayout';
 
-export const CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS = 1500;
+// --- Presentation Limits ---
+const MAX_RENDERED_LOG_LINES = 80;
 
-const availableActionIds = [
+// --- Controller Constants ---
+const CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS = 1500;
+
+const AVAILABLE_ACTION_IDS = [
   'project.quick-kill',
   'project.refresh',
   'project.search.change',
@@ -28,6 +49,161 @@ const availableActionIds = [
   'project.view.change',
 ];
 
+const STATUS_PRESENTATION = {
+  stopped: { key: 'stopped', tone: 'neutral' },
+  starting: { key: 'starting', tone: 'info' },
+  running: { key: 'running', tone: 'success' },
+  stopping: { key: 'stopping', tone: 'warning' },
+  error: { key: 'error', tone: 'danger' },
+  external: { key: 'external', tone: 'warning' },
+  'port-conflict': { key: 'port-conflict', tone: 'danger' },
+  invalid: { key: 'invalid', tone: 'danger' },
+  'not-found': { key: 'not-found', tone: 'warning' },
+} satisfies Record<ProjectStatus, { key: ProjectStatus; tone: SemanticTone }>;
+
+// --- Helper Functions (From Presenters) ---
+function createStatusViewModel(status: ProjectStatus): StatusViewModel {
+  return STATUS_PRESENTATION[status];
+}
+
+function createAlerts(project: ProjectSummary): readonly AlertViewModel[] {
+  if (project.status === 'error') {
+    return [{ key: 'startup-failed', tone: 'danger', value: project.error }];
+  }
+  if (project.status === 'port-conflict') {
+    return [
+      {
+        key: 'port-conflict',
+        tone: 'warning',
+        value: project.error ?? (project.port === undefined ? undefined : String(project.port)),
+      },
+    ];
+  }
+  if (project.status === 'invalid') {
+    return [{ key: 'invalid-config', tone: 'danger', value: project.error }];
+  }
+  if (project.status === 'not-found') {
+    return [{ key: 'project-not-found', tone: 'warning', value: project.relativePath }];
+  }
+  if (project.error) {
+    return [{ key: 'process-error', tone: 'danger', value: project.error }];
+  }
+  return [];
+}
+
+function createTags(project: ProjectSummary): readonly TagViewModel[] {
+  const tags: TagViewModel[] = [];
+  if (project.managed) {
+    tags.push({ key: 'managed' });
+  }
+  if (project.status === 'external') {
+    tags.push({ key: 'external' });
+  }
+  if (project.managed && project.status === 'not-found') {
+    tags.push({ key: 'tombstone' });
+  }
+  if (project.port !== undefined) {
+    tags.push({ key: 'port', value: String(project.port) });
+  }
+  if (project.pid !== undefined) {
+    tags.push({ key: 'pid', value: String(project.pid) });
+  }
+  tags.push({ key: 'path', value: project.relativePath });
+  if (project.desktop.enabled) {
+    tags.push({ key: 'desktop' });
+  }
+  return tags;
+}
+
+function createTerminalViewModel(logs: readonly string[]): TerminalViewModel {
+  const lines = logs.slice(-MAX_RENDERED_LOG_LINES);
+  return {
+    lines,
+    truncated: logs.length > MAX_RENDERED_LOG_LINES,
+    maxLines: MAX_RENDERED_LOG_LINES,
+  };
+}
+
+function createProjectCardViewModel(
+  project: ProjectSummary,
+  pending: boolean,
+): ProjectCardViewModel {
+  const actionContext = {
+    status: project.status,
+    managed: project.managed,
+    pending,
+  };
+  const nonPendingActionContext = { ...actionContext, pending: false };
+  const canOpen = canOpenProject(actionContext) && Boolean(project.url);
+  const canStart = canStartProject(actionContext);
+  const canStop = canStopProject(actionContext);
+  const canQuickKill = canQuickKillProject(actionContext);
+  const couldStart = canStartProject(nonPendingActionContext);
+  const couldStop = canStopProject(nonPendingActionContext);
+  const couldQuickKill = canQuickKillProject(nonPendingActionContext);
+
+  const actions: readonly CardActionViewModel[] = [
+    {
+      actionId: 'project.start-open',
+      disabled: !canOpen && !canStart,
+      loading: pending && !canOpen && couldStart,
+    },
+    {
+      actionId: 'project.stop',
+      disabled: !canStop,
+      loading: pending && couldStop,
+    },
+    {
+      actionId: 'project.quick-kill',
+      disabled: !canQuickKill,
+      loading: pending && couldQuickKill,
+    },
+  ];
+
+  return {
+    id: project.id,
+    name: project.name,
+    status: createStatusViewModel(project.status),
+    alerts: createAlerts(project),
+    tags: createTags(project),
+    actions,
+    terminal: createTerminalViewModel(project.logs),
+    url: project.url,
+  };
+}
+
+function createActiveServerItem(
+  project: ProjectSummary,
+  pendingActions: Readonly<Record<string, boolean>>,
+): ActiveServerItemViewModel {
+  const canQuickKill = canQuickKillProject({
+    status: project.status,
+    managed: project.managed,
+    pending: Boolean(pendingActions[project.id]),
+  });
+  const couldQuickKill = canQuickKillProject({
+    status: project.status,
+    managed: project.managed,
+    pending: false,
+  });
+  const action: CardActionViewModel = {
+    actionId: 'project.quick-kill',
+    disabled: !canQuickKill,
+    loading: Boolean(pendingActions[project.id]) && couldQuickKill,
+  };
+
+  return {
+    id: project.id,
+    name: project.name,
+    port: project.port,
+    pid: project.pid,
+    status: createStatusViewModel(project.status),
+    managed: project.managed,
+    action,
+  };
+}
+
+// --- Controller utilities ---
 interface RefreshOptions {
   signal?: AbortSignal;
   supersede?: boolean;
@@ -39,14 +215,46 @@ interface InFlightRefresh {
   promise: Promise<ProjectSummary[]>;
 }
 
-export interface ControlCenterController {
-  viewModel: ControlCenterViewModel;
-  dispatch(actionId: string, payload?: unknown): void;
+function createLinkedAbortController(signal?: AbortSignal): {
+  controller: AbortController;
+  release(): void;
+} {
+  const controller = new AbortController();
+  const abort = () => controller.abort(signal?.reason);
+
+  if (signal?.aborted) {
+    abort();
+  } else {
+    signal?.addEventListener('abort', abort, { once: true });
+  }
+
+  return {
+    controller,
+    release() {
+      signal?.removeEventListener('abort', abort);
+    },
+  };
 }
 
-export function useControlCenterController(
-  runtimeOverride?: ControlCenterRuntime,
-): ControlCenterController {
+function isCancellation(error: unknown): boolean {
+  if (error instanceof Error && error.name === 'AbortError') {
+    return true;
+  }
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'kind' in error &&
+    (error as { kind?: unknown }).kind === 'cancelled'
+  );
+}
+
+// --- The Screen Component ---
+
+export function ControlCenterScreen({
+  runtimeOverride,
+}: {
+  runtimeOverride?: ControlCenterRuntime;
+}) {
   const [runtime] = useState<ControlCenterRuntime>(
     () => runtimeOverride ?? createControlCenterRuntime(),
   );
@@ -342,62 +550,78 @@ export function useControlCenterController(
     ],
   );
 
-  const viewModel = useMemo(
-    () =>
-      createControlCenterViewModel({
-        projects: loading && projects === null ? null : projects,
-        searchQuery,
-        sortMode,
+  const viewModel = useMemo<ControlCenterViewModel>(() => {
+    const rawProjects = loading && projects === null ? null : projects;
+    
+    // Grid Model
+    const visibleProjects = rawProjects === null ? null : selectProjects(rawProjects, searchQuery, sortMode);
+    
+    let grid: ProjectGridViewModel;
+    if (visibleProjects === null) {
+      grid = { state: 'loading' };
+    } else if (visibleProjects.length === 0) {
+      grid = { state: 'empty' };
+    } else {
+      grid = {
+        state: 'ready',
         viewMode,
-        pendingActions,
-        availableActionIds,
-        pageError,
-        refreshPending,
-      }),
-    [
-      loading,
-      pageError,
-      pendingActions,
-      projects,
-      refreshPending,
+        projects: visibleProjects.map((project) =>
+          createProjectCardViewModel(project, Boolean(pendingActions[project.id])),
+        ),
+      };
+    }
+    
+    // Toolbar Model
+    const activeServers = (rawProjects ?? [])
+      .filter((project) => isActiveProject(project.status))
+      .map((project) => createActiveServerItem(project, pendingActions));
+
+    const toolbarActions: readonly UiActionViewModel[] = [
+      { actionId: 'project.search.change', disabled: false, loading: false },
+      { actionId: 'project.sort.change', disabled: false, loading: false },
+      { actionId: 'project.view.change', disabled: false, loading: false },
+      {
+        actionId: 'project.refresh',
+        disabled: Boolean(refreshPending),
+        loading: Boolean(refreshPending),
+      },
+    ];
+
+    const toolbar: ToolbarViewModel = {
       searchQuery,
       sortMode,
       viewMode,
-    ],
-  );
+      summary: {
+        visibleCount: visibleProjects?.length ?? (rawProjects?.length ?? 0),
+        totalCount: rawProjects?.length ?? 0,
+        activeCount: activeServers.length,
+      },
+      activeServers,
+      actions: toolbarActions,
+    };
 
-  return { viewModel, dispatch };
-}
+    // Header Model
+    const header: HeaderViewModel = {
+      actions: [],
+    };
 
-function createLinkedAbortController(signal?: AbortSignal): {
-  controller: AbortController;
-  release(): void;
-} {
-  const controller = new AbortController();
-  const abort = () => controller.abort(signal?.reason);
+    return {
+      header,
+      toolbar,
+      grid,
+      availableActionIds: [...AVAILABLE_ACTION_IDS],
+      pageAlert: pageError ? { key: 'page-error', tone: 'danger', value: pageError } : undefined,
+    };
+  }, [
+    loading,
+    pageError,
+    pendingActions,
+    projects,
+    refreshPending,
+    searchQuery,
+    sortMode,
+    viewMode,
+  ]);
 
-  if (signal?.aborted) {
-    abort();
-  } else {
-    signal?.addEventListener('abort', abort, { once: true });
-  }
-
-  return {
-    controller,
-    release() {
-      signal?.removeEventListener('abort', abort);
-    },
-  };
-}
-
-function isCancellation(error: unknown): boolean {
-  if (error instanceof Error && error.name === 'AbortError') {
-    return true;
-  }
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'kind' in error &&
-    (error as { kind?: unknown }).kind === 'cancelled'
-  );
+  return <ControlCenterLayout viewModel={viewModel} onAction={dispatch} />;
 }

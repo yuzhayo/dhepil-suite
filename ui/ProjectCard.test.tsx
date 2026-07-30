@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { ProjectCardViewModel } from '../src/features/control-center/application/view-models';
+import type { ProjectCardViewModel } from '../src/engine/contracts';
 import { cardDefinition, type CardActionDefinition } from './cardDefinition';
 import { ProjectCard } from './ProjectCard';
 

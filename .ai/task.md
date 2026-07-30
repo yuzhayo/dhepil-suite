@@ -58,14 +58,14 @@ Hapus subfolder di dalam engine, jadikan flat files.
 
 ## Phase C — Collapse Presenter/Controller ke Screen
 
-- [ ] Buat `src/ControlCenterScreen.tsx` baru (polling + state + compose inline)
+- [x] Buat `src/ControlCenterScreen.tsx` baru (polling + state + compose inline)
   - Absorb logic dari `useControlCenterController.ts`
   - Absorb mapping dari semua `presenters/*.ts`
   - Render UI components dari `ui/` langsung
-- [ ] Hapus `src/features/control-center/application/` seluruhnya
-- [ ] Hapus `src/features/control-center/screens/`
-- [ ] Update `src/App.tsx` → import dari `src/ControlCenterScreen.tsx`
-- [ ] Verify: `npm run typecheck`
+- [x] Hapus `src/features/control-center/application/` seluruhnya
+- [x] Hapus `src/features/control-center/screens/`
+- [x] Update `src/App.tsx` → import dari `src/ControlCenterScreen.tsx`
+- [x] Verify: `npm run typecheck`
 
 ## Phase D — Hapus `features/` Seluruhnya
 

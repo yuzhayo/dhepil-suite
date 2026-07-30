@@ -5,7 +5,7 @@ import type {
   ActiveServerItemViewModel,
   ToolbarViewModel,
   UiActionViewModel,
-} from '../src/features/control-center/application/view-models';
+} from '../src/engine/contracts';
 import {
   toolbarDefinition,
   type ToolbarActiveServersDefinition,

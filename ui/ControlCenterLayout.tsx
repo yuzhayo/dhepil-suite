@@ -1,6 +1,6 @@
 import { Alert, Button } from 'antd';
 
-import type { ControlCenterViewModel } from '../src/features/control-center/application/view-models';
+import type { ControlCenterViewModel } from '../src/engine/contracts';
 import { cardDefinition } from './cardDefinition';
 import { ProjectGrid } from './ProjectGrid';
 import { ControlCenterHeader } from './ControlCenterHeader';

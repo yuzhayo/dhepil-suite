@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import type { ToolbarViewModel } from '../src/features/control-center/application/view-models';
+import type { ToolbarViewModel } from '../src/engine/contracts';
 import { ProjectToolbar } from './ProjectToolbar';
 import { toolbarDefinition } from './toolbarDefinition';
 

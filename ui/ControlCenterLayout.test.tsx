@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { ControlCenterViewModel } from '../src/features/control-center/application/view-models';
+import type { ControlCenterViewModel } from '../src/engine/contracts';
 import { ControlCenterLayout } from './ControlCenterLayout';
 
 const availableActionIds = [

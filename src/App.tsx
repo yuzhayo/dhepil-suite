@@ -1,6 +1,6 @@
 import { App as AntdApp, ConfigProvider } from 'antd';
 
-import { ControlCenterScreen } from './features/control-center/screens/ControlCenterScreen';
+import { ControlCenterScreen } from './ControlCenterScreen';
 
 export default function App() {
   return (
