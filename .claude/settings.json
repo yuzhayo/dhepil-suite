@@ -14,5 +14,8 @@
       "Bash(npx eslint *)",
       "Bash(python -c \"from pathlib import Path; print\\(Path\\('src/features/control-center/data/httpProjectManagerClient.ts'\\).read_text\\(\\)\\)\")"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
   }
 }
