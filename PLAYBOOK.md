@@ -47,8 +47,10 @@ npx --yes antd lint src --format json
 ## 4. Panduan Membuat App Baru (`apps/<id>/`)
 
 1. Buat folder baru di dalam `apps/` (contoh: `apps/my-new-app/`).
-2. App **DILARANG** memuat kode UI dari app lain, dan dilarang mengubah source code `src/` (Root Control Center).
-3. App diperbolehkan meng-import komponen reusable dari root `ui/` (CoreUI).
+2. **Strict UI Separation**: App di dalam `apps/` murni HANYA boleh berisi kode Logic, State, dan komponen **Gate** (Composition Root). App DILARANG mendefinisikan komponen UI visualnya sendiri di dalam foldernya.
+3. **CoreUI as the Single UI Source**: Jika app membutuhkan komponen UI baru (misal: tabel spreadsheet, grid khusus), maka komponen UI tersebut **WAJIB** dibangun secara generik dan diletakkan di `root/ui/` (CoreUI). App kemudian meng-import UI tersebut dan menyuapkan datanya melalui pola Gate.
+4. **Ant Design (AntD) Required**: Saat membangun komponen di `root/ui/`, Agent WAJIB menggunakan komponen bawaan Ant Design 6. Jangan membuat komponen dari awal menggunakan CSS murni jika AntD sudah menyediakannya.
+5. App **DILARANG** memuat kode UI dari app lain, dan dilarang mengubah source code `src/` (Root Control Center).
 4. Buat file `app.manifest.json` minimal:
 
 ```json
