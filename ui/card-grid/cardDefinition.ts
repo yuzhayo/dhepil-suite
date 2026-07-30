@@ -1,4 +1,4 @@
-import type { AlertKey, SemanticTone, StatusKey, TagKey } from '../src/engine/contracts';
+import type { AlertKey, SemanticTone, StatusKey, TagKey } from '../../src/engine/contracts';
 
 export type CardActionKind = 'default' | 'primary' | 'danger';
 export type StatusBadgeKind = 'success' | 'processing' | 'default' | 'error' | 'warning';

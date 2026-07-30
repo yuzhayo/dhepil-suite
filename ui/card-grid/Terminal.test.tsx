@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { ProjectTerminal } from './ProjectTerminal';
+import { ProjectTerminal } from './Terminal';
 
 describe('ProjectTerminal', () => {
   it('renders log content in an accessible keyboard-scrollable pre', () => {

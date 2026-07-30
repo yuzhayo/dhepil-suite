@@ -47,6 +47,10 @@ describe('architecture import boundaries', () => {
     ['ui → engine index', 'ui/fixture.ts', "import '../src/engine/index';"],
     ['ui → engine children', 'ui/fixture.ts', "import '../src/engine/children/projectLifecycle';"],
     ['ui → scripts', 'ui/fixture.ts', "import '../scripts/project-manager';"],
+
+    // ui/ children must not import sibling children or the layout parent
+    ['ui child → sibling ui child', 'ui/header/fixture.ts', "import '../toolbar/Toolbar';"],
+    ['ui child → CoreLayout parent', 'ui/header/fixture.ts', "import '../CoreLayout';"],
   ] as const;
 
   it.each(forbiddenCases)(
@@ -94,15 +98,15 @@ describe('architecture import boundaries', () => {
   it.each([
     // ui may import peer UI, local CSS, antd, and engine/contracts (shared types)
     ['AntD', "import { Empty } from 'antd';"],
-    ['peer UI component', "import { ProjectCard } from './ProjectCard';"],
-    ['local CSS', "import './ProjectGrid.css';"],
+    ['peer UI component', "import { ProjectCard } from './Card';"],
+    ['local CSS', "import './CardGrid.css';"],
     ['local definition', "import { gridDefinition } from './gridDefinition';"],
     [
       'engine contracts (shared types)',
-      "import type { ProjectCardViewModel } from '../src/engine/contracts';",
+      "import type { ProjectCardViewModel } from '../../src/engine/contracts';",
     ],
   ])('allows ui to import %s', async (_name, source) => {
-    const messages = await lintVirtualFile('ui/fixture.ts', source);
+    const messages = await lintVirtualFile('ui/card-grid/fixture.ts', source);
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
@@ -110,8 +114,8 @@ describe('architecture import boundaries', () => {
     // ControlCenterScreen may import engine and ui (composition root)
     ['engine index', "import { useEngine } from './engine';"],
     ['engine contracts', "import type { ProjectSummary } from './engine/contracts';"],
-    ['ui layout', "import { ControlCenterLayout } from '../ui/ControlCenterLayout';"],
-    ['ui toolbar', "import { ProjectToolbar } from '../ui/ProjectToolbar';"],
+    ['ui layout', "import { CoreLayout } from '../ui/CoreLayout';"],
+    ['ui toolbar', "import { ProjectToolbar } from '../ui/toolbar/Toolbar';"],
   ])('allows ControlCenterScreen to import %s', async (_name, source) => {
     const messages = await lintVirtualFile('src/ControlCenterScreen.tsx', source);
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);

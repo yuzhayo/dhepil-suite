@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { ProjectCardViewModel } from '../src/engine/contracts';
+import type { ProjectCardViewModel } from '../../src/engine/contracts';
 import { cardDefinition, type CardActionDefinition } from './cardDefinition';
-import { ProjectCard } from './ProjectCard';
+import { ProjectCard } from './Card';
 
 const viewModel: ProjectCardViewModel = {
   id: 'manga-reader',

@@ -1,8 +1,8 @@
 import { Button, Typography } from 'antd';
 
-import type { HeaderViewModel } from '../src/engine/contracts';
+import type { HeaderViewModel } from '../../src/engine/contracts';
 import { headerDefinition, type HeaderActionKind } from './headerDefinition';
-import './ControlCenterHeader.css';
+import './Header.css';
 
 const { Paragraph, Title } = Typography;
 

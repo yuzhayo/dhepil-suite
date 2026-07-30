@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import type { ControlCenterViewModel } from '../src/engine/contracts';
-import { ControlCenterLayout } from './ControlCenterLayout';
+import { CoreLayout } from './CoreLayout';
 
 const availableActionIds = [
   'project.refresh',
@@ -57,9 +57,9 @@ const viewModel: ControlCenterViewModel = {
   },
 };
 
-describe('ControlCenterLayout', () => {
+describe('CoreLayout', () => {
   it('composes header, toolbar, page alert, and grid from one view model', () => {
-    render(<ControlCenterLayout viewModel={viewModel} onAction={vi.fn()} />);
+    render(<CoreLayout viewModel={viewModel} onAction={vi.fn()} />);
 
     expect(screen.getByRole('heading', { name: 'Dhepil Suite' })).toBeInTheDocument();
     expect(screen.getByRole('search', { name: 'Cari dan atur project' })).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('ControlCenterLayout', () => {
 
   it('forwards the definition-owned refresh action from page error recovery', () => {
     const onAction = vi.fn();
-    render(<ControlCenterLayout viewModel={viewModel} onAction={onAction} />);
+    render(<CoreLayout viewModel={viewModel} onAction={onAction} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
 
@@ -80,7 +80,7 @@ describe('ControlCenterLayout', () => {
 
   it('keeps page recovery visible and disabled without a registered handler', () => {
     render(
-      <ControlCenterLayout
+      <CoreLayout
         viewModel={{ ...viewModel, availableActionIds: [] }}
         onAction={vi.fn()}
       />,
@@ -90,7 +90,7 @@ describe('ControlCenterLayout', () => {
   });
 
   it('declares layout, workspace, grid, and terminal scroll ownership', () => {
-    render(<ControlCenterLayout viewModel={viewModel} onAction={vi.fn()} />);
+    render(<CoreLayout viewModel={viewModel} onAction={vi.fn()} />);
 
     const layout = screen.getByRole('main');
     const workspace = screen.getByRole('region', { name: 'Daftar project' });

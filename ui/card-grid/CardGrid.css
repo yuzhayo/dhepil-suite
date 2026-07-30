@@ -20,7 +20,10 @@
 }
 
 .project-grid-ui__collection--grid .project-card-ui {
+  width: 100%;
   aspect-ratio: var(--layout-grid-card-aspect);
+  max-height: var(--layout-grid-card-max-height);
+  min-height: 0;
 }
 
 .project-grid-ui__collection--list {

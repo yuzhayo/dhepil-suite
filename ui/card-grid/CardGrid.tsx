@@ -1,9 +1,9 @@
 import { Empty, Skeleton } from 'antd';
 
-import type { ProjectGridViewModel } from '../src/engine/contracts';
-import { ProjectCard } from './ProjectCard';
+import type { ProjectGridViewModel } from '../../src/engine/contracts';
+import { ProjectCard } from './Card';
 import { gridDefinition } from './gridDefinition';
-import './ProjectGrid.css';
+import './CardGrid.css';
 
 export interface ProjectGridProps {
   viewModel: ProjectGridViewModel;

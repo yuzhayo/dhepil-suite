@@ -5,13 +5,13 @@ import type {
   ActiveServerItemViewModel,
   ToolbarViewModel,
   UiActionViewModel,
-} from '../src/engine/contracts';
+} from '../../src/engine/contracts';
 import {
   toolbarDefinition,
   type ToolbarActiveServersDefinition,
   type ToolbarControlDefinition,
 } from './toolbarDefinition';
-import './ProjectToolbar.css';
+import './Toolbar.css';
 
 const { Text } = Typography;
 

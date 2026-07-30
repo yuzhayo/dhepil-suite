@@ -78,13 +78,12 @@ Buat satu file `.ts` di `engine/children/`. Export fungsi child. Import dan wire
 
 ```
 ui/
-├─ ControlCenterLayout.tsx
-├─ ControlCenterHeader.tsx
-├─ ProjectToolbar.tsx
-├─ ProjectGrid.tsx
-├─ ProjectCard.tsx
-├─ ProjectTerminal.tsx
-└─ layoutTokens.css
+├─ CoreLayout.tsx             ← Parent Orchestrator
+├─ CoreLayout.css
+├─ CoreLayout.tokens.css      ← Responsive breakpoints
+├─ header/                    ← Encapsulated child
+├─ toolbar/                   ← Encapsulated child
+└─ card-grid/                 ← Encapsulated child (Card + Grid)
 ```
 
 ---

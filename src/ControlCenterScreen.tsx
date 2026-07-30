@@ -31,7 +31,7 @@ import type {
   ToolbarViewModel,
   UiActionViewModel,
 } from './engine/contracts';
-import { ControlCenterLayout } from '../ui/ControlCenterLayout';
+import { CoreLayout } from '../ui/CoreLayout';
 
 // --- Presentation Limits ---
 const MAX_RENDERED_LOG_LINES = 80;
@@ -618,5 +618,5 @@ export function ControlCenterScreen({
     viewMode,
   ]);
 
-  return <ControlCenterLayout viewModel={viewModel} onAction={dispatch} />;
+  return <CoreLayout viewModel={viewModel} onAction={dispatch} />;
 }

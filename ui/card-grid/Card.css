@@ -114,7 +114,7 @@
 
 .project-grid-ui__collection--grid .project-terminal {
   height: var(--layout-grid-terminal-height);
-  min-height: var(--layout-grid-terminal-height);
+  min-height: 0;
   flex: var(--layout-grid-terminal-flex);
 }
 

@@ -131,4 +131,25 @@ export const controlCenterBoundaryConfigs = [
       ],
     },
   },
+  // ── ui/ children must not import sibling children or the layout parent ──
+  {
+    files: ['ui/*/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^\\.\\./(?:header|toolbar|card-grid)',
+              message: 'UI children must not import sibling UI children.',
+            },
+            {
+              regex: '^\\.\\./CoreLayout',
+              message: 'UI children must not import the parent layout orchestrator.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ] satisfies ConfigWithExtends[];

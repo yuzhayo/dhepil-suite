@@ -1,25 +1,25 @@
 import { Alert, Button } from 'antd';
 
 import type { ControlCenterViewModel } from '../src/engine/contracts';
-import { cardDefinition } from './cardDefinition';
-import { ProjectGrid } from './ProjectGrid';
-import { ControlCenterHeader } from './ControlCenterHeader';
-import { ProjectToolbar } from './ProjectToolbar';
-import { toolbarDefinition, type ToolbarButtonDefinition } from './toolbarDefinition';
-import './layoutTokens.css';
-import './controlCenterLayout.css';
+import { cardDefinition } from './card-grid/cardDefinition';
+import { ProjectGrid } from './card-grid/CardGrid';
+import { ControlCenterHeader } from './header/Header';
+import { ProjectToolbar } from './toolbar/Toolbar';
+import { toolbarDefinition, type ToolbarButtonDefinition } from './toolbar/toolbarDefinition';
+import './CoreLayout.tokens.css';
+import './CoreLayout.css';
 
 const refreshControl = toolbarDefinition.find(
   (control): control is ToolbarButtonDefinition =>
     control.id === 'project-refresh' && control.kind === 'button',
 );
 
-export interface ControlCenterLayoutProps {
+export interface CoreLayoutProps {
   viewModel: ControlCenterViewModel;
   onAction: (actionId: string, payload?: unknown) => void;
 }
 
-export function ControlCenterLayout({ viewModel, onAction }: ControlCenterLayoutProps) {
+export function CoreLayout({ viewModel, onAction }: CoreLayoutProps) {
   const pageAlert = viewModel.pageAlert;
   const alertDefinition = pageAlert ? cardDefinition.alerts[pageAlert.key] : undefined;
   const refreshActionState = refreshControl

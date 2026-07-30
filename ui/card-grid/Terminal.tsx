@@ -1,8 +1,8 @@
 import { Typography } from 'antd';
 
-import type { TerminalViewModel } from '../src/engine/contracts';
+import type { TerminalViewModel } from '../../src/engine/contracts';
 import { cardDefinition } from './cardDefinition';
-import './ProjectCard.css';
+import './Card.css';
 
 const { Text } = Typography;
 

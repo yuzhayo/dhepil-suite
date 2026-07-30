@@ -1,6 +1,6 @@
 .project-toolbar-ui {
-  display: grid;
-  grid-template-columns: var(--layout-toolbar-columns);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--layout-toolbar-gap, 8px);
   padding: 10px;
@@ -19,27 +19,28 @@
 }
 
 .project-toolbar-ui__control--search {
-  grid-column: var(--layout-toolbar-search-column);
+  flex: 1 1 240px;
 }
 
 .project-toolbar-ui__control--select {
-  grid-column: var(--layout-toolbar-select-column);
+  flex: 0 1 auto;
 }
 
 .project-toolbar-ui__control--view {
-  grid-column: var(--layout-toolbar-view-column);
+  flex: 0 1 auto;
 }
 
 .project-toolbar-ui__control--button {
-  grid-column: var(--layout-toolbar-button-column);
+  flex: 0 1 auto;
 }
 
 .project-toolbar-ui__control--active-servers {
-  grid-column: var(--layout-toolbar-active-column);
+  flex: 0 1 auto;
 }
 
 .project-toolbar-ui__control--summary {
-  grid-column: var(--layout-toolbar-summary-column);
+  margin-left: auto;
+  flex: 0 1 auto;
 }
 
 .project-toolbar-ui__summary {

@@ -5,10 +5,10 @@ import type {
   CardActionViewModel,
   ProjectCardViewModel,
   TagViewModel,
-} from '../src/engine/contracts';
+} from '../../src/engine/contracts';
 import { cardDefinition, type CardActionDefinition } from './cardDefinition';
-import { ProjectTerminal } from './ProjectTerminal';
-import './ProjectCard.css';
+import { ProjectTerminal } from './Terminal';
+import './Card.css';
 
 const { Text, Title } = Typography;
 

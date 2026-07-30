@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { HeaderViewModel } from '../src/engine/contracts';
-import { ControlCenterHeader } from './ControlCenterHeader';
+import type { HeaderViewModel } from '../../src/engine/contracts';
+import { ControlCenterHeader } from './Header';
 import { headerDefinition } from './headerDefinition';
 
 const enabledViewModel: HeaderViewModel = {
