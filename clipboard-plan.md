@@ -36,33 +36,33 @@ dhepil-suite/
 
 ---
 
-## 2. CoreUI: Generic Spreadsheet Component (`root/ui/`)
+## 2. CoreUI: Generic DataGrid Component (`root/ui/`)
 
 Komponen ini tidak tahu apa-apa soal Clipboard, ID, atau LocalStorage. Ia murni komponen UI untuk merender data tabular dengan teks area dinamis.
 
 ### `ui/contracts.ts` (Penambahan Tipe Generik)
 ```ts
-export interface SpreadsheetColumnViewModel {
+export interface DataGridColumnViewModel {
   id: string;
   title: string;
 }
 
-export interface SpreadsheetRowViewModel {
+export interface DataGridRowViewModel {
   id: string;
   cells: Record<string, string>; // columnId -> teks konten
 }
 
-export type SpreadsheetSortMode = 'newest' | 'oldest' | 'title-asc' | 'title-desc';
+export type DataGridSortMode = 'newest' | 'oldest' | 'title-asc' | 'title-desc';
 
-export interface SpreadsheetViewModel {
-  columns: SpreadsheetColumnViewModel[];
-  rows: SpreadsheetRowViewModel[];
+export interface DataGridViewModel {
+  columns: DataGridColumnViewModel[];
+  rows: DataGridRowViewModel[];
   sortColumn: string | null;
-  sortMode: SpreadsheetSortMode;
+  sortMode: DataGridSortMode;
 }
 ```
 
-### `ui/spreadsheet/Spreadsheet.tsx`
+### `ui/data-grid/DataGrid.tsx`
 Menerima `viewModel` dan *action handlers*:
 - `onAddColumn()`, `onDeleteColumn(id)`, `onUpdateColumnTitle(id, title)`
 - `onAddRow()`, `onDeleteRow(id)`
@@ -113,12 +113,12 @@ Sebuah *custom hook* yang menangani State dan Persistence:
 
 ## 4. Clipboard Gate (`apps/clipboard/src/ClipboardGate.tsx`)
 
-Satu-satunya komponen yang "tahu segalanya" dalam konteks aplikasi ini. Menjembatani hook Engine dengan UI Spreadsheet.
+Satu-satunya komponen yang "tahu segalanya" dalam konteks aplikasi ini. Menjembatani hook Engine dengan UI DataGrid.
 
 ```tsx
-import { Spreadsheet } from '@dhepil/coreui/spreadsheet'; // Contoh import dari ui/
-import { useClipboardEngine } from './engine/useClipboardEngine';
 import { App as AntdApp } from 'antd'; // Untuk toast message
+import { DataGrid } from '@dhepil/coreui/data-grid'; // Contoh import dari ui/
+import { useClipboardEngine } from './engine/useClipboardEngine';
 
 export function ClipboardGate() {
   const engine = useClipboardEngine();
@@ -134,7 +134,7 @@ export function ClipboardGate() {
   };
 
   return (
-    <Spreadsheet 
+    <DataGrid 
       viewModel={engine.viewModel}
       onAddColumn={engine.addColumn}
       onUpdateCell={engine.updateCell}
@@ -151,7 +151,7 @@ export function ClipboardGate() {
 
 1. **Phase 1: Bangun CoreUI (`root/ui/`)**
    - Modifikasi `ui/contracts.ts` (Tambah tipe).
-   - Buat `ui/spreadsheet/Spreadsheet.tsx` dan styling.
+   - Buat `ui/data-grid/DataGrid.tsx` dan styling.
    - Buat test untuk memastikan isolasi.
 2. **Phase 2: Scaffold App Clipboard (`apps/clipboard/`)**
    - Buat struktur folder, `.manifest.json`, Vite config.

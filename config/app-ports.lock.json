@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "assignments": {
     "dhepil": 2000,
-    "spreadsheet-minimal": 2001
+    "spreadsheet-minimal": 2001,
+    "clipboard": 2002
   }
 }

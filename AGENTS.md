@@ -1,9 +1,12 @@
 # Dhepil Suite - Agent Directives
 
-**CRITICAL INSTRUCTION FOR ALL AI AGENTS:**
-You MUST read `PLAYBOOK.md` located in the root directory before modifying ANY files, planning ANY architecture, or editing this workspace.
+**CRITICAL INSTRUCTION FOR ALL AI AGENTS (ONBOARDING):**
+To understand the project context quickly **without scanning the entire project**, you MUST read these files in order:
+1. `PLAYBOOK.md`: The **Single Source of Truth** for architecture, strict CoreUI boundaries, and app development rules.
+2. `.ai/handoff.md`: Contains the latest status, recent changes, and current focus of the project.
+3. The specific plan document for the app you are working on (if any).
 
-`PLAYBOOK.md` is the **Single Source of Truth** for the Dhepil Suite architecture, including how the Control Center Engine works and the strict CoreUI Parent-Child boundaries.
+Do NOT modify ANY files or plan ANY architecture before reading these documents.
 
 ---
 

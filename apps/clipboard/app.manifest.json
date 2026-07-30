@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "clipboard",
+  "name": "Clipboard",
+  "runtime": "vite",
+  "description": "Grid spreadsheet dinamis khusus untuk manajemen clipboard.",
+  "desktop": {
+    "enabled": false,
+    "script": "desktop:dev"
+  }
+}

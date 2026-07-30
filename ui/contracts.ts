@@ -176,3 +176,34 @@ export interface CoreLayoutProps {
   content?: ReactNode;
   pageAlert?: ReactNode;
 }
+
+export interface DataGridColumnViewModel {
+  id: string;
+  title: string;
+}
+
+export interface DataGridRowViewModel {
+  id: string;
+  cells: Record<string, string>;
+}
+
+export type DataGridSortMode = 'newest' | 'oldest' | 'title-asc' | 'title-desc';
+
+export interface DataGridViewModel {
+  columns: DataGridColumnViewModel[];
+  rows: DataGridRowViewModel[];
+  sortColumn: string | null;
+  sortMode: DataGridSortMode;
+}
+
+export interface DataGridProps {
+  viewModel: DataGridViewModel;
+  onAddColumn?: () => void;
+  onDeleteColumn?: (id: string) => void;
+  onUpdateColumnTitle?: (id: string, title: string) => void;
+  onAddRow?: () => void;
+  onDeleteRow?: (id: string) => void;
+  onUpdateCell?: (rowId: string, columnId: string, text: string) => void;
+  onCopyCell?: (text: string) => void;
+  onSortChange?: (columnId: string | null, mode: DataGridSortMode) => void;
+}

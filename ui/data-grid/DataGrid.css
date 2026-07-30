@@ -1,0 +1,33 @@
+.core-ui-data-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.core-ui-data-grid__toolbar {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  
+  /* Membuat toolbar menempel di atas saat scroll */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #ffffff; /* Mencegah transparan saat menimpa tabel */
+  padding-bottom: 8px;
+  padding-top: 8px;
+}
+
+.core-ui-data-grid__header-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.core-ui-data-grid__header-cell .ant-input {
+  font-weight: bold;
+}

@@ -6,6 +6,12 @@
     },
     {
       "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./apps/spreadsheet-minimal/tsconfig.json"
+    },
+    {
+      "path": "./apps/clipboard/tsconfig.json"
     }
   ]
 }
