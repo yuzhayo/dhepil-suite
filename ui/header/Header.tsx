@@ -1,63 +1,68 @@
 import { Button, Typography } from 'antd';
 
-import type { HeaderViewModel } from '../../src/engine/contracts';
-import { headerDefinition, type HeaderActionKind } from './headerDefinition';
+import type { HeaderProps } from '../contracts';
 import './Header.css';
 
 const { Paragraph, Title } = Typography;
 
-export interface ControlCenterHeaderProps {
-  viewModel: HeaderViewModel;
-  availableActionIds: readonly string[];
-  onAction: (actionId: string) => void;
-}
+export type { HeaderProps };
 
-export function ControlCenterHeader({
+export function Header({
   viewModel,
   availableActionIds,
   onAction,
-}: ControlCenterHeaderProps) {
+  title,
+  subtitle,
+  actions,
+}: HeaderProps) {
   const availableActions = new Set(availableActionIds);
   const actionStates = new Map(
     viewModel.actions.map((actionState) => [actionState.actionId, actionState]),
   );
-  const actions = [...headerDefinition.actions].sort((left, right) => left.order - right.order);
+
+  const displayTitle = title ?? viewModel.title;
+  const displaySubtitle = subtitle ?? viewModel.subtitle;
+  const displayActions = actions ?? viewModel.actionDefinitions ?? [];
+  const sortedActions = [...displayActions].sort(
+    (left, right) => (left.order ?? 0) - (right.order ?? 0),
+  );
 
   return (
-    <header className="control-center-ui-header">
-      <div className="control-center-ui-header__content">
-        <Title className="control-center-ui-header__title" level={1}>
-          {headerDefinition.title}
-        </Title>
-        <Paragraph className="control-center-ui-header__subtitle">
-          {headerDefinition.subtitle}
-        </Paragraph>
+    <header className="core-ui-header">
+      <div className="core-ui-header__content">
+        {displayTitle ? (
+          <Title className="core-ui-header__title" level={1}>
+            {displayTitle}
+          </Title>
+        ) : null}
+        {displaySubtitle ? (
+          <Paragraph className="core-ui-header__subtitle">{displaySubtitle}</Paragraph>
+        ) : null}
       </div>
 
-      <div className="control-center-ui-header__actions" aria-label="Aksi control center">
-        {actions.map((action) => {
-          const state = actionStates.get(action.actionId);
-          const handlerAvailable = availableActions.has(action.actionId);
+      {sortedActions.length > 0 ? (
+        <div className="core-ui-header__actions" aria-label="Aksi header">
+          {sortedActions.map((action) => {
+            const state = actionStates.get(action.actionId);
+            const handlerAvailable =
+              availableActionIds === undefined || availableActions.has(action.actionId);
 
-          return (
-            <Button
-              key={action.id}
-              aria-label={action.accessibleName}
-              danger={action.kind === 'danger'}
-              disabled={!handlerAvailable || Boolean(state?.disabled)}
-              loading={Boolean(state?.loading)}
-              type={toButtonType(action.kind)}
-              onClick={() => onAction(action.actionId)}
-            >
-              {action.label}
-            </Button>
-          );
-        })}
-      </div>
+            return (
+              <Button
+                key={action.id}
+                aria-label={action.accessibleName ?? action.label}
+                danger={action.kind === 'danger'}
+                disabled={!handlerAvailable || Boolean(state?.disabled)}
+                loading={Boolean(state?.loading)}
+                type={action.kind === 'primary' ? 'primary' : 'default'}
+                onClick={() => onAction?.(action.actionId)}
+              >
+                {action.label}
+              </Button>
+            );
+          })}
+        </div>
+      ) : null}
     </header>
   );
-}
-
-function toButtonType(kind: HeaderActionKind): 'default' | 'primary' {
-  return kind === 'primary' ? 'primary' : 'default';
 }

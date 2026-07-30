@@ -1,17 +1,17 @@
 import type { ConfigWithExtends } from 'typescript-eslint';
 
 /**
- * ESLint boundary rules for the new modular architecture:
+ * ESLint boundary rules for the modular architecture:
  *
  *   src/engine/          — all logic (domain, data, children orchestration)
- *   ui/                  — shared UI components at monorepo root (props only)
- *   src/ControlCenterScreen.tsx — composition root (may import engine + ui)
+ *   ui/                  — shared generic CoreUI components at monorepo root (props only, NO engine dependency)
+ *   src/ControlCenterScreen.tsx — gate / composition root (maps engine + ui)
  *
  * Import contract:
  *   engine/*             → engine internals only. NOT ui/, App.tsx, apps/
  *   engine/children/*    → engine parent modules only. NOT sibling children
  *   ui/*                 → props only. NOT engine/, scripts/
- *   ControlCenterScreen  → engine/ + ui/ (the only place that wires them)
+ *   ControlCenterScreen  → engine/ + ui/ (the gate that wires them)
  */
 
 export const controlCenterBoundaryConfigs = [
@@ -109,7 +109,7 @@ export const controlCenterBoundaryConfigs = [
     },
   },
 
-  // ── ui/ must not import engine/ (except the shared type contract: engine/contracts) ──
+  // ── ui/ must not import engine/ or scripts/ ──
   {
     files: ['ui/**/*.{ts,tsx}'],
     rules: {
@@ -118,9 +118,9 @@ export const controlCenterBoundaryConfigs = [
         {
           patterns: [
             {
-              regex: '(?:^|/)engine/(?!contracts(?:\\.[cm]?[jt]sx?)?$)[^/]+',
+              regex: '(?:^|/)engine(?:/|$)',
               message:
-                'UI components must not import engine modules — only engine/contracts (shared types) is allowed.',
+                'UI components must not import engine modules — UI is completely generic and decoupled.',
             },
             {
               regex: '(?:^|/)scripts(?:/|$)',

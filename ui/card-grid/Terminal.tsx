@@ -1,20 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { Typography } from 'antd';
 
-import type { TerminalViewModel } from '../../src/engine/contracts';
-import { cardDefinition } from './cardDefinition';
+import type { TerminalProps } from '../contracts';
 import './Card.css';
 
 const { Text } = Typography;
 
-export interface ProjectTerminalProps {
-  viewModel: TerminalViewModel;
-}
+export type { TerminalProps };
 
-export function ProjectTerminal({ viewModel }: ProjectTerminalProps) {
-  const terminal = cardDefinition.terminal;
+export function Terminal({ viewModel }: TerminalProps) {
+  const title = viewModel.title ?? 'Output process';
+  const emptyCopy = viewModel.emptyCopy ?? 'Belum ada output process.';
+  const truncatedCopy = viewModel.truncatedCopy ?? 'Hanya baris log terbaru yang ditampilkan.';
+
   const displayLines = viewModel.status === 'stopped' ? [] : viewModel.lines;
-  const content = displayLines.length === 0 ? terminal.emptyCopy : displayLines.join('\n');
+  const content = displayLines.length === 0 ? emptyCopy : displayLines.join('\n');
   const preRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
@@ -24,19 +24,19 @@ export function ProjectTerminal({ viewModel }: ProjectTerminalProps) {
   }, [content]);
 
   return (
-    <section className="project-terminal">
-      <div className="project-terminal__heading">
-        <Text strong>{terminal.title}</Text>
+    <section className="core-ui-terminal">
+      <div className="core-ui-terminal__heading">
+        <Text strong>{title}</Text>
         {viewModel.truncated ? (
-          <Text className="project-terminal__truncated" type="secondary">
-            {terminal.truncatedCopy} Maksimum {viewModel.maxLines} baris.
+          <Text className="core-ui-terminal__truncated" type="secondary">
+            {truncatedCopy} Maksimum {viewModel.maxLines} baris.
           </Text>
         ) : null}
       </div>
       <pre
         ref={preRef}
-        className="project-terminal__content"
-        aria-label={terminal.accessibleName}
+        className="core-ui-terminal__content"
+        aria-label={title}
         aria-live="polite"
         tabIndex={0}
       >

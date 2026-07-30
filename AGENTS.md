@@ -1,13 +1,14 @@
 # Dhepil Suite - Agent Directives
 
 **CRITICAL INSTRUCTION FOR ALL AI AGENTS:**
-You MUST read `PLAYBOOK.md` located in the root directory before modifying ANY files, planning ANY architecture, or editing this workspace. 
+You MUST read `PLAYBOOK.md` located in the root directory before modifying ANY files, planning ANY architecture, or editing this workspace.
 
 `PLAYBOOK.md` is the **Single Source of Truth** for the Dhepil Suite architecture, including how the Control Center Engine works and the strict CoreUI Parent-Child boundaries.
 
 ---
 
 ## TL;DR Golden Rules
+
 1. **Never write logic in Parent Components**: Files like `src/ControlCenterScreen.tsx` and `ui/CoreLayout.tsx` are dumb orchestrators. **All visual behavior and logic must be encapsulated in the leaf Child components** (e.g., `ui/card-grid/Terminal.tsx`).
 2. **Engine Flat Children**: The `src/engine/children/` folder must remain completely flat. No subfolders.
 3. **No Presenters**: We do not use a presenter layer. `ControlCenterScreen.tsx` maps raw engine data to ViewModels directly.
@@ -25,4 +26,4 @@ npm run build            # Vite build
 npx --yes antd lint src --format json
 ```
 
-*For detailed explanations of these rules, architecture, and diagrams, read `PLAYBOOK.md`.*
+_For detailed explanations of these rules, architecture, and diagrams, read `PLAYBOOK.md`._

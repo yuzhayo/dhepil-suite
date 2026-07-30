@@ -65,25 +65,25 @@ apps/clipboard/
 
 ### Penjelasan per file
 
-| File | Sumber | Penjelasan |
-|------|--------|------------|
-| `AGENTS.md` | Copy dari `spreadsheet-minimal`, ganti nama | Aturan kepemilikan app, kontrak discovery, script dev Vite |
-| `app.manifest.json` | Copy, ganti `id: "clipboard"`, `name: "Clipboard"` | Kontrak discovery otomatis: schemaVersion 1, id cocok folder, runtime vite |
-| `index.html` | Copy, ganti `<title>` dan `theme-color` | HTML entry point dengan `<div id="root">` dan `<script type="module" src="/src/main.tsx">` |
-| `package.json` | Copy, ganti `name: "@dhepil-suite/clipboard"` | npm package dengan script `dev`, `build`, `typecheck`, `preview`; deps antd/react/vite |
-| `tsconfig.json` | Copy persis dari `spreadsheet-minimal` | Identik: target ES2022, Bundler resolution, react-jsx, strict, include src + vite.config.ts |
-| `vite.config.ts` | Copy persis dari `spreadsheet-minimal` | Identik 3 baris: `import react from '@vitejs/plugin-react'; export default defineConfig({ plugins: [react()] });` |
-| `src/main.tsx` | Copy persis | `createRoot` + `<StrictMode><App /></StrictMode>` + import global.css |
-| `src/vite-env.d.ts` | Copy persis | `/// <reference types="vite/client" />` |
-| `src/App.tsx` | Copy, ganti import screen | Render `<ApplicationProviders><ClipboardScreen /></ApplicationProviders>` |
-| `src/app/ApplicationProviders.tsx` | Copy, ganti `colorPrimary: '#722ed1'` | `ConfigProvider` + `AntdApp` wrapper; ungu untuk membedakan dari app lain |
-| `src/styles/global.css` | Copy persis | Reset + box-sizing + root min-height |
-| `src/features/clipboard/data/types.ts` | **BARU** | Interface `ClipboardColumn`, `ClipboardRow`, `ClipboardCell`, `SortMode`, `STORAGE_KEY` |
-| `src/features/clipboard/data/useClipboardData.ts` | **BARU** | Custom hook: load/save localStorage, CRUD kolom/baris/cell, sort, debounce 500ms |
-| `src/features/clipboard/screens/ClipboardScreen.tsx` | **BARU** | Screen utama: antd Table + Input.TextArea + Copy/Delete + Select sort + Empty state |
-| `src/features/clipboard/screens/ClipboardScreen.css` | **BARU** | Styling minimal: grid scroll, responsive padding, color accent |
-| `src/features/clipboard/sync/sheetsAdapter.ts` | **BARU** | Placeholder interface `SheetsSyncAdapter` + factory `createSheetsAdapter()` — throw error sampai diimplementasikan |
-| `src/features/clipboard/__tests__/ClipboardScreen.test.tsx` | **BARU** | 10 test case: render, CRUD, copy, sort, localStorage round-trip |
+| File                                                        | Sumber                                             | Penjelasan                                                                                                         |
+| ----------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `AGENTS.md`                                                 | Copy dari `spreadsheet-minimal`, ganti nama        | Aturan kepemilikan app, kontrak discovery, script dev Vite                                                         |
+| `app.manifest.json`                                         | Copy, ganti `id: "clipboard"`, `name: "Clipboard"` | Kontrak discovery otomatis: schemaVersion 1, id cocok folder, runtime vite                                         |
+| `index.html`                                                | Copy, ganti `<title>` dan `theme-color`            | HTML entry point dengan `<div id="root">` dan `<script type="module" src="/src/main.tsx">`                         |
+| `package.json`                                              | Copy, ganti `name: "@dhepil-suite/clipboard"`      | npm package dengan script `dev`, `build`, `typecheck`, `preview`; deps antd/react/vite                             |
+| `tsconfig.json`                                             | Copy persis dari `spreadsheet-minimal`             | Identik: target ES2022, Bundler resolution, react-jsx, strict, include src + vite.config.ts                        |
+| `vite.config.ts`                                            | Copy persis dari `spreadsheet-minimal`             | Identik 3 baris: `import react from '@vitejs/plugin-react'; export default defineConfig({ plugins: [react()] });`  |
+| `src/main.tsx`                                              | Copy persis                                        | `createRoot` + `<StrictMode><App /></StrictMode>` + import global.css                                              |
+| `src/vite-env.d.ts`                                         | Copy persis                                        | `/// <reference types="vite/client" />`                                                                            |
+| `src/App.tsx`                                               | Copy, ganti import screen                          | Render `<ApplicationProviders><ClipboardScreen /></ApplicationProviders>`                                          |
+| `src/app/ApplicationProviders.tsx`                          | Copy, ganti `colorPrimary: '#722ed1'`              | `ConfigProvider` + `AntdApp` wrapper; ungu untuk membedakan dari app lain                                          |
+| `src/styles/global.css`                                     | Copy persis                                        | Reset + box-sizing + root min-height                                                                               |
+| `src/features/clipboard/data/types.ts`                      | **BARU**                                           | Interface `ClipboardColumn`, `ClipboardRow`, `ClipboardCell`, `SortMode`, `STORAGE_KEY`                            |
+| `src/features/clipboard/data/useClipboardData.ts`           | **BARU**                                           | Custom hook: load/save localStorage, CRUD kolom/baris/cell, sort, debounce 500ms                                   |
+| `src/features/clipboard/screens/ClipboardScreen.tsx`        | **BARU**                                           | Screen utama: antd Table + Input.TextArea + Copy/Delete + Select sort + Empty state                                |
+| `src/features/clipboard/screens/ClipboardScreen.css`        | **BARU**                                           | Styling minimal: grid scroll, responsive padding, color accent                                                     |
+| `src/features/clipboard/sync/sheetsAdapter.ts`              | **BARU**                                           | Placeholder interface `SheetsSyncAdapter` + factory `createSheetsAdapter()` — throw error sampai diimplementasikan |
+| `src/features/clipboard/__tests__/ClipboardScreen.test.tsx` | **BARU**                                           | 10 test case: render, CRUD, copy, sort, localStorage round-trip                                                    |
 
 ---
 
@@ -91,15 +91,15 @@ apps/clipboard/
 
 ```ts
 interface ClipboardColumn {
-  id: string;          // crypto.randomUUID()
-  title: string;       // nama kolom, editable
+  id: string; // crypto.randomUUID()
+  title: string; // nama kolom, editable
 }
 
 interface ClipboardRow {
-  id: string;          // crypto.randomUUID()
-  createdAt: string;   // ISO 8601
-  updatedAt: string;   // ISO 8601
-  cells: Record<string, string>;  // columnId → content
+  id: string; // crypto.randomUUID()
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  cells: Record<string, string>; // columnId → content
 }
 
 type SortMode = 'newest' | 'oldest' | 'title-asc' | 'title-desc';
@@ -181,21 +181,21 @@ import { CopyOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 ```
 
-| Komponen | Import | Penggunaan | Alasan |
-|----------|--------|------------|--------|
-| `Table` | `antd` | Grid utama, `dataSource={sortedRows}`, `columns` dinamis, `pagination={false}`, `scroll={{ x: 'max-content' }}` | Sudah ada di antd 6; native sorting, accessible, responsive |
-| `Input` | `antd` | Edit title kolom di header, `variant="borderless"` | Ringan, tidak mengganggu layout |
-| `Input.TextArea` | `antd` | Isi cell, `autoSize={{ minRows: 1, maxRows: 8 }}`, `variant="borderless"` | Satu baris tetap nyaman, bisa meluas |
-| `Button` | `antd` | Copy, Tambah, Hapus | Standar antd |
-| `CopyOutlined` | `@ant-design/icons` | Ikon tombol Copy | Ikon universal |
-| `PlusOutlined` | `@ant-design/icons` | Ikon tombol Tambah Kolom / Tambah Baris | Jelas, standar |
-| `DeleteOutlined` | `@ant-design/icons` | Ikon tombol Hapus Kolom / Hapus Baris | Ikon universal |
-| `Popconfirm` | `antd` | Konfirmasi hapus kolom/baris, `trigger="click"` | Lebih ringan dari modal |
-| `Select` | `antd` | Pilih kolom sort, pilih mode sort | Compact, standar antd |
-| `Typography.Title` | `antd` | Judul halaman "Clipboard" | Konsisten dengan app lain |
-| `Space` | `antd` | Layout toolbar (gap antar tombol) | Standar antd |
-| `Empty` | `antd` | State kosong saat belum ada baris | Standar antd |
-| `App.useApp()` | `antd` | `message.success('Disalin')` / `message.error('Gagal menyalin')` | Sudah ada `AntdApp` wrapper di `ApplicationProviders.tsx` |
+| Komponen           | Import              | Penggunaan                                                                                                      | Alasan                                                      |
+| ------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `Table`            | `antd`              | Grid utama, `dataSource={sortedRows}`, `columns` dinamis, `pagination={false}`, `scroll={{ x: 'max-content' }}` | Sudah ada di antd 6; native sorting, accessible, responsive |
+| `Input`            | `antd`              | Edit title kolom di header, `variant="borderless"`                                                              | Ringan, tidak mengganggu layout                             |
+| `Input.TextArea`   | `antd`              | Isi cell, `autoSize={{ minRows: 1, maxRows: 8 }}`, `variant="borderless"`                                       | Satu baris tetap nyaman, bisa meluas                        |
+| `Button`           | `antd`              | Copy, Tambah, Hapus                                                                                             | Standar antd                                                |
+| `CopyOutlined`     | `@ant-design/icons` | Ikon tombol Copy                                                                                                | Ikon universal                                              |
+| `PlusOutlined`     | `@ant-design/icons` | Ikon tombol Tambah Kolom / Tambah Baris                                                                         | Jelas, standar                                              |
+| `DeleteOutlined`   | `@ant-design/icons` | Ikon tombol Hapus Kolom / Hapus Baris                                                                           | Ikon universal                                              |
+| `Popconfirm`       | `antd`              | Konfirmasi hapus kolom/baris, `trigger="click"`                                                                 | Lebih ringan dari modal                                     |
+| `Select`           | `antd`              | Pilih kolom sort, pilih mode sort                                                                               | Compact, standar antd                                       |
+| `Typography.Title` | `antd`              | Judul halaman "Clipboard"                                                                                       | Konsisten dengan app lain                                   |
+| `Space`            | `antd`              | Layout toolbar (gap antar tombol)                                                                               | Standar antd                                                |
+| `Empty`            | `antd`              | State kosong saat belum ada baris                                                                               | Standar antd                                                |
+| `App.useApp()`     | `antd`              | `message.success('Disalin')` / `message.error('Gagal menyalin')`                                                | Sudah ada `AntdApp` wrapper di `ApplicationProviders.tsx`   |
 
 ### Copy behavior
 
@@ -235,7 +235,9 @@ export interface SheetsSyncAdapter {
 export function createSheetsAdapter(): SheetsSyncAdapter {
   return {
     async exportData() {
-      throw new Error('Sync adapter belum diimplementasikan. Letakkan kode Tampermonkey/Apps Script di folder ini.');
+      throw new Error(
+        'Sync adapter belum diimplementasikan. Letakkan kode Tampermonkey/Apps Script di folder ini.',
+      );
     },
     async importData() {
       throw new Error('Sync adapter belum diimplementasikan.');
@@ -259,18 +261,18 @@ UI: dua tombol di header — "Ekspor ke Sheets" dan "Impor dari Sheets" — disa
 
 **10 test cases**:
 
-| # | Test | Assertion |
-|---|------|-----------|
-| 1 | Render empty state | `<Empty>` muncul, tidak ada table |
-| 2 | Tambah kolom | Kolom baru muncul dengan title "Kolom Baru" |
-| 3 | Tambah baris | Baris baru muncul dengan cell kosong |
-| 4 | Edit title kolom | Input menerima teks, nilai tersimpan |
-| 5 | Ketik di cell | TextArea menerima teks, nilai tersimpan |
-| 6 | Klik Copy | `navigator.clipboard.writeText` dipanggil dengan content cell |
-| 7 | Hapus kolom | Popconfirm muncul, konfirmasi → kolom hilang |
-| 8 | Hapus baris | Popconfirm muncul, konfirmasi → baris hilang |
-| 9 | Sort | Ganti Select → urutan baris berubah |
-| 10 | localStorage | Reload hook → data terbaca kembali |
+| #   | Test               | Assertion                                                     |
+| --- | ------------------ | ------------------------------------------------------------- |
+| 1   | Render empty state | `<Empty>` muncul, tidak ada table                             |
+| 2   | Tambah kolom       | Kolom baru muncul dengan title "Kolom Baru"                   |
+| 3   | Tambah baris       | Baris baru muncul dengan cell kosong                          |
+| 4   | Edit title kolom   | Input menerima teks, nilai tersimpan                          |
+| 5   | Ketik di cell      | TextArea menerima teks, nilai tersimpan                       |
+| 6   | Klik Copy          | `navigator.clipboard.writeText` dipanggil dengan content cell |
+| 7   | Hapus kolom        | Popconfirm muncul, konfirmasi → kolom hilang                  |
+| 8   | Hapus baris        | Popconfirm muncul, konfirmasi → baris hilang                  |
+| 9   | Sort               | Ganti Select → urutan baris berubah                           |
+| 10  | localStorage       | Reload hook → data terbaca kembali                            |
 
 Mock: `navigator.clipboard` via `vi.fn()`, `App.useApp()` via `vi.mock()`, `localStorage` via `vi.stubGlobal()` atau langsung.
 
@@ -295,16 +297,16 @@ Semua 6 harus lulus.
 
 ## Yang Tidak Dibangun (Sengaja Diskip)
 
-| Fitur | Alasan | Kapan ditambah |
-|-------|--------|----------------|
-| Drag-and-drop kolom/baris | Kompleks, butuh library atau implementasi manual | User minta |
-| Search/filter | Cell count belum besar | Saat > 50 cell |
-| Pin/favorite, kategori, color label | Tidak diminta | User minta |
-| Dark mode custom | antd ConfigProvider sudah handle | User minta custom |
-| Multi-select / bulk copy | Tidak diminta | User minta |
-| Keyboard shortcuts | Tidak diminta | User minta |
-| Undo/redo | Kompleks | User minta |
-| Autosave indicator | Debounce 500ms cukup cepat, tidak perlu UI | User minta |
+| Fitur                               | Alasan                                           | Kapan ditambah    |
+| ----------------------------------- | ------------------------------------------------ | ----------------- |
+| Drag-and-drop kolom/baris           | Kompleks, butuh library atau implementasi manual | User minta        |
+| Search/filter                       | Cell count belum besar                           | Saat > 50 cell    |
+| Pin/favorite, kategori, color label | Tidak diminta                                    | User minta        |
+| Dark mode custom                    | antd ConfigProvider sudah handle                 | User minta custom |
+| Multi-select / bulk copy            | Tidak diminta                                    | User minta        |
+| Keyboard shortcuts                  | Tidak diminta                                    | User minta        |
+| Undo/redo                           | Kompleks                                         | User minta        |
+| Autosave indicator                  | Debounce 500ms cukup cepat, tidak perlu UI       | User minta        |
 
 ---
 

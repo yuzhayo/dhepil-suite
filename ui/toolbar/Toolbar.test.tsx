@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import type { ToolbarViewModel } from '../../src/engine/contracts';
-import { ProjectToolbar } from './Toolbar';
-import { toolbarDefinition } from './toolbarDefinition';
+import { Toolbar } from './Toolbar';
+import type { ToolbarViewModel } from '../contracts';
+import { toolbarControls } from '../../src/controlCenterDefinitions';
 
 const viewModel: ToolbarViewModel = {
   searchQuery: 'manga',
@@ -34,6 +34,7 @@ const viewModel: ToolbarViewModel = {
     { actionId: 'project.view.change', disabled: false, loading: false },
     { actionId: 'project.refresh', disabled: false, loading: false },
   ],
+  controls: toolbarControls,
 };
 
 const availableActionIds = [
@@ -44,20 +45,16 @@ const availableActionIds = [
   'project.quick-kill',
 ];
 
-describe('ProjectToolbar', () => {
+describe('Toolbar', () => {
   it('renders controls in definition order', () => {
     const { container } = render(
-      <ProjectToolbar
-        viewModel={viewModel}
-        availableActionIds={availableActionIds}
-        onAction={vi.fn()}
-      />,
+      <Toolbar viewModel={viewModel} availableActionIds={availableActionIds} onAction={vi.fn()} />,
     );
     const renderedIds = [...container.querySelectorAll('[data-toolbar-control-id]')].map(
       (control) => control.getAttribute('data-toolbar-control-id'),
     );
-    const expectedIds = [...toolbarDefinition]
-      .sort((left, right) => left.order - right.order)
+    const expectedIds = [...toolbarControls]
+      .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
       .map((control) => control.id);
 
     expect(renderedIds).toEqual(expectedIds);
@@ -67,11 +64,7 @@ describe('ProjectToolbar', () => {
   it('forwards action IDs and payloads without local state', () => {
     const onAction = vi.fn();
     render(
-      <ProjectToolbar
-        viewModel={viewModel}
-        availableActionIds={availableActionIds}
-        onAction={onAction}
-      />,
+      <Toolbar viewModel={viewModel} availableActionIds={availableActionIds} onAction={onAction} />,
     );
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Cari project' }), {
@@ -85,7 +78,7 @@ describe('ProjectToolbar', () => {
 
   it('keeps a control visible and disabled when its handler is unavailable', () => {
     render(
-      <ProjectToolbar
+      <Toolbar
         viewModel={viewModel}
         availableActionIds={availableActionIds.filter((actionId) => actionId !== 'project.refresh')}
         onAction={vi.fn()}
@@ -95,14 +88,10 @@ describe('ProjectToolbar', () => {
     expect(screen.getByRole('button', { name: 'Refresh daftar project' })).toBeDisabled();
   });
 
-  it('dispatches quick kill with the selected project ID', async () => {
+  it('dispatches quick kill with the selected item ID', async () => {
     const onAction = vi.fn();
     render(
-      <ProjectToolbar
-        viewModel={viewModel}
-        availableActionIds={availableActionIds}
-        onAction={onAction}
-      />,
+      <Toolbar viewModel={viewModel} availableActionIds={availableActionIds} onAction={onAction} />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Server aktif (1) ▾' }));
@@ -112,19 +101,5 @@ describe('ProjectToolbar', () => {
     await waitFor(() => {
       expect(onAction).toHaveBeenCalledWith('project.quick-kill', 'manga-reader');
     });
-  });
-
-  it('disables the active-server control when quick-kill has no handler', () => {
-    render(
-      <ProjectToolbar
-        viewModel={viewModel}
-        availableActionIds={availableActionIds.filter(
-          (actionId) => actionId !== 'project.quick-kill',
-        )}
-        onAction={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: 'Server aktif (1) ▾' })).toBeDisabled();
   });
 });

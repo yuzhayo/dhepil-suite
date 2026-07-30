@@ -1,4 +1,5 @@
-import type { AlertKey, SemanticTone, StatusKey, TagKey } from '../../src/engine/contracts';
+import type { HeaderAction, ToolbarControl } from '../ui/contracts';
+import type { AlertKey, StatusKey, TagKey } from './engine/contracts';
 
 export type CardActionKind = 'default' | 'primary' | 'danger';
 export type StatusBadgeKind = 'success' | 'processing' | 'default' | 'error' | 'warning';
@@ -113,11 +114,114 @@ export const cardDefinition = {
     success: 'success',
     warning: 'warning',
     danger: 'error',
-  } satisfies Record<SemanticTone, AlertPresentationKind>,
+  } satisfies Record<string, AlertPresentationKind>,
   terminal: {
     title: 'Output process',
     accessibleName: 'Output process',
     emptyCopy: 'Belum ada output process.',
     truncatedCopy: 'Hanya baris log terbaru yang ditampilkan.',
   },
+};
+
+export const headerDefinition = {
+  title: 'Dhepil Suite',
+  subtitle: 'Nyalakan, buka, pantau, dan hentikan semua app dari satu control center lokal.',
+  actions: [
+    {
+      id: 'refresh-projects',
+      label: 'Refresh',
+      accessibleName: 'Refresh status project',
+      actionId: 'project.refresh',
+      kind: 'default',
+      order: 10,
+    },
+  ] satisfies readonly HeaderAction[],
+};
+
+export const toolbarControls: readonly ToolbarControl[] = [
+  {
+    id: 'project-search',
+    kind: 'search',
+    actionId: 'project.search.change',
+    accessibleName: 'Cari project',
+    placeholder: 'Cari nama, folder, atau port',
+    order: 10,
+    group: 'query',
+    responsivePriority: 10,
+  },
+  {
+    id: 'project-sort',
+    kind: 'select',
+    actionId: 'project.sort.change',
+    accessibleName: 'Urutkan project',
+    options: [
+      { label: 'Nama A–Z', value: 'name-asc' },
+      { label: 'Nama Z–A', value: 'name-desc' },
+      { label: 'Port terkecil', value: 'port-asc' },
+      { label: 'Aktif lebih dulu', value: 'active-first' },
+    ],
+    order: 20,
+    group: 'query',
+    responsivePriority: 20,
+  },
+  {
+    id: 'project-view',
+    kind: 'view',
+    actionId: 'project.view.change',
+    accessibleName: 'Mode tampilan project',
+    options: [
+      { label: 'Grid', value: 'grid' },
+      { label: 'List', value: 'list' },
+    ],
+    order: 30,
+    group: 'query',
+    responsivePriority: 30,
+  },
+  {
+    id: 'project-refresh',
+    kind: 'button',
+    actionId: 'project.refresh',
+    label: 'Refresh',
+    accessibleName: 'Refresh daftar project',
+    order: 40,
+    group: 'actions',
+    responsivePriority: 40,
+  },
+  {
+    id: 'active-servers',
+    kind: 'active-servers',
+    actionId: 'project.quick-kill',
+    label: 'Server aktif',
+    accessibleName: 'Daftar server aktif',
+    emptyLabel: 'Tidak ada server aktif',
+    killLabel: 'Kill',
+    killingLabel: 'Stopping…',
+    externalLabel: 'External',
+    pidLabel: 'PID',
+    order: 50,
+    group: 'actions',
+    responsivePriority: 50,
+  },
+  {
+    id: 'project-summary',
+    kind: 'summary',
+    visibleLabel: 'ditampilkan',
+    totalLabel: 'total',
+    accessibleName: 'Ringkasan project',
+    order: 60,
+    group: 'status',
+    responsivePriority: 60,
+  },
+];
+
+export const gridDefinition = {
+  skeletonCount: 2,
+  loadingAccessibleLabel: 'Memuat project',
+  emptyAccessibleLabel: 'Daftar project kosong',
+  emptyCopy: 'Project tidak ditemukan',
+  cardOrderingPolicyName: 'view-model-order',
+  layoutModes: [
+    { id: 'grid', accessibleLabel: 'Daftar project mode grid' },
+    { id: 'list', accessibleLabel: 'Daftar project mode list' },
+  ],
 };

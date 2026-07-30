@@ -1,4 +1,4 @@
-.control-center-ui-header {
+.core-ui-header {
   display: flex;
   width: min(
     var(--layout-max-width),
@@ -14,24 +14,24 @@
   background: transparent;
 }
 
-.control-center-ui-header__content {
+.core-ui-header__content {
   min-width: 0;
 }
 
-.control-center-ui-header__title.ant-typography {
+.core-ui-header__title.ant-typography {
   margin: 0;
   color: inherit;
   font-size: var(--layout-header-title-size);
   line-height: 1.2;
 }
 
-.control-center-ui-header__subtitle.ant-typography {
+.core-ui-header__subtitle.ant-typography {
   max-width: 720px;
   margin: 4px 0 0;
   color: rgba(255, 255, 255, 0.82);
 }
 
-.control-center-ui-header__actions {
+.core-ui-header__actions {
   display: flex;
   flex: 0 0 auto;
   flex-wrap: wrap;

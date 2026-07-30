@@ -1,4 +1,4 @@
-.project-toolbar-ui {
+.core-ui-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -10,46 +10,46 @@
   box-shadow: 0 8px 24px rgb(16 36 70 / 6%);
 }
 
-.project-toolbar-ui__control {
+.core-ui-toolbar__control {
   min-width: 0;
 }
 
-.project-toolbar-ui__control--select .ant-select {
+.core-ui-toolbar__control--select .ant-select {
   width: 100%;
 }
 
-.project-toolbar-ui__control--search {
+.core-ui-toolbar__control--search {
   flex: 1 1 240px;
 }
 
-.project-toolbar-ui__control--select {
+.core-ui-toolbar__control--select {
   flex: 0 1 auto;
 }
 
-.project-toolbar-ui__control--view {
+.core-ui-toolbar__control--view {
   flex: 0 1 auto;
 }
 
-.project-toolbar-ui__control--button {
+.core-ui-toolbar__control--button {
   flex: 0 1 auto;
 }
 
-.project-toolbar-ui__control--active-servers {
+.core-ui-toolbar__control--active-servers {
   flex: 0 1 auto;
 }
 
-.project-toolbar-ui__control--summary {
+.core-ui-toolbar__control--summary {
   margin-left: auto;
   flex: 0 1 auto;
 }
 
-.project-toolbar-ui__summary {
+.core-ui-toolbar__summary {
   display: block;
   text-align: var(--layout-toolbar-summary-align);
   white-space: nowrap;
 }
 
-.project-toolbar-ui__summary-label {
+.core-ui-toolbar__summary-label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -60,7 +60,7 @@
   border: 0;
 }
 
-.project-toolbar-ui__server {
+.core-ui-toolbar__server {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -68,16 +68,16 @@
   gap: var(--layout-header-gap);
 }
 
-.project-toolbar-ui__server small {
+.core-ui-toolbar__server small {
   display: block;
   color: #667085;
 }
 
-.project-toolbar-ui__kill {
+.core-ui-toolbar__kill {
   color: #cf1322;
   font-weight: 600;
 }
 
-.project-toolbar-ui__kill--external {
+.core-ui-toolbar__kill--external {
   color: #667085;
 }

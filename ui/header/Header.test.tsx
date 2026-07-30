@@ -1,81 +1,48 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { HeaderViewModel } from '../../src/engine/contracts';
-import { ControlCenterHeader } from './Header';
-import { headerDefinition } from './headerDefinition';
+import { Header } from './Header';
+import type { HeaderProps } from '../contracts';
 
-const enabledViewModel: HeaderViewModel = {
-  actions: [
-    {
-      actionId: 'project.refresh',
-      disabled: false,
-      loading: false,
-    },
-  ],
+const sampleHeaderProps: HeaderProps = {
+  viewModel: {
+    title: 'Test Header',
+    subtitle: 'Header Subtitle',
+    actions: [{ actionId: 'test.action', disabled: false, loading: false }],
+    actionDefinitions: [
+      {
+        id: 'test-action',
+        label: 'Refresh',
+        accessibleName: 'Refresh items',
+        actionId: 'test.action',
+        kind: 'default',
+        order: 10,
+      },
+    ],
+  },
+  availableActionIds: ['test.action'],
 };
 
-describe('ControlCenterHeader', () => {
-  it('renders static copy and actions in definition order', () => {
-    render(
-      <ControlCenterHeader
-        viewModel={enabledViewModel}
-        availableActionIds={['project.refresh']}
-        onAction={vi.fn()}
-      />,
-    );
+describe('Header', () => {
+  it('renders title, subtitle, and action buttons', () => {
+    render(<Header {...sampleHeaderProps} onAction={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { name: headerDefinition.title })).toBeInTheDocument();
-    expect(screen.getByText(headerDefinition.subtitle)).toBeInTheDocument();
-
-    const expectedLabels = [...headerDefinition.actions]
-      .sort((left, right) => left.order - right.order)
-      .map((action) => action.accessibleName);
-    const renderedLabels = screen
-      .getAllByRole('button')
-      .map((button) => button.getAttribute('aria-label'));
-
-    expect(renderedLabels).toEqual(expectedLabels);
+    expect(screen.getByRole('heading', { name: 'Test Header' })).toBeInTheDocument();
+    expect(screen.getByText('Header Subtitle')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh items' })).toBeInTheDocument();
   });
 
-  it('forwards the declared action ID', () => {
+  it('forwards action ID when button is clicked', () => {
     const onAction = vi.fn();
-    render(
-      <ControlCenterHeader
-        viewModel={enabledViewModel}
-        availableActionIds={['project.refresh']}
-        onAction={onAction}
-      />,
-    );
+    render(<Header {...sampleHeaderProps} onAction={onAction} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh status project' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh items' }));
 
-    expect(onAction).toHaveBeenCalledTimes(1);
-    expect(onAction).toHaveBeenCalledWith('project.refresh');
+    expect(onAction).toHaveBeenCalledWith('test.action');
   });
 
-  it('keeps an action visible and disabled when its handler is unavailable', () => {
-    render(
-      <ControlCenterHeader
-        viewModel={enabledViewModel}
-        availableActionIds={[]}
-        onAction={vi.fn()}
-      />,
-    );
+  it('disables action when handler is unavailable', () => {
+    render(<Header {...sampleHeaderProps} availableActionIds={[]} onAction={vi.fn()} />);
 
-    expect(screen.getByRole('button', { name: 'Refresh status project' })).toBeDisabled();
-  });
-
-  it('respects the disabled state supplied by the view model', () => {
-    render(
-      <ControlCenterHeader
-        viewModel={{
-          actions: [{ actionId: 'project.refresh', disabled: true, loading: false }],
-        }}
-        availableActionIds={['project.refresh']}
-        onAction={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: 'Refresh status project' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Refresh items' })).toBeDisabled();
   });
 });

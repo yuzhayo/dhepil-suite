@@ -19,7 +19,7 @@ describe('architecture import boundaries', () => {
 
   const forbiddenCases = [
     // engine/ must not import ui/, App.tsx, apps/, scripts/
-    ['engine → ui', 'src/engine/fixture.ts', "import '../../ui/ProjectCard';"],
+    ['engine → ui', 'src/engine/fixture.ts', "import '../../ui/card-grid/Card';"],
     ['engine → App.tsx', 'src/engine/fixture.ts', "import '../App';"],
     ['engine → apps', 'src/engine/fixture.ts', "import '../../apps/dhepil/main';"],
     ['engine → scripts', 'src/engine/fixture.ts', "import '../../scripts/project-manager';"],
@@ -34,7 +34,7 @@ describe('architecture import boundaries', () => {
     ['child → sibling quickKill', 'src/engine/children/projectRefresh.ts', "import './quickKill';"],
 
     // engine/children/ inherits engine restrictions
-    ['child → ui', 'src/engine/children/fixture.ts', "import '../../../ui/ProjectCard';"],
+    ['child → ui', 'src/engine/children/fixture.ts', "import '../../../ui/card-grid/Card';"],
     ['child → apps', 'src/engine/children/fixture.ts', "import '../../../apps/dhepil/main';"],
     [
       'child → scripts',
@@ -42,10 +42,11 @@ describe('architecture import boundaries', () => {
       "import '../../../scripts/project-manager';",
     ],
 
-    // ui/ must not import engine modules (except contracts)
+    // ui/ must not import engine modules (including contracts)
     ['ui → engine httpClient', 'ui/fixture.ts', "import '../src/engine/httpClient';"],
     ['ui → engine index', 'ui/fixture.ts', "import '../src/engine/index';"],
     ['ui → engine children', 'ui/fixture.ts', "import '../src/engine/children/projectLifecycle';"],
+    ['ui → engine contracts', 'ui/fixture.ts', "import '../src/engine/contracts';"],
     ['ui → scripts', 'ui/fixture.ts', "import '../scripts/project-manager';"],
 
     // ui/ children must not import sibling children or the layout parent
@@ -87,35 +88,23 @@ describe('architecture import boundaries', () => {
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
-  it('allows contracts.ts to import from projectCollection.ts', async () => {
-    const messages = await lintVirtualFile(
-      'src/engine/contracts.ts',
-      "import type { ProjectSortMode } from './projectCollection';",
-    );
-    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
-  });
-
   it.each([
-    // ui may import peer UI, local CSS, antd, and engine/contracts (shared types)
+    // ui may import peer UI, local CSS, antd, and ui/contracts
     ['AntD', "import { Empty } from 'antd';"],
-    ['peer UI component', "import { ProjectCard } from './Card';"],
+    ['peer UI component', "import { Card } from './Card';"],
     ['local CSS', "import './CardGrid.css';"],
-    ['local definition', "import { gridDefinition } from './gridDefinition';"],
-    [
-      'engine contracts (shared types)',
-      "import type { ProjectCardViewModel } from '../../src/engine/contracts';",
-    ],
+    ['ui contracts', "import type { CardViewModel } from '../contracts';"],
   ])('allows ui to import %s', async (_name, source) => {
     const messages = await lintVirtualFile('ui/card-grid/fixture.ts', source);
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);
   });
 
   it.each([
-    // ControlCenterScreen may import engine and ui (composition root)
+    // ControlCenterScreen may import engine and ui (composition root / gate)
     ['engine index', "import { useEngine } from './engine';"],
     ['engine contracts', "import type { ProjectSummary } from './engine/contracts';"],
     ['ui layout', "import { CoreLayout } from '../ui/CoreLayout';"],
-    ['ui toolbar', "import { ProjectToolbar } from '../ui/toolbar/Toolbar';"],
+    ['ui toolbar', "import { Toolbar } from '../ui/toolbar/Toolbar';"],
   ])('allows ControlCenterScreen to import %s', async (_name, source) => {
     const messages = await lintVirtualFile('src/ControlCenterScreen.tsx', source);
     expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([]);

@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 
-import { ProjectTerminal } from './Terminal';
+import { Terminal } from './Terminal';
 
-describe('ProjectTerminal', () => {
+describe('Terminal', () => {
   it('renders log content in an accessible keyboard-scrollable pre', () => {
     render(
-      <ProjectTerminal
+      <Terminal
         viewModel={{
           status: 'running',
           lines: ['server starting', 'server ready'],
@@ -18,7 +18,7 @@ describe('ProjectTerminal', () => {
     const terminal = screen.getByLabelText('Output process');
 
     expect(terminal.tagName).toBe('PRE');
-    expect(terminal).toHaveClass('project-terminal__content');
+    expect(terminal).toHaveClass('core-ui-terminal__content');
     expect(terminal).toHaveAttribute('aria-live', 'polite');
     expect(terminal).toHaveAttribute('tabindex', '0');
     expect(terminal).toHaveTextContent('server starting');
@@ -26,13 +26,19 @@ describe('ProjectTerminal', () => {
   });
 
   it('renders the empty copy without inventing log data', () => {
-    render(<ProjectTerminal viewModel={{ status: 'stopped', lines: [], truncated: false, maxLines: 80 }} />);
+    render(
+      <Terminal viewModel={{ status: 'stopped', lines: [], truncated: false, maxLines: 80 }} />,
+    );
 
     expect(screen.getByLabelText('Output process')).toHaveTextContent('Belum ada output process.');
   });
 
   it('announces presenter-owned truncation metadata', () => {
-    render(<ProjectTerminal viewModel={{ status: 'running', lines: ['a', 'b'], truncated: true, maxLines: 80 }} />);
+    render(
+      <Terminal
+        viewModel={{ status: 'running', lines: ['a', 'b'], truncated: true, maxLines: 80 }}
+      />,
+    );
 
     expect(
       screen.getByText('Hanya baris log terbaru yang ditampilkan. Maksimum 80 baris.'),

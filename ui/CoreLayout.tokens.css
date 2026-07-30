@@ -1,4 +1,4 @@
-.control-center-layout {
+.core-ui-layout {
   --layout-max-width: 100%;
   --layout-inline-gutter: 16px;
   --layout-section-gap: 10px;
@@ -36,17 +36,10 @@
 }
 
 @media (max-width: 900px) {
-  .control-center-layout {
+  .core-ui-layout {
     --layout-list-card-columns: minmax(240px, 0.5fr) 1fr;
     --layout-toolbar-columns: minmax(180px, 1fr) minmax(150px, 200px) auto auto;
     --layout-toolbar-summary-column: 1 / -1;
     --layout-toolbar-summary-align: left;
-  }
-}
-
-@media (max-width: 600px) {
-  .control-center-layout {
-    --layout-grid-card-min-width: 100%;
-    --layout-toolbar-summary-column: 1 / -1;
   }
 }

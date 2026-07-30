@@ -1,93 +1,74 @@
-import { Alert, Badge, Button, Card, Tag, Typography } from 'antd';
+import { Alert, Badge, Button, Card as AntCard, Tag, Typography } from 'antd';
 
-import type {
-  AlertViewModel,
-  CardActionViewModel,
-  ProjectCardViewModel,
-  TagViewModel,
-} from '../../src/engine/contracts';
-import { cardDefinition, type CardActionDefinition } from './cardDefinition';
-import { ProjectTerminal } from './Terminal';
+import type { AlertViewModel, CardProps, TagViewModel, UiAction } from '../contracts';
+import { Terminal } from './Terminal';
 import './Card.css';
 
 const { Text, Title } = Typography;
 
-export interface ProjectCardProps {
-  viewModel: ProjectCardViewModel;
-  availableActionIds: readonly string[];
-  onAction: (actionId: string, payload?: unknown) => void;
-}
+export type { CardProps };
 
-export function ProjectCard({ viewModel, availableActionIds, onAction }: ProjectCardProps) {
-  const status = cardDefinition.statuses[viewModel.status.key];
+export function Card({ viewModel, availableActionIds = [], onAction = () => {} }: CardProps) {
   const availableActions = new Set(availableActionIds);
-  const actionStates = new Map(
-    viewModel.actions.map((actionState) => [actionState.actionId, actionState]),
-  );
-  const actions = [...cardDefinition.actions].sort((left, right) => left.order - right.order);
+  const statusBadge =
+    viewModel.status.badge ?? toBadgeStatus(viewModel.status.key, viewModel.status.tone);
+  const statusLabel = viewModel.status.label ?? viewModel.status.key;
 
   return (
-    <Card
-      className="project-card-ui"
+    <AntCard
+      className="core-ui-card"
       role="article"
       aria-label={`Project ${viewModel.name}`}
       title={
-        <Title className="project-card-ui__title" level={3}>
+        <Title className="core-ui-card__title" level={3}>
           {viewModel.name}
         </Title>
       }
-      extra={<Badge status={status.badge} text={status.label} />}
+      extra={<Badge status={statusBadge} text={statusLabel} />}
       variant="outlined"
     >
-      <div className="project-card-ui__actions" aria-label={`Aksi ${viewModel.name}`}>
-        {actions.map((definition) =>
-          renderAction(
-            definition,
-            viewModel,
-            actionStates.get(definition.actionId),
-            availableActions,
-            onAction,
-          ),
+      <div className="core-ui-card__actions" aria-label={`Aksi ${viewModel.name}`}>
+        {viewModel.actions.map((action) =>
+          renderAction(action, viewModel, availableActions, onAction),
         )}
       </div>
 
       {viewModel.tags.length > 0 ? (
-        <div className="project-card-ui__tags" aria-label={`Metadata ${viewModel.name}`}>
+        <div className="core-ui-card__tags" aria-label={`Metadata ${viewModel.name}`}>
           {viewModel.tags.map((tag, index) => renderTag(tag, index))}
         </div>
       ) : null}
 
       {viewModel.alerts.length > 0 ? (
-        <div className="project-card-ui__alerts">
+        <div className="core-ui-card__alerts">
           {viewModel.alerts.map((alert, index) => renderAlert(alert, index))}
         </div>
       ) : null}
 
-      <ProjectTerminal viewModel={viewModel.terminal} />
-    </Card>
+      <Terminal viewModel={viewModel.terminal} />
+    </AntCard>
   );
 }
 
 function renderAction(
-  definition: CardActionDefinition,
-  project: ProjectCardViewModel,
-  state: CardActionViewModel | undefined,
+  action: UiAction,
+  item: CardProps['viewModel'],
   availableActions: ReadonlySet<string>,
-  onAction: ProjectCardProps['onAction'],
+  onAction: CardProps['onAction'],
 ) {
-  const handlerAvailable = availableActions.has(definition.actionId);
-  const disabled = !handlerAvailable || !state || state.disabled;
-  const label = definition.labelByStatus?.[project.status.key] ?? definition.defaultLabel;
+  const handlerAvailable = availableActions.size === 0 || availableActions.has(action.actionId);
+  const disabled = !handlerAvailable || Boolean(action.disabled);
+  const label = action.label ?? action.actionId;
 
   return (
     <Button
-      key={definition.id}
+      key={action.actionId}
       aria-label={label}
-      danger={definition.kind === 'danger'}
+      danger={action.kind === 'danger'}
       disabled={disabled}
-      loading={Boolean(state?.loading)}
-      type={definition.kind === 'primary' ? 'primary' : 'default'}
-      onClick={() => onAction(definition.actionId, project.id)}
+      loading={Boolean(action.loading)}
+      type={action.kind === 'primary' ? 'primary' : 'default'}
+      onClick={() => onAction?.(action.actionId, item.id)}
     >
       {label}
     </Button>
@@ -95,33 +76,54 @@ function renderAction(
 }
 
 function renderTag(tag: TagViewModel, index: number) {
-  const definition = cardDefinition.tags[tag.key];
-  const value = definition.showValue && tag.value ? ` ${tag.value}` : '';
+  const label = tag.label ?? tag.key;
+  const value = tag.value ? ` ${tag.value}` : '';
 
   return (
-    <Tag key={`${tag.key}-${tag.value ?? index}`} color={definition.color} variant="filled">
-      {definition.label}
+    <Tag key={`${tag.key}-${tag.value ?? index}`} color={tag.color ?? 'default'} variant="filled">
+      {label}
       {value}
     </Tag>
   );
 }
 
 function renderAlert(alert: AlertViewModel, index: number) {
-  const definition = cardDefinition.alerts[alert.key];
+  const alertType = toAlertType(alert.tone);
+  const title = alert.title ?? alert.key;
 
   return (
     <Alert
       key={`${alert.key}-${index}`}
-      className="project-card-ui__alert"
-      type={cardDefinition.alertTypes[alert.tone]}
+      className="core-ui-card__alert"
+      type={alertType}
       showIcon
-      title={definition.title}
+      title={title}
       description={
-        <span className="project-card-ui__alert-description">
-          <span>{definition.description}</span>
-          {alert.value ? <Text code>{alert.value}</Text> : null}
-        </span>
+        alert.description || alert.value ? (
+          <span className="core-ui-card__alert-description">
+            {alert.description ? <span>{alert.description}</span> : null}
+            {alert.value ? <Text code>{alert.value}</Text> : null}
+          </span>
+        ) : undefined
       }
     />
   );
+}
+
+function toBadgeStatus(
+  key: string,
+  tone: string,
+): 'default' | 'processing' | 'success' | 'warning' | 'error' {
+  if (tone === 'success') return 'success';
+  if (tone === 'info') return 'processing';
+  if (tone === 'warning') return 'warning';
+  if (tone === 'danger') return 'error';
+  return 'default';
+}
+
+function toAlertType(tone: string): 'info' | 'success' | 'warning' | 'error' {
+  if (tone === 'success') return 'success';
+  if (tone === 'warning') return 'warning';
+  if (tone === 'danger') return 'error';
+  return 'info';
 }

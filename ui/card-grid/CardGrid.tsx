@@ -1,27 +1,29 @@
 import { Empty, Skeleton } from 'antd';
 
-import type { ProjectGridViewModel } from '../../src/engine/contracts';
-import { ProjectCard } from './Card';
-import { gridDefinition } from './gridDefinition';
+import type { GridProps } from '../contracts';
+import { Card } from './Card';
 import './CardGrid.css';
 
-export interface ProjectGridProps {
-  viewModel: ProjectGridViewModel;
-  availableActionIds: readonly string[];
-  onAction: (actionId: string, payload?: unknown) => void;
-}
+export type { GridProps };
 
-export function ProjectGrid({ viewModel, availableActionIds, onAction }: ProjectGridProps) {
+export function Grid({
+  viewModel,
+  availableActionIds = [],
+  onAction = () => {},
+  loadingLabel = 'Memuat data',
+  emptyLabel = 'Daftar kosong',
+  emptyCopy = 'Tidak ada item ditemukan',
+}: GridProps) {
   if (viewModel.state === 'loading') {
     return (
       <section
-        className="project-grid-ui project-grid-ui__collection project-grid-ui__collection--grid project-grid-ui--loading"
-        aria-label={gridDefinition.loadingAccessibleLabel}
+        className="core-ui-grid core-ui-grid__collection core-ui-grid__collection--grid core-ui-grid--loading"
+        aria-label={loadingLabel}
       >
-        {Array.from({ length: gridDefinition.skeletonCount }, (_, index) => (
+        {Array.from({ length: 2 }, (_, index) => (
           <div
-            key={`project-skeleton-${index + 1}`}
-            className="project-grid-ui__skeleton"
+            key={`grid-skeleton-${index + 1}`}
+            className="core-ui-grid__skeleton"
             data-grid-skeleton
           >
             <Skeleton active />
@@ -31,35 +33,30 @@ export function ProjectGrid({ viewModel, availableActionIds, onAction }: Project
     );
   }
 
-  if (viewModel.state === 'empty') {
+  if (viewModel.state === 'empty' || !viewModel.items || viewModel.items.length === 0) {
     return (
-      <section
-        className="project-grid-ui project-grid-ui--empty"
-        aria-label={gridDefinition.emptyAccessibleLabel}
-      >
+      <section className="core-ui-grid core-ui-grid--empty" aria-label={emptyLabel}>
         <Empty
-          className="project-grid-ui__empty"
+          className="core-ui-grid__empty"
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={gridDefinition.emptyCopy}
+          description={emptyCopy}
         />
       </section>
     );
   }
 
-  const layout =
-    gridDefinition.layoutModes.find((candidate) => candidate.id === viewModel.viewMode) ??
-    gridDefinition.layoutModes[0];
+  const viewMode = viewModel.viewMode ?? 'grid';
 
   return (
     <section
-      className={`project-grid-ui project-grid-ui__collection project-grid-ui__collection--${viewModel.viewMode}`}
-      aria-label={layout.accessibleLabel}
-      data-card-ordering-policy={gridDefinition.cardOrderingPolicyName}
+      className={`core-ui-grid core-ui-grid__collection core-ui-grid__collection--${viewMode}`}
+      aria-label={`Daftar project mode ${viewMode}`}
+      data-card-ordering-policy="view-model-order"
     >
-      {viewModel.projects.map((project) => (
-        <ProjectCard
-          key={project.id}
-          viewModel={project}
+      {viewModel.items.map((item) => (
+        <Card
+          key={item.id}
+          viewModel={item}
           availableActionIds={availableActionIds}
           onAction={onAction}
         />

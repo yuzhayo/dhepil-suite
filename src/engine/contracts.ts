@@ -1,5 +1,3 @@
-import type { ProjectSortMode, ProjectViewMode } from './projectCollection';
-
 export type ProjectStatus =
   | 'stopped'
   | 'starting'
@@ -54,9 +52,7 @@ export interface ProjectWindow {
   open(url: string): void;
 }
 
-// --- View Models ---
-
-export type SemanticTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+// --- Domain Keys ---
 
 export type StatusKey = ProjectStatus;
 
@@ -69,95 +65,3 @@ export type AlertKey =
   | 'page-error';
 
 export type TagKey = 'managed' | 'external' | 'tombstone' | 'port' | 'pid' | 'path' | 'desktop';
-
-export interface UiActionViewModel {
-  actionId: string;
-  disabled: boolean;
-  loading: boolean;
-}
-
-export type CardActionViewModel = UiActionViewModel;
-
-export interface StatusViewModel {
-  key: StatusKey;
-  tone: SemanticTone;
-}
-
-export interface AlertViewModel {
-  key: AlertKey;
-  tone: SemanticTone;
-  value?: string;
-}
-
-export interface TagViewModel {
-  key: TagKey;
-  value?: string;
-}
-
-export interface TerminalViewModel {
-  status: ProjectStatus;
-  lines: readonly string[];
-  truncated: boolean;
-  maxLines: number;
-}
-
-export interface ProjectCardViewModel {
-  id: string;
-  name: string;
-  status: StatusViewModel;
-  alerts: readonly AlertViewModel[];
-  tags: readonly TagViewModel[];
-  actions: readonly CardActionViewModel[];
-  terminal: TerminalViewModel;
-  url?: string;
-}
-
-export interface ActiveServerItemViewModel {
-  id: string;
-  name: string;
-  port?: number;
-  pid?: number;
-  status: StatusViewModel;
-  managed: boolean;
-  action: CardActionViewModel;
-}
-
-export interface ToolbarSummaryViewModel {
-  visibleCount: number;
-  totalCount: number;
-  activeCount: number;
-}
-
-export interface ToolbarViewModel {
-  searchQuery: string;
-  sortMode: ProjectSortMode;
-  viewMode: ProjectViewMode;
-  summary: ToolbarSummaryViewModel;
-  activeServers: readonly ActiveServerItemViewModel[];
-  actions: readonly UiActionViewModel[];
-}
-
-export type ProjectGridViewModel =
-  | {
-      state: 'loading';
-    }
-  | {
-      state: 'empty';
-    }
-  | {
-      state: 'ready';
-      viewMode: ProjectViewMode;
-      projects: readonly ProjectCardViewModel[];
-    };
-
-export interface HeaderViewModel {
-  actions: readonly UiActionViewModel[];
-}
-
-export interface ControlCenterViewModel {
-  header: HeaderViewModel;
-  toolbar: ToolbarViewModel;
-  grid: ProjectGridViewModel;
-  availableActionIds: readonly string[];
-  pageAlert?: AlertViewModel;
-}

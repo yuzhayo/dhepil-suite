@@ -1,4 +1,4 @@
-.project-grid-ui {
+.core-ui-grid {
   min-width: 0;
   min-height: 0;
   overflow: auto;
@@ -8,7 +8,7 @@
   scrollbar-width: thin;
 }
 
-.project-grid-ui__collection {
+.core-ui-grid__collection {
   display: grid;
   align-content: start;
   align-items: stretch;
@@ -16,22 +16,22 @@
   padding: 2px;
 }
 
-.project-grid-ui__collection--grid {
+.core-ui-grid__collection--grid {
   grid-template-columns: repeat(auto-fill, minmax(var(--layout-grid-card-min-width), 1fr));
 }
 
-.project-grid-ui__collection--grid .project-card-ui {
+.core-ui-grid__collection--grid .core-ui-card {
   width: 100%;
   aspect-ratio: var(--layout-grid-card-aspect);
   max-height: var(--layout-grid-card-max-height);
   min-height: 0;
 }
 
-.project-grid-ui__collection--list {
+.core-ui-grid__collection--list {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.project-grid-ui__skeleton {
+.core-ui-grid__skeleton {
   min-height: 280px;
   padding: 20px;
   background: #ffffff;
@@ -39,21 +39,21 @@
   border-radius: 12px;
 }
 
-.project-grid-ui--empty {
+.core-ui-grid--empty {
   display: grid;
   min-height: 240px;
   place-items: center;
 }
 
-.project-grid-ui__empty {
+.core-ui-grid__empty {
   margin: 24px;
 }
 
-.project-grid-ui::-webkit-scrollbar {
+.core-ui-grid::-webkit-scrollbar {
   width: 9px;
 }
 
-.project-grid-ui::-webkit-scrollbar-thumb {
+.core-ui-grid::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
   background: #8ea0b7;

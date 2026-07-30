@@ -1,11 +1,11 @@
 /**
  * ARCHITECTURE RULE:
- * This is the Parent Composition Root. DO NOT WRITE PRESENTATION LOGIC HERE.
- * This file should only act as a dumb pass-through mapping Engine state to ViewModels.
- * All feature logic (such as filtering, formatting, or conditional UI behavior) 
- * MUST be encapsulated inside the respective Child components (e.g. ui/card-grid/Terminal.tsx).
+ * This is the Gate / Composition Root for the Control Center application.
+ * It connects the Engine domain state to generic CoreUI components via props
+ * and supplies ReactNode slots to <CoreLayout>.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Button } from 'antd';
 import {
   type ControlCenterRuntime,
   createControlCenterRuntime,
@@ -24,21 +24,27 @@ import {
   type ProjectStatus,
 } from './engine';
 import type {
+  ActiveServerItem,
   AlertViewModel,
-  ActiveServerItemViewModel,
-  CardActionViewModel,
-  ControlCenterViewModel,
+  CardViewModel,
+  GridState,
   HeaderViewModel,
-  ProjectCardViewModel,
-  ProjectGridViewModel,
-  SemanticTone,
   StatusViewModel,
   TagViewModel,
   TerminalViewModel,
   ToolbarViewModel,
-  UiActionViewModel,
-} from './engine/contracts';
+  UiAction,
+} from '../ui/contracts';
 import { CoreLayout } from '../ui/CoreLayout';
+import { Header } from '../ui/header/Header';
+import { Toolbar } from '../ui/toolbar/Toolbar';
+import { Grid } from '../ui/card-grid/CardGrid';
+import {
+  cardDefinition,
+  headerDefinition,
+  toolbarControls,
+  gridDefinition,
+} from './controlCenterDefinitions';
 
 // --- Presentation Limits ---
 const MAX_RENDERED_LOG_LINES = 80;
@@ -66,58 +72,90 @@ const STATUS_PRESENTATION = {
   'port-conflict': { key: 'port-conflict', tone: 'danger' },
   invalid: { key: 'invalid', tone: 'danger' },
   'not-found': { key: 'not-found', tone: 'warning' },
-} satisfies Record<ProjectStatus, { key: ProjectStatus; tone: SemanticTone }>;
+} satisfies Record<ProjectStatus, { key: ProjectStatus; tone: StatusViewModel['tone'] }>;
 
-// --- Helper Functions (From Presenters) ---
+// --- Helper Functions ---
 function createStatusViewModel(status: ProjectStatus): StatusViewModel {
-  return STATUS_PRESENTATION[status];
+  const presentation = STATUS_PRESENTATION[status];
+  const def = cardDefinition.statuses[status];
+  return {
+    key: presentation.key,
+    tone: presentation.tone,
+    badge: def?.badge,
+    label: def?.label,
+  };
 }
 
 function createAlerts(project: ProjectSummary): readonly AlertViewModel[] {
+  const mapAlert = (
+    key: keyof typeof cardDefinition.alerts,
+    tone: AlertViewModel['tone'],
+    value?: string,
+  ): AlertViewModel => {
+    const def = cardDefinition.alerts[key];
+    return {
+      key,
+      tone,
+      title: def?.title,
+      description: def?.description,
+      value,
+    };
+  };
+
   if (project.status === 'error') {
-    return [{ key: 'startup-failed', tone: 'danger', value: project.error }];
+    return [mapAlert('startup-failed', 'danger', project.error)];
   }
   if (project.status === 'port-conflict') {
     return [
-      {
-        key: 'port-conflict',
-        tone: 'warning',
-        value: project.error ?? (project.port === undefined ? undefined : String(project.port)),
-      },
+      mapAlert(
+        'port-conflict',
+        'warning',
+        project.error ?? (project.port === undefined ? undefined : String(project.port)),
+      ),
     ];
   }
   if (project.status === 'invalid') {
-    return [{ key: 'invalid-config', tone: 'danger', value: project.error }];
+    return [mapAlert('invalid-config', 'danger', project.error)];
   }
   if (project.status === 'not-found') {
-    return [{ key: 'project-not-found', tone: 'warning', value: project.relativePath }];
+    return [mapAlert('project-not-found', 'warning', project.relativePath)];
   }
   if (project.error) {
-    return [{ key: 'process-error', tone: 'danger', value: project.error }];
+    return [mapAlert('process-error', 'danger', project.error)];
   }
   return [];
 }
 
 function createTags(project: ProjectSummary): readonly TagViewModel[] {
   const tags: TagViewModel[] = [];
+  const addTag = (key: keyof typeof cardDefinition.tags, value?: string) => {
+    const def = cardDefinition.tags[key];
+    tags.push({
+      key,
+      label: def?.label,
+      color: def?.color,
+      value: def?.showValue && value ? value : undefined,
+    });
+  };
+
   if (project.managed) {
-    tags.push({ key: 'managed' });
+    addTag('managed');
   }
   if (project.status === 'external') {
-    tags.push({ key: 'external' });
+    addTag('external');
   }
   if (project.managed && project.status === 'not-found') {
-    tags.push({ key: 'tombstone' });
+    addTag('tombstone');
   }
   if (project.port !== undefined) {
-    tags.push({ key: 'port', value: String(project.port) });
+    addTag('port', String(project.port));
   }
   if (project.pid !== undefined) {
-    tags.push({ key: 'pid', value: String(project.pid) });
+    addTag('pid', String(project.pid));
   }
-  tags.push({ key: 'path', value: project.relativePath });
+  addTag('path', project.relativePath);
   if (project.desktop.enabled) {
-    tags.push({ key: 'desktop' });
+    addTag('desktop');
   }
   return tags;
 }
@@ -132,13 +170,13 @@ function createTerminalViewModel(
     lines,
     truncated: logs.length > MAX_RENDERED_LOG_LINES,
     maxLines: MAX_RENDERED_LOG_LINES,
+    title: cardDefinition.terminal.title,
+    emptyCopy: cardDefinition.terminal.emptyCopy,
+    truncatedCopy: cardDefinition.terminal.truncatedCopy,
   };
 }
 
-function createProjectCardViewModel(
-  project: ProjectSummary,
-  pending: boolean,
-): ProjectCardViewModel {
+function createProjectCardViewModel(project: ProjectSummary, pending: boolean): CardViewModel {
   const actionContext = {
     status: project.status,
     managed: project.managed,
@@ -153,23 +191,33 @@ function createProjectCardViewModel(
   const couldStop = canStopProject(nonPendingActionContext);
   const couldQuickKill = canQuickKillProject(nonPendingActionContext);
 
-  const actions: readonly CardActionViewModel[] = [
-    {
-      actionId: 'project.start-open',
-      disabled: !canOpen && !canStart,
-      loading: pending && !canOpen && couldStart,
-    },
-    {
-      actionId: 'project.stop',
-      disabled: !canStop,
-      loading: pending && couldStop,
-    },
-    {
-      actionId: 'project.quick-kill',
-      disabled: !canQuickKill,
-      loading: pending && couldQuickKill,
-    },
-  ];
+  const actionDefs = [...cardDefinition.actions].sort((a, b) => a.order - b.order);
+  const actions: UiAction[] = actionDefs.map((def) => {
+    let disabled = true;
+    let loading = false;
+    if (def.actionId === 'project.start-open') {
+      disabled = !canOpen && !canStart;
+      loading = pending && !canOpen && couldStart;
+    } else if (def.actionId === 'project.stop') {
+      disabled = !canStop;
+      loading = pending && couldStop;
+    } else if (def.actionId === 'project.quick-kill') {
+      disabled = !canQuickKill;
+      loading = pending && couldQuickKill;
+    }
+
+    const label =
+      (def.labelByStatus as Record<string, string> | undefined)?.[project.status] ??
+      def.defaultLabel;
+
+    return {
+      actionId: def.actionId,
+      disabled,
+      loading,
+      label,
+      kind: def.kind,
+    };
+  });
 
   return {
     id: project.id,
@@ -186,7 +234,7 @@ function createProjectCardViewModel(
 function createActiveServerItem(
   project: ProjectSummary,
   pendingActions: Readonly<Record<string, boolean>>,
-): ActiveServerItemViewModel {
+): ActiveServerItem {
   const canQuickKill = canQuickKillProject({
     status: project.status,
     managed: project.managed,
@@ -197,7 +245,7 @@ function createActiveServerItem(
     managed: project.managed,
     pending: false,
   });
-  const action: CardActionViewModel = {
+  const action: UiAction = {
     actionId: 'project.quick-kill',
     disabled: !canQuickKill,
     loading: Boolean(pendingActions[project.id]) && couldQuickKill,
@@ -259,7 +307,7 @@ function isCancellation(error: unknown): boolean {
   );
 }
 
-// --- The Screen Component ---
+// --- The Screen Component (Gate) ---
 
 export function ControlCenterScreen({
   runtimeOverride,
@@ -555,79 +603,111 @@ export function ControlCenterScreen({
     [quickKillCapability, refreshCapability, reportError, startAndOpenCapability, stopCapability],
   );
 
-  const viewModel = useMemo<ControlCenterViewModel>(() => {
-    const rawProjects = loading && projects === null ? null : projects;
+  // --- View Models & Slot Construction ---
+  const rawProjects = loading && projects === null ? null : projects;
+  const visibleProjects =
+    rawProjects === null ? null : selectProjects(rawProjects, searchQuery, sortMode);
 
-    // Grid Model
-    const visibleProjects =
-      rawProjects === null ? null : selectProjects(rawProjects, searchQuery, sortMode);
-
-    let grid: ProjectGridViewModel;
-    if (visibleProjects === null) {
-      grid = { state: 'loading' };
-    } else if (visibleProjects.length === 0) {
-      grid = { state: 'empty' };
-    } else {
-      grid = {
-        state: 'ready',
-        viewMode,
-        projects: visibleProjects.map((project) =>
-          createProjectCardViewModel(project, Boolean(pendingActions[project.id])),
-        ),
-      };
-    }
-
-    // Toolbar Model
-    const activeServers = (rawProjects ?? [])
-      .filter((project) => isActiveProject(project.status))
-      .map((project) => createActiveServerItem(project, pendingActions));
-
-    const toolbarActions: readonly UiActionViewModel[] = [
-      { actionId: 'project.search.change', disabled: false, loading: false },
-      { actionId: 'project.sort.change', disabled: false, loading: false },
-      { actionId: 'project.view.change', disabled: false, loading: false },
-      {
-        actionId: 'project.refresh',
-        disabled: Boolean(refreshPending),
-        loading: Boolean(refreshPending),
-      },
-    ];
-
-    const toolbar: ToolbarViewModel = {
-      searchQuery,
-      sortMode,
+  let gridState: GridState;
+  if (visibleProjects === null) {
+    gridState = { state: 'loading' };
+  } else if (visibleProjects.length === 0) {
+    gridState = { state: 'empty' };
+  } else {
+    gridState = {
+      state: 'ready',
       viewMode,
-      summary: {
-        visibleCount: visibleProjects?.length ?? rawProjects?.length ?? 0,
-        totalCount: rawProjects?.length ?? 0,
-        activeCount: activeServers.length,
-      },
-      activeServers,
-      actions: toolbarActions,
+      items: visibleProjects.map((project) =>
+        createProjectCardViewModel(project, Boolean(pendingActions[project.id])),
+      ),
     };
+  }
 
-    // Header Model
-    const header: HeaderViewModel = {
-      actions: [],
-    };
+  const activeServers = (rawProjects ?? [])
+    .filter((project) => isActiveProject(project.status))
+    .map((project) => createActiveServerItem(project, pendingActions));
 
-    return {
-      header,
-      toolbar,
-      grid,
-      availableActionIds: [...AVAILABLE_ACTION_IDS],
-      pageAlert: pageError ? { key: 'page-error', tone: 'danger', value: pageError } : undefined,
-    };
-  }, [
-    loading,
-    pageError,
-    pendingActions,
-    projects,
-    refreshPending,
+  const toolbarActions: readonly UiAction[] = [
+    { actionId: 'project.search.change', disabled: false, loading: false },
+    { actionId: 'project.sort.change', disabled: false, loading: false },
+    { actionId: 'project.view.change', disabled: false, loading: false },
+    {
+      actionId: 'project.refresh',
+      disabled: Boolean(refreshPending),
+      loading: Boolean(refreshPending),
+    },
+  ];
+
+  const toolbarVm: ToolbarViewModel = {
     searchQuery,
     sortMode,
     viewMode,
-  ]);
+    summary: {
+      visibleCount: visibleProjects?.length ?? rawProjects?.length ?? 0,
+      totalCount: rawProjects?.length ?? 0,
+      activeCount: activeServers.length,
+    },
+    activeServers,
+    actions: toolbarActions,
+    controls: toolbarControls,
+  };
 
-  return <CoreLayout viewModel={viewModel} onAction={dispatch} />;
+  const headerVm: HeaderViewModel = {
+    title: headerDefinition.title,
+    subtitle: headerDefinition.subtitle,
+    actions: [],
+    actionDefinitions: headerDefinition.actions,
+  };
+
+  const pageAlert = pageError ? (
+    <Alert
+      className="core-ui-layout__page-alert"
+      type="error"
+      showIcon
+      title={cardDefinition.alerts['page-error'].title}
+      description={
+        <span className="core-ui-layout__alert-description">
+          <span>{cardDefinition.alerts['page-error'].description}</span>
+          <span>{pageError}</span>
+        </span>
+      }
+      action={
+        <Button
+          disabled={Boolean(refreshPending)}
+          loading={Boolean(refreshPending)}
+          onClick={() => dispatch('project.refresh')}
+        >
+          Coba lagi
+        </Button>
+      }
+    />
+  ) : undefined;
+
+  const headerSlot = (
+    <Header viewModel={headerVm} availableActionIds={AVAILABLE_ACTION_IDS} onAction={dispatch} />
+  );
+
+  const toolbarSlot = (
+    <Toolbar viewModel={toolbarVm} availableActionIds={AVAILABLE_ACTION_IDS} onAction={dispatch} />
+  );
+
+  const contentSlot = (
+    <Grid
+      viewModel={gridState}
+      availableActionIds={AVAILABLE_ACTION_IDS}
+      onAction={dispatch}
+      loadingLabel={gridDefinition.loadingAccessibleLabel}
+      emptyLabel={gridDefinition.emptyAccessibleLabel}
+      emptyCopy={gridDefinition.emptyCopy}
+    />
+  );
+
+  return (
+    <CoreLayout
+      header={headerSlot}
+      toolbar={toolbarSlot}
+      content={contentSlot}
+      pageAlert={pageAlert}
+    />
+  );
 }
