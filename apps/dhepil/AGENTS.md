@@ -5,5 +5,6 @@ Folder ini dimiliki app `dhepil`. Port ditetapkan dan dikunci oleh root control 
 - Jangan mengubah root control center atau `apps/spreadsheet-minimal` dari pekerjaan app ini.
 - Pertahankan `app.manifest.json` sebagai kontrak discovery publik app.
 - Sediakan script `dev` yang menerima argumen Vite `--host`, `--port`, dan `--strictPort`.
-- Jika Electron ditambahkan, sediakan script `desktop:dev` di package app ini.
+- Electron saat ini disabled. Jika diaktifkan, ikuti `PLAYBOOK.md` Section 10: ubah metadata manifest dan tambahkan thin scripts `desktop:dev` + `desktop:build`.
+- Jangan menambahkan dependency Electron, main/preload, atau electron-builder config ke app ini.
 - Pertahankan arsitektur feature-oriented dan aturan parent-child app.

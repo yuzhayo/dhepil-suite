@@ -1,161 +1,142 @@
-# Clipboard App — Implementation Plan (Strict UI Separation)
+# Clipboard App — Current Implementation and Backlog
 
-## Context & Architecture Rules
+> **Status aktual — 2026-08-01:** Dokumen ini mencatat kondisi Clipboard dan backlog khusus app. Sumber kebenaran arsitektur monorepo tetap `PLAYBOOK.md`.
 
-Sesuai dengan `PLAYBOOK.md`, Clipboard App akan mengadopsi pola **Strict UI Separation**. Artinya:
-1. **CoreUI (`root/ui/`)**: Semua visual komponen UI (Tabel spreadsheet, sel teks area, tombol, layout) **wajib** dibuat di sini sebagai komponen generik yang sepenuhnya terisolasi dan pasif (dumb components).
-2. **Clipboard App (`apps/clipboard/`)**: Murni hanya berisi kode logika (_Engine_, _State Management_, _Local Storage Sync_) dan **Gate** (`ClipboardGate.tsx`). Gate bertugas memetakan data dan fungsi logika ke dalam properti (props) komponen CoreUI.
+## 1. Runtime dan Packaging
 
----
+| Item            | Kondisi aktual                              |
+| --------------- | ------------------------------------------- |
+| App ID          | `clipboard`                                 |
+| Package         | `@dhepil-suite/clipboard`                   |
+| Runtime         | Vite + React 19 + Ant Design 6              |
+| Stable port     | `2002`                                      |
+| Persistence     | Browser/Electron renderer `localStorage`    |
+| Electron        | Enabled melalui shared workspace `electron` |
+| Installer       | Windows NSIS x64 berhasil dibuat            |
+| Release output  | `electron/release/clipboard/`               |
+| Google Sheets   | Belum diimplementasikan                     |
+| Dedicated tests | Belum tersedia                              |
 
-## 1. File Tree & Structure
+Clipboard tidak memiliki Electron dependency, main process, preload, atau build config sendiri. `app.manifest.json` dan thin package scripts hanya mendelegasikan ke toolchain terpusat sesuai `PLAYBOOK.md` Section 10.
+
+## 2. Struktur Aktual
 
 ```text
 dhepil-suite/
-├── ui/
-│   ├── contracts.ts                  ← (UPDATE) Tambah tipe SpreadsheetViewModel
-│   └── spreadsheet/
-│       ├── Spreadsheet.tsx           ← (NEW) Komponen UI murni (Antd Table)
-│       └── Spreadsheet.css           ← (NEW) Styling khusus grid dinamis
-└── apps/clipboard/
-    ├── app.manifest.json
-    ├── index.html
-    ├── package.json
-    ├── vite.config.ts
-    └── src/
-        ├── App.tsx
-        ├── app/
-        │   └── ApplicationProviders.tsx
-        ├── engine/
-        │   ├── types.ts              ← (NEW) Model domain (Column, Row, SortMode)
-        │   └── useClipboardEngine.ts ← (NEW) Logic CRUD & LocalStorage (Efisiensi Tinggi)
-        ├── sync/
-        │   └── sheetsAdapter.ts      ← (NEW) Placeholder sinkronisasi Google Sheets
-        └── ClipboardGate.tsx         ← (NEW) Gate pengikat Engine <-> CoreUI
+├─ ui/
+│  ├─ contracts.ts
+│  ├─ data-grid/
+│  │  ├─ DataGrid.tsx
+│  │  └─ DataGrid.css
+│  └─ theme/
+│     ├─ SharedThemeProvider.tsx
+│     ├─ ThemeToggle.tsx
+│     └─ useSharedTheme.ts
+├─ apps/clipboard/
+│  ├─ AGENTS.md
+│  ├─ app.manifest.json
+│  ├─ index.html
+│  ├─ package.json
+│  ├─ tsconfig.json
+│  ├─ vite.config.ts
+│  └─ src/
+│     ├─ app/ApplicationProviders.tsx
+│     ├─ engine/
+│     │  ├─ types.ts
+│     │  └─ useClipboardEngine.ts
+│     ├─ styles/global.css
+│     ├─ App.tsx
+│     ├─ ClipboardGate.tsx
+│     └─ main.tsx
+└─ electron/
+   ├─ main/
+   ├─ preload/
+   ├─ scripts/
+   └─ release/clipboard/   # generated, ignored
 ```
 
----
+`ui/theme/` dan integrasi provider sudah menjadi shared checkpoint. Perubahan theme berikutnya tetap harus mempertahankan kontrak generik, sinkronisasi preference, dan isolasi business logic app.
 
-## 2. CoreUI: Generic DataGrid Component (`root/ui/`)
+## 3. Kontrak UI Generik
 
-Komponen ini tidak tahu apa-apa soal Clipboard, ID, atau LocalStorage. Ia murni komponen UI untuk merender data tabular dengan teks area dinamis.
+`ui/data-grid/DataGrid.tsx` adalah presentational component generik. Kontraknya dimiliki `ui/contracts.ts`, bukan Clipboard.
 
-### `ui/contracts.ts` (Penambahan Tipe Generik)
-```ts
-export interface DataGridColumnViewModel {
-  id: string;
-  title: string;
-}
+Data yang diterima:
 
-export interface DataGridRowViewModel {
-  id: string;
-  cells: Record<string, string>; // columnId -> teks konten
-}
+- daftar kolom `{ id, title }`;
+- daftar baris `{ id, cells }`;
+- kolom dan mode sort aktif.
 
-export type DataGridSortMode = 'newest' | 'oldest' | 'title-asc' | 'title-desc';
+Action handler yang tersedia:
 
-export interface DataGridViewModel {
-  columns: DataGridColumnViewModel[];
-  rows: DataGridRowViewModel[];
-  sortColumn: string | null;
-  sortMode: DataGridSortMode;
-}
-```
+- tambah, hapus, dan rename kolom;
+- tambah dan hapus baris;
+- ubah isi cell;
+- salin isi cell;
+- ubah kolom/mode sort.
 
-### `ui/data-grid/DataGrid.tsx`
-Menerima `viewModel` dan *action handlers*:
-- `onAddColumn()`, `onDeleteColumn(id)`, `onUpdateColumnTitle(id, title)`
-- `onAddRow()`, `onDeleteRow(id)`
-- `onUpdateCell(rowId, columnId, text)`
-- `onCopyCell(text)` (UI hanya melempar teks yang diklik, Gate yang mengeksekusi `navigator.clipboard`)
-- `onSortChange(columnId, sortMode)`
+Komponen Ant Design yang dipakai saat ini adalah `Table`, `Input`, `Input.TextArea`, `Button`, `Popconfirm`, `Select`, dan `Space`. `DataGrid` tidak membaca `localStorage` dan tidak meng-import engine Clipboard.
 
-**Komponen Antd yang Digunakan:**
-`Table`, `Input.TextArea` (autoSize), `Button`, `Popconfirm`, `Select`.
+## 4. Engine Clipboard
 
----
+`apps/clipboard/src/engine/useClipboardEngine.ts` saat ini memiliki:
 
-## 3. Clipboard App Logic (`apps/clipboard/src/engine/`)
+- state kolom dan baris in-memory;
+- ID berbasis `crypto.randomUUID()`;
+- cell lookup berbentuk `Record<columnId, text>`;
+- immutable add/update/delete;
+- cleanup data cell saat kolom dihapus;
+- sort `newest`, `oldest`, `title-asc`, dan `title-desc`;
+- memoized sorted rows;
+- persistence `localStorage` dengan key `clipboard-data`;
+- debounce save `500ms`.
 
-Di sinilah **efisiensi tingkat tinggi** diimplementasikan.
+`apps/clipboard/src/engine/types.ts` memiliki dua model domain: `ClipboardColumn` dan `ClipboardRow`.
 
-### Data Model (`types.ts`)
-```ts
-export interface ClipboardColumn {
-  id: string; // crypto.randomUUID()
-  title: string;
-}
+## 5. Gate dan Provider
 
-export interface ClipboardRow {
-  id: string;
-  createdAt: number; // Timestamp integer (cepat diurutkan)
-  updatedAt: number;
-  cells: Record<string, string>; // Lookup O(1)
-}
-```
-*Mengapa efisien?* Menyimpan `cells` sebagai `Record` memberikan akses O(1) ke data spesifik tanpa perlu *looping* untuk mencocokkan ID kolom saat *render* atau pembaruan data. `createdAt` menggunakan `number` (timestamp) lebih cepat untuk komputasi sortir dibandingkan objek `Date` atau string ISO.
+`ClipboardGate.tsx` menghubungkan engine ke generic `DataGrid`. Gate juga memiliki browser capability `navigator.clipboard.writeText()` dan menerjemahkan hasilnya menjadi Ant Design message.
 
-### Logic Controller (`useClipboardEngine.ts`)
-Sebuah *custom hook* yang menangani State dan Persistence:
-1. **In-Memory State (`useState`)**: Mengelola sumber kebenaran utama selama sesi berjalan.
-2. **Debounced LocalStorage Save (`useEffect`)**: Setiap kali state `rows` atau `columns` berubah, kita jadwalkan *save* ke `localStorage` dengan penundaan `500ms`. Jika user mengetik cepat di banyak sel secara berurutan, *save* hanya terjadi sekali di akhir. Mencegah *I/O blocking* di _main thread_!
-3. **Memoized Sorting (`useMemo`)**: Fungsi sortir murni akan mengembalikan *array* baru HANYA jika `rows`, `sortColumn`, atau `sortMode` berubah. Mengetik di satu baris yang tidak memengaruhi parameter sortir tidak akan memicu kalkulasi ulang secara berat.
-4. **Targeted State Update**: Menggunakan metode *immutable spread* per baris:
-   ```ts
-   setRows((prev) => prev.map(r => r.id === rowId ? { 
-     ...r, 
-     updatedAt: Date.now(), 
-     cells: { ...r.cells, [colId]: newText } 
-   } : r))
-   ```
+`ApplicationProviders.tsx` memasang shared theme provider. `App.tsx` hanya menyusun provider dan Gate.
 
----
+## 6. Kontrak Electron Clipboard
 
-## 4. Clipboard Gate (`apps/clipboard/src/ClipboardGate.tsx`)
+Manifest Clipboard saat ini:
 
-Satu-satunya komponen yang "tahu segalanya" dalam konteks aplikasi ini. Menjembatani hook Engine dengan UI DataGrid.
-
-```tsx
-import { App as AntdApp } from 'antd'; // Untuk toast message
-import { DataGrid } from '@dhepil/coreui/data-grid'; // Contoh import dari ui/
-import { useClipboardEngine } from './engine/useClipboardEngine';
-
-export function ClipboardGate() {
-  const engine = useClipboardEngine();
-  const { message } = AntdApp.useApp();
-
-  const handleCopyCell = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      message.success('Teks disalin!');
-    } catch {
-      message.error('Gagal menyalin.');
-    }
-  };
-
-  return (
-    <DataGrid 
-      viewModel={engine.viewModel}
-      onAddColumn={engine.addColumn}
-      onUpdateCell={engine.updateCell}
-      onCopyCell={handleCopyCell}
-      // ... terus pasangkan semua handlers ke engine
-    />
-  );
+```json
+{
+  "desktop": {
+    "enabled": true,
+    "script": "desktop:dev",
+    "appId": "com.dhepil.clipboard",
+    "productName": "Clipboard"
+  }
 }
 ```
 
----
+Thin scripts package:
 
-## 5. Execution Order (Langkah Eksekusi Selanjutnya)
+```json
+{
+  "desktop:dev": "node ../../electron/scripts/desktop.mjs dev clipboard",
+  "desktop:build": "node ../../electron/scripts/desktop.mjs build clipboard"
+}
+```
 
-1. **Phase 1: Bangun CoreUI (`root/ui/`)**
-   - Modifikasi `ui/contracts.ts` (Tambah tipe).
-   - Buat `ui/data-grid/DataGrid.tsx` dan styling.
-   - Buat test untuk memastikan isolasi.
-2. **Phase 2: Scaffold App Clipboard (`apps/clipboard/`)**
-   - Buat struktur folder, `.manifest.json`, Vite config.
-3. **Phase 3: Tulis Engine Logic**
-   - `types.ts` dan `useClipboardEngine.ts` (Lengkap dengan test untuk Debounce dan Sort).
-4. **Phase 4: Rakit Gate**
-   - Buat `ClipboardGate.tsx`, panggil `Spreadsheet`, run di dev server dan test fungsionalitas Copy/Paste.
+Command dari root:
+
+```bash
+npm run desktop:dev -- clipboard
+npm run desktop:build -- clipboard --dir
+npm run desktop:build -- clipboard
+```
+
+## 7. Backlog Terverifikasi
+
+Backlog berikut belum ada di source aktual:
+
+1. Unit/integration test khusus `useClipboardEngine`, `ClipboardGate`, dan `DataGrid`.
+2. Adapter Google Sheets atau folder `src/sync/`.
+3. Contract sync, conflict handling, auth, dan retry untuk remote persistence.
+
+Jangan menganggap Google Sheets sebagai kontrak aktif sebelum adapter dan boundary-nya dirancang serta disetujui. Perubahan berikutnya tetap harus mempertahankan pemisahan generic CoreUI, engine app, dan Gate.

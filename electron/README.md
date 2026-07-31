@@ -53,13 +53,69 @@ npm run desktop:build --workspace @dhepil-suite/clipboard
 
 ## Menambahkan App Desktop
 
-1. Pastikan app Vite sudah valid dan memiliki stable port.
-2. Aktifkan `desktop.enabled` di manifest.
-3. Tambahkan script `desktop:dev` dan `desktop:build` yang mendelegasikan ke `scripts/desktop.mjs`.
-4. Jalankan unpacked build terlebih dahulu.
-5. Setelah smoke test lulus, buat installer penuh.
+Panduan canonical dan troubleshooting lengkap berada di [`PLAYBOOK.md` Section 10](../PLAYBOOK.md#10-electron-desktop-packaging).
+
+### 1. Pastikan app siap
+
+App harus berupa direct child `apps/<id>/` dengan:
+
+- `app.manifest.json`;
+- `package.json`;
+- `tsconfig.json`;
+- `vite.config.ts`;
+- renderer Vite yang lulus typecheck;
+- stable port di `config/app-ports.lock.json` untuk desktop dev.
+
+### 2. Aktifkan manifest
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "my-new-app",
+  "name": "My New App",
+  "runtime": "vite",
+  "desktop": {
+    "enabled": true,
+    "script": "desktop:dev",
+    "appId": "com.dhepil.my.new.app",
+    "productName": "My New App"
+  }
+}
+```
+
+`appId` dan `productName` dapat dihilangkan untuk memakai default. Tambahkan `"icon": "assets/icon.png"` hanya jika app memiliki icon sendiri; path harus tetap berada di folder app.
+
+### 3. Tambahkan thin scripts
+
+```json
+{
+  "scripts": {
+    "desktop:dev": "node ../../electron/scripts/desktop.mjs dev my-new-app",
+    "desktop:build": "node ../../electron/scripts/desktop.mjs build my-new-app"
+  }
+}
+```
+
+### 4. Validasi berurutan
+
+```bash
+npm run typecheck --workspace @dhepil-suite/my-new-app
+npm run desktop:dev -- my-new-app
+npm run desktop:build -- my-new-app --dir
+npm run desktop:build -- my-new-app
+```
+
+Periksa executable unpacked sebelum membuat installer final. Build berikutnya membersihkan seluruh `release/<app-id>/`, jadi jangan menyimpan file manual di sana.
 
 Jangan menambahkan Electron, electron-builder, main process, preload, atau build config ke package app.
+
+## Current Desktop Apps
+
+| App                   | Port   | Desktop  |
+| --------------------- | ------ | -------- |
+| `clipboard`           | `2002` | Enabled  |
+| `dhepil`              | `2000` | Disabled |
+| `spreadsheet-minimal` | `2001` | Disabled |
 
 ## Output Clipboard Saat Ini
 
