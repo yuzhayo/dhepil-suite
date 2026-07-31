@@ -1,65 +1,76 @@
-# Handoff Document
+# Dhepil Suite — Current Handoff
 
-## Status Terakhir
+> **Snapshot:** 2026-08-01. Dokumen ini mencatat kondisi repository aktual setelah konsolidasi WIP. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser launcher dimiliki `browser-plan.md`.
 
-Shared Electron runtime dan build orchestration sudah dipusatkan di `electron/`. Clipboard adalah app desktop pertama yang opt-in dan installer Windows-nya berhasil dibangun serta dijalankan.
+## Status Repository
 
-## Pekerjaan Selesai
+Dhepil Suite adalah monorepo development control center pada port `1999`. App di `apps/*` ditemukan dari `app.manifest.json`, memperoleh stable port dari `config/app-ports.lock.json`, dan dapat dibangun mandiri bila opt-in desktop.
 
-1. Menambahkan npm workspace `@dhepil-suite/desktop-runtime` di `electron/package.json`.
-2. Memindahkan seluruh ownership Electron ke `electron/`:
-   - generic main process;
-   - sandboxed preload;
-   - cached binary installer;
-   - dev/build/build-all orchestrator;
-   - generated runtime dan release per app.
-3. Root hanya memiliki command entry point:
-   - `npm run desktop:dev -- <app-id>`;
-   - `npm run desktop:build -- <app-id> [--dir]`;
-   - `npm run desktop:build:all [-- --dir]`.
-4. Clipboard opt-in melalui `app.manifest.json` dan thin package scripts. Package Clipboard tidak lagi memiliki Electron dependency, main/preload, atau electron-builder config.
-5. Renderer desktop dibangun dengan asset relatif langsung ke temporary staging di luar npm workspace. Ini mencegah dependency production root ikut masuk ke `app.asar`.
-6. Dev launcher memakai stable port dari `config/app-ports.lock.json` dan membersihkan `ELECTRON_RUN_AS_NODE` hanya dari child environment.
-7. Data Electron diisolasi per app ID. Clipboard memakai `%APPDATA%\Dhepil Suite Apps\clipboard`.
-8. Source contract dan prosedur app baru didokumentasikan di `PLAYBOOK.md`, `AGENTS.md`, dan `electron/README.md`.
-9. Artifact generated lama `apps/clipboard/dist-electron` sudah dikeluarkan dari folder app dan digantikan oleh clean release terpusat; tidak ada lagi output Electron di folder app.
+| App                   | Port | Desktop  |
+| --------------------- | ---- | -------- |
+| `dhepil`              | 2000 | disabled |
+| `spreadsheet-minimal` | 2001 | disabled |
+| `clipboard`           | 2002 | enabled  |
 
-## Artifact Terverifikasi
+Root control center tidak menjadi runtime dependency artifact final. Source app tidak mengimpor root atau app lain.
+
+## Checkpoint yang Sudah Di-commit
 
 ```text
-electron/release/clipboard/
-├─ Clipboard-Setup-0.1.0.exe
-├─ Clipboard-Setup-0.1.0.exe.blockmap
-└─ win-unpacked/Clipboard.exe
+75dabbd feat(electron): centralize per-app desktop builds
+e84ac0b docs(clipboard): add app ownership guardrails
+68c04ab test: stabilize local validation baseline
+4dfba07 feat(ui): centralize shared Ant Design theme
+fde197f fix(ui): contain grid card actions
+6d89b66 docs: sync architecture and desktop playbook
+94bb5e7 docs(browser): add standalone launcher implementation plan
 ```
 
-- Installer NSIS x64: PASS.
-- Packaged `Clipboard.exe`: hidup, responsive, dan membuka window `Clipboard App`.
-- Isolasi userData `Dhepil Suite Apps\clipboard`: PASS.
-- Sandboxed preload CommonJS: PASS; stderr smoke test kosong.
-- Cleanup smoke process: PASS, tidak ada proses tersisa.
-- `app.asar`: hanya 11 entry main/preload/renderer/package; tidak membawa `node_modules`.
-- SHA256 installer: `D08A00F800BDEED4D29B45BC7558D912334AFBB4FAB5B518E79EC40EB924D7A4`.
+Perubahan tersebut mencakup:
+
+- shared Electron build/runtime ownership di `electron/`;
+- per-app desktop opt-in melalui manifest dan thin scripts;
+- shared Ant Design theme, toggle, persistence, dan same-window synchronization;
+- UI control-center fluid desktop dan containment action/card;
+- port-independent process-manager test;
+- sinkronisasi root/app ownership dan Electron playbook;
+- satu plan kanonis browser launcher yang self-contained dan belum diimplementasikan.
+
+## Electron yang Sudah Terverifikasi
+
+Clipboard adalah app desktop pertama yang opt-in. Artifact checkpoint berada di `electron/release/clipboard/`:
+
+```text
+Clipboard-Setup-0.1.0.exe
+Clipboard-Setup-0.1.0.exe.blockmap
+win-unpacked/Clipboard.exe
+```
+
+Checkpoint sebelumnya membuktikan installer NSIS x64, packaged executable, sandboxed preload, app-specific `userData`, cleanup smoke process, dan app ASAR minimal. SHA256 installer saat checkpoint: `D08A00F800BDEED4D29B45BC7558D912334AFBB4FAB5B518E79EC40EB924D7A4`.
+
+Artifact generated bukan source of truth dan dapat berubah setelah build berikutnya. Prosedur opt-in app baru ada di `PLAYBOOK.md` Section 10 dan `electron/README.md`.
 
 ## Validation Aktual
 
-- `node --check electron/scripts/desktop.mjs`: PASS.
-- `node --check electron/scripts/install-electron.cjs`: PASS.
-- `npm run typecheck`: PASS, termasuk Electron workspace.
-- `npm run test -- scripts/project-discovery.test.ts --maxWorkers=2`: PASS, 4/4.
+- `npm run format:check`: PASS.
 - `npm run lint`: PASS.
-- `npm run build`: PASS.
-- `npx --yes antd lint src --format json`: PASS, 0 issue.
-- `npm audit --omit=dev`: PASS, 0 vulnerability production.
-- `npm run format:check`: belum PASS karena 11 file UI/plan WIP yang sudah ada dan berada di luar scope Electron.
-- Full `npm run test -- --maxWorkers=2`: 98 PASS, 1 FAIL. Test lama `project-manager.test.ts` mengasumsikan port 2000 kosong, sementara server user sedang aktif di port 2000. Server tersebut tidak dihentikan.
+- `npm run typecheck`: PASS.
+- `npm run test -- --maxWorkers=2`: PASS, 21 files / 104 tests.
+- `npm run build`: PASS; warning chunk Vite lebih dari 500 kB tetap non-blocking.
+- `npx --yes antd lint . --format json`: PASS, 0 issue.
+- Build renderer `clipboard`: PASS.
+- Build renderer `spreadsheet-minimal`: PASS.
 
-## Warning
+Browser visual QA belum dijalankan karena browser-control runtime tidak tersedia pada sesi konsolidasi. Jangan menganggap layout visual PASS hanya dari build/test lokal.
 
-- Build renderer memberi warning chunk lebih dari 500 kB; non-blocking dan bukan kegagalan Electron.
-- `npm install` melaporkan 16 high-severity vulnerability pada dependency development transitive. Tidak dijalankan `npm audit fix --force`.
-- Working tree masih memiliki WIP UI/theme milik user. Perubahan tersebut dipertahankan dan tidak diformat atau di-reset.
+## Warning yang Masih Terbuka
 
-## Fokus Selanjutnya
+- `npm install` melaporkan 16 high-severity vulnerability pada dependency development/transitive. Tidak dijalankan `npm audit fix --force` karena dapat mengubah dependency secara destruktif.
+- Bundle root masih memberi warning ukuran chunk lebih dari 500 kB.
+- Server user pada port `2000` harus dipertahankan; test tidak lagi mengasumsikan port tersebut kosong.
 
-Untuk app baru, selesaikan renderer Vite, stable port, manifest desktop, dan dua thin scripts. Tidak perlu menambah dependency atau konfigurasi Electron. Jalankan unpacked build sebagai smoke test sebelum installer penuh.
+## Next Work
+
+`browser-plan.md` adalah plan-only. Implementasi `apps/browser-launcher/` belum dimulai dan wajib mulai dari **Fase 0**, termasuk legal/redistribution CfT, packaged `node:sqlite` spike, safe ZIP extractor, offline seed staging, dan perluasan capability contract di `PLAYBOOK.md`.
+
+Jangan mulai dari UI dan jangan membuat `browser-plan1.md` atau plan paralel baru. System Chrome, Edge, default browser, serta root port `1999` bukan fallback runtime artifact final.

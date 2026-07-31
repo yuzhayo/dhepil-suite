@@ -1,39 +1,54 @@
-# Implementation Plan — Terminal Auto-Clear & Auto-Scroll
+# Implementation Ledger — Workspace Consolidation
 
-## Latar Belakang
+> **Status:** COMPLETE pada 2026-08-01. File ini mencatat pekerjaan konsolidasi yang sudah dijalankan; bukan sumber keputusan arsitektur baru.
 
-Sesuai permintaan Anda, kita akan menambahkan dua fitur _quality-of-life_ pada komponen Terminal:
+## Objective
 
-1. **Auto-Clear:** Terminal otomatis dibersihkan ketika server sengaja dimatikan (`stopped`).
-2. **Auto-Scroll:** Terminal selalu otomatis di-_scroll_ ke baris paling bawah setiap kali ada baris _log_ baru yang masuk.
+Mengaudit seluruh tracked/untracked WIP, mempertahankan perubahan yang benar, memperbaiki blocker validation, dan membuat checkpoint commit kecil tanpa push atau destructive Git operation.
 
----
+## Completed Work
 
-## Proposed Changes
+1. Ownership Clipboard didokumentasikan di app-level `AGENTS.md`.
+2. Test process manager tidak lagi bergantung pada fixed port `2000` yang dapat sedang dipakai user.
+3. Formatting debt pada engine Clipboard diselesaikan tanpa mengubah behavior.
+4. Shared Ant Design theme dipusatkan dengan provider, toggle, persistence, tests, dan integrasi root/app.
+5. Header memperoleh slot `extra` yang kecil; usulan refactor Header generik penuh dibatalkan karena tidak diperlukan dan berisiko memindahkan logic ke screen.
+6. Action/card layout control center diperbaiki agar tidak saling menimpa pada fluid desktop width.
+7. `PLAYBOOK.md`, root/app ownership docs, dan Electron documentation disinkronkan dengan struktur aktual.
+8. Dua draft browser launcher dikonsolidasikan menjadi satu `browser-plan.md`; implementasi browser launcher belum dimulai.
 
-### `src/ControlCenterScreen.tsx`
+## Checkpoints
 
-Menambahkan aturan sederhana pada fungsi pembuatan _View Model_ Terminal.
+```text
+e84ac0b docs(clipboard): add app ownership guardrails
+68c04ab test: stabilize local validation baseline
+4dfba07 feat(ui): centralize shared Ant Design theme
+fde197f fix(ui): contain grid card actions
+6d89b66 docs: sync architecture and desktop playbook
+94bb5e7 docs(browser): add standalone launcher implementation plan
+```
 
-- Mengubah fungsi pembantu `createTerminalViewModel` agar juga menerima argumen `status`.
-- Jika `status === 'stopped'`, fungsi tersebut akan mengembalikan himpunan _log_ kosong (`[]`), sehingga Terminal langsung tampak bersih di UI tanpa harus menghapus data log asli yang mungkin masih tersimpan di _backend_.
-- (Jika statusnya adalah `error` karena aplikasi _crash_, log akan tetap dipertahankan agar Anda bisa melihat pesan _error_-nya).
+## Validation Contract
 
-### `ui/card-grid/Terminal.tsx`
+Final consolidation gate:
 
-Menambahkan fitur _auto-scroll_ menggunakan siklus _React hook_ standar.
+```bash
+npm run format:check
+npm run lint
+npm run typecheck
+npm run test -- --maxWorkers=2
+npm run build
+npx --yes antd lint . --format json
+```
 
-- Meng-import `useEffect` dan `useRef` dari React.
-- Mengaitkan `useRef` ke dalam elemen `<pre>` milik terminal.
-- Menggunakan `useEffect` yang memantau perubahan variabel `content` (isi teks log). Setiap kali teks berubah atau bertambah panjang, _scroll_ paksa elemen `<pre>` agar `scrollTop = scrollHeight`, menjamin visibilitas baris paling akhir di bagian bawah.
+Expected recorded result: seluruh command PASS; test 21 files / 104 tests; Ant Design lint 0 issue; hanya warning bundle chunk >500 kB. Browser visual QA tetap `NOT RUN` bila browser-control runtime tidak tersedia.
 
----
+## Remaining Work
 
-## Verification Plan
+Tidak ada source WIP yang sengaja ditinggalkan oleh konsolidasi ini. Pekerjaan produk berikutnya harus memakai plan kanonisnya sendiri:
 
-### Manual Verification
+- browser launcher: mulai `browser-plan.md` Fase 0;
+- app desktop baru: ikuti `PLAYBOOK.md` Section 4 dan Section 10;
+- dependency vulnerability remediation: audit terpisah, jangan memakai forced upgrade sebagai bagian cleanup umum.
 
-1. Jalankan server aplikasi apa saja.
-2. Pantau terminal yang sedang mengeluarkan log. Pastikan terminal secara otomatis terus ter-scroll ke baris terbawah.
-3. Klik tombol "Stop server".
-4. Verifikasi bahwa segera setelah statusnya berubah menjadi "Tidak aktif", kotak terminal langsung mereset teks menjadi "Belum ada output process." (kosong).
+File ini tidak mengotorisasi implementasi fase browser launcher atau perubahan source app berikutnya.
