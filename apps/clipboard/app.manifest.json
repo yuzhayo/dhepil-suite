@@ -5,7 +5,9 @@
   "runtime": "vite",
   "description": "Grid spreadsheet dinamis khusus untuk manajemen clipboard.",
   "desktop": {
-    "enabled": false,
-    "script": "desktop:dev"
+    "enabled": true,
+    "script": "desktop:dev",
+    "appId": "com.dhepil.clipboard",
+    "productName": "Clipboard"
   }
 }

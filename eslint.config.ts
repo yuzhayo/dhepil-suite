@@ -8,10 +8,10 @@ import { controlCenterBoundaryConfigs } from './tooling/eslint/controlCenterBoun
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'coverage', 'node_modules'],
+    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', 'electron/release/**'],
   },
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{js,mjs,cjs,ts,tsx,cts,mts}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2022,
@@ -19,6 +19,12 @@ export default tseslint.config(
         ...globals.browser,
         ...globals.node,
       },
+    },
+  },
+  {
+    files: ['**/*.{cjs,cts}'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   {

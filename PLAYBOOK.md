@@ -22,13 +22,15 @@ npm-workspaces monorepo (`apps/*`) dengan **root control center** di port `1999`
 
 ## 3. Tech Stack & Build Gate
 
-| Tool       | Version |
-| ---------- | ------- |
-| React      | 19      |
-| antd       | 6.5.1   |
-| TypeScript | 6       |
-| Vite       | 7       |
-| Vitest     | 4       |
+| Tool             | Version |
+| ---------------- | ------- |
+| React            | 19.2.8  |
+| antd             | 6.5.2   |
+| TypeScript       | 6.0.3   |
+| Vite             | 8.1.5   |
+| Vitest           | 4.1.10  |
+| Electron         | 43.2.0  |
+| electron-builder | 26.15.3 |
 
 ESM only (`"type": "module"`). No CommonJS.
 **Build Gate (wajib lulus semua sebelum commit):**
@@ -51,7 +53,7 @@ npx --yes antd lint src --format json
 3. **CoreUI as the Single UI Source**: Jika app membutuhkan komponen UI baru (misal: tabel spreadsheet, grid khusus), maka komponen UI tersebut **WAJIB** dibangun secara generik dan diletakkan di `root/ui/` (CoreUI). App kemudian meng-import UI tersebut dan menyuapkan datanya melalui pola Gate.
 4. **Ant Design (AntD) Required**: Saat membangun komponen di `root/ui/`, Agent WAJIB menggunakan komponen bawaan Ant Design 6. Jangan membuat komponen dari awal menggunakan CSS murni jika AntD sudah menyediakannya.
 5. App **DILARANG** memuat kode UI dari app lain, dan dilarang mengubah source code `src/` (Root Control Center).
-4. Buat file `app.manifest.json` minimal:
+6. Buat file `app.manifest.json` minimal:
 
 ```json
 {
@@ -80,6 +82,12 @@ dhepil-suite/
 │  └─ main.tsx
 ├─ apps/
 │  └─ <app-id>/           ← app isolasi (baca Panduan Membuat App Baru)
+├─ electron/               ← shared desktop runtime + build/release orchestrator
+│  ├─ main/                ← generic Electron main process
+│  ├─ preload/             ← generic context-isolated bridge
+│  ├─ scripts/             ← dev/build/cache tooling
+│  ├─ dist/                ← generated shared runtime (ignored)
+│  └─ release/<app-id>/    ← generated standalone artifact (ignored)
 ├─ config/
 │  └─ app-ports.lock.json ← port assignment permanen (2000-2999)
 ├─ scripts/               ← Vite middleware plugin (Node.js API)
@@ -157,3 +165,82 @@ Module dependency berjalan 1 arah (tidak boleh _circular_):
 | `external`      | Port responding, bukan milik root   |
 | `port-conflict` | Port terpakai, tidak terverifikasi  |
 | `not-found`     | Folder dihapus, process masih hidup |
+
+---
+
+## 10. Electron Desktop Packaging
+
+### 10.1 Ownership
+
+`electron/` adalah **satu-satunya owner** untuk Electron di monorepo:
+
+- `electron/main/` dan `electron/preload/` adalah shell generik; dilarang memuat business logic app.
+- `electron/package.json` memiliki satu instalasi Electron 43.2.0 dan electron-builder.
+- `electron/scripts/desktop.mjs` menangani dev, typecheck renderer, build renderer dengan asset relatif, staging terisolasi, dan packaging per app.
+- `electron/scripts/install-electron.cjs` memakai binary lokal/cache jika tersedia dan fallback download yang dapat dilanjutkan.
+- Root hanya menyediakan workspace dan command entry point. Jangan memindahkan dependency Electron ke root atau ke `apps/<id>/`.
+- App tidak boleh memiliki `main`, `preload`, konfigurasi electron-builder, atau dependency Electron sendiri.
+
+Satu instalasi toolchain menghindari duplikasi dependency saat development. Setiap artifact final tetap standalone, sehingga masing-masing release secara normal membawa Chromium/Node/Electron miliknya sendiri dan dapat dijalankan tanpa Dhepil Suite.
+
+### 10.2 Opt-in App
+
+App desktop tetap ditemukan dari `apps/*`; tidak ada registry Electron manual. Tambahkan metadata berikut:
+
+```json
+{
+  "desktop": {
+    "enabled": true,
+    "script": "desktop:dev",
+    "appId": "com.dhepil.myapp",
+    "productName": "My App"
+  }
+}
+```
+
+`appId` opsional dan secara default diturunkan dari ID folder. `productName` opsional dan secara default memakai `manifest.name`. `icon` opsional, harus berupa path relatif yang tetap berada di folder app; jika tidak diisi, `electron/icon.png` digunakan.
+
+Package app hanya memiliki delegasi tipis:
+
+```json
+{
+  "scripts": {
+    "desktop:dev": "node ../../electron/scripts/desktop.mjs dev myapp",
+    "desktop:build": "node ../../electron/scripts/desktop.mjs build myapp"
+  }
+}
+```
+
+### 10.3 Commands
+
+Jalankan dari root:
+
+```bash
+npm run desktop:dev -- clipboard
+npm run desktop:build -- clipboard
+npm run desktop:build -- clipboard --dir
+npm run desktop:build:all
+npm run desktop:build:all -- --dir
+```
+
+- `desktop:dev` memakai stable port app dari `config/app-ports.lock.json`.
+- `desktop:build` menghasilkan installer Windows NSIS x64.
+- Flag `--dir` hanya menghasilkan unpacked app untuk smoke test yang lebih cepat.
+- `desktop:build:all` memindai semua manifest dengan `desktop.enabled: true`.
+- Semua output berada di `electron/release/<app-id>/`.
+- Runtime main/preload hasil compile berada di `electron/dist/`.
+- Staging dibuat sementara di OS temp agar electron-builder tidak membawa dependency production root ke `app.asar`.
+
+Dev launcher selalu membuang `ELECTRON_RUN_AS_NODE` hanya dari child environment agar Electron tidak salah berjalan sebagai Node. Data development tiap app diisolasi melalui ID app; release menggunakan metadata ID yang sama.
+
+### 10.4 Binary Cache
+
+`electron/scripts/install-electron.cjs` mencari archive ini terlebih dahulu:
+
+```text
+D:\ARTIFACT\electron-cache\electron-v43.2.0-win32-x64.zip
+```
+
+Lokasi dapat diganti dengan `ELECTRON_LOCAL_SEED_DIR`. Jika seed tidak ada, script memakai `ELECTRON_MIRROR` atau mirror default dengan `curl` resume/retry, lalu fallback ke installer Electron resmi dari package npm.
+
+Target packaging saat ini sengaja Windows NSIS x64. Dukungan macOS/Linux harus ditambahkan sekali di orchestrator `electron/scripts/desktop.mjs`, bukan diduplikasi di setiap app.

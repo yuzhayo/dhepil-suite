@@ -2,6 +2,7 @@
 
 **CRITICAL INSTRUCTION FOR ALL AI AGENTS (ONBOARDING):**
 To understand the project context quickly **without scanning the entire project**, you MUST read these files in order:
+
 1. `PLAYBOOK.md`: The **Single Source of Truth** for architecture, strict CoreUI boundaries, and app development rules.
 2. `.ai/handoff.md`: Contains the latest status, recent changes, and current focus of the project.
 3. The specific plan document for the app you are working on (if any).
@@ -18,6 +19,7 @@ Do NOT modify ANY files or plan ANY architecture before reading these documents.
 4. **.ai Folder Tracking**: The `.ai` folder is ONLY used for transient session tracking (`implementation_plan.md` and `handoff.md`). Do NOT store long-term architecture docs here. When finishing a task, update the handoff document.
 5. **Creating New Apps**: To add an app, create a folder in `apps/<id>/`, add `app.manifest.json` and a `package.json` with a `dev` script. It will be discovered automatically.
 6. **Ant Design (AntD) Required**: Any agent creating a new app or modifying UI components MUST actively use Ant Design 6 (AntD). Do not invent custom UI components from scratch if AntD already provides a suitable base component.
+7. **Centralized Electron Ownership**: Semua source, dependency, installer helper, dan build orchestration Electron hanya boleh berada di `electron/`. App hanya boleh opt-in melalui metadata `desktop` dan thin scripts di package app; jangan menambahkan Electron dependency atau main/preload ke `apps/<id>/`.
 
 ## Commands (run from root, in order)
 
