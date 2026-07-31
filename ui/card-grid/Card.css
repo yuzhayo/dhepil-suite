@@ -47,6 +47,24 @@
   gap: 8px;
 }
 
+/* Force fit actions into 1 row in grid view */
+.core-ui-grid__collection--grid .core-ui-card__actions {
+  flex-wrap: nowrap;
+}
+
+.core-ui-grid__collection--grid .core-ui-card__actions > * {
+  flex: 1;
+  min-width: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.core-ui-grid__collection--grid .core-ui-card__actions .ant-btn > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .core-ui-card__alerts {
   display: grid;
   gap: 8px;
