@@ -50,10 +50,7 @@ export function useClipboardEngine() {
 
   // Handlers
   const addColumn = useCallback(() => {
-    setColumns((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), title: `Kolom ${prev.length + 1}` },
-    ]);
+    setColumns((prev) => [...prev, { id: crypto.randomUUID(), title: `Kolom ${prev.length + 1}` }]);
   }, []);
 
   const deleteColumn = useCallback((id: string) => {
@@ -64,7 +61,7 @@ export function useClipboardEngine() {
         const newCells = { ...row.cells };
         delete newCells[id];
         return { ...row, cells: newCells };
-      })
+      }),
     );
   }, []);
 
@@ -102,7 +99,7 @@ export function useClipboardEngine() {
           };
         }
         return row;
-      })
+      }),
     );
   }, []);
 
@@ -114,7 +111,7 @@ export function useClipboardEngine() {
   // Memoized sorting
   const sortedRows = useMemo(() => {
     const arr = [...rows];
-    
+
     if (sortMode === 'newest') {
       arr.sort((a, b) => b.createdAt - a.createdAt);
     } else if (sortMode === 'oldest') {
@@ -127,7 +124,7 @@ export function useClipboardEngine() {
         return sortMode === 'title-asc' ? cmp : -cmp;
       });
     }
-    
+
     return arr;
   }, [rows, sortColumn, sortMode]);
 

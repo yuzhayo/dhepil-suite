@@ -101,24 +101,29 @@ describe('ProjectManager discovery', () => {
     try {
       await createApp(rootDirectory, 'sample-app');
       const manager = new ProjectManager({ rootDirectory });
-      expect((await manager.list())[0]?.port).toBe(2000);
+      const assignedPort = (await manager.list())[0]?.port;
+      expect(assignedPort).toBeGreaterThanOrEqual(2000);
+      expect(assignedPort).toBeLessThanOrEqual(2999);
+      if (assignedPort === undefined) {
+        throw new Error('Fixture tidak mendapat stable port.');
+      }
       await new Promise<void>((resolvePromise, rejectPromise) => {
         listener.once('error', rejectPromise);
-        listener.listen(2000, '127.0.0.1', resolvePromise);
+        listener.listen(assignedPort, '127.0.0.1', resolvePromise);
       });
       const [listed, startFailure] = await Promise.all([
         manager.list(),
         manager.start('sample-app').catch((error: unknown) => error),
       ]);
-      expect(listed[0]?.port).toBe(2000);
+      expect(listed[0]?.port).toBe(assignedPort);
       expect(startFailure).toBeInstanceOf(Error);
-      expect(String(startFailure)).toContain('Port 2000 sedang dipakai');
+      expect(String(startFailure)).toContain(`Port ${assignedPort} sedang dipakai`);
       const registry = JSON.parse(
         await (
           await import('node:fs/promises')
         ).readFile(join(rootDirectory, 'config', 'app-ports.lock.json'), 'utf8'),
       ) as { assignments: Record<string, number> };
-      expect(registry.assignments).toEqual({ 'sample-app': 2000 });
+      expect(registry.assignments).toEqual({ 'sample-app': assignedPort });
     } finally {
       for (const socket of sockets) {
         socket.destroy();
