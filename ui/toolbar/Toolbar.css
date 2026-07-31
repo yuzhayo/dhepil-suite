@@ -4,10 +4,10 @@
   align-items: center;
   gap: var(--layout-toolbar-gap, 8px);
   padding: 10px;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgb(16 36 70 / 6%);
+  box-shadow: var(--ant-box-shadow);
 }
 
 .core-ui-toolbar__control {
@@ -70,14 +70,14 @@
 
 .core-ui-toolbar__server small {
   display: block;
-  color: #667085;
+  color: var(--ant-color-text-secondary);
 }
 
 .core-ui-toolbar__kill {
-  color: #cf1322;
+  color: var(--ant-color-error);
   font-weight: 600;
 }
 
 .core-ui-toolbar__kill--external {
-  color: #667085;
+  color: var(--ant-color-text-secondary);
 }

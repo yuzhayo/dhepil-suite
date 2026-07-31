@@ -1,6 +1,6 @@
 :root {
-  color: #172033;
-  background: #f4f6f9;
+  color: var(--ant-color-text, #172033);
+  background-color: var(--ant-color-bg-layout, #f4f6f9);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -17,7 +17,7 @@ body,
 }
 
 html {
-  background: #f4f6f9;
+  background-color: var(--ant-color-bg-layout, #f4f6f9);
 }
 
 body {

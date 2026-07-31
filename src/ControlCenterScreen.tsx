@@ -39,6 +39,7 @@ import { CoreLayout } from '../ui/CoreLayout';
 import { Header } from '../ui/header/Header';
 import { Toolbar } from '../ui/toolbar/Toolbar';
 import { Grid } from '../ui/card-grid/CardGrid';
+import { ThemeToggle } from '../ui/theme/ThemeToggle';
 import {
   cardDefinition,
   headerDefinition,
@@ -684,7 +685,12 @@ export function ControlCenterScreen({
   ) : undefined;
 
   const headerSlot = (
-    <Header viewModel={headerVm} availableActionIds={AVAILABLE_ACTION_IDS} onAction={dispatch} />
+    <Header
+      viewModel={headerVm}
+      availableActionIds={AVAILABLE_ACTION_IDS}
+      onAction={dispatch}
+      extra={<ThemeToggle />}
+    />
   );
 
   const toolbarSlot = (

@@ -10,7 +10,7 @@
   margin: 0 auto;
   padding: var(--layout-header-padding);
   flex-direction: var(--layout-header-direction);
-  color: #ffffff;
+  color: var(--ant-color-text);
   background: transparent;
 }
 
@@ -28,7 +28,7 @@
 .core-ui-header__subtitle.ant-typography {
   max-width: 720px;
   margin: 4px 0 0;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--ant-color-text-secondary);
 }
 
 .core-ui-header__actions {

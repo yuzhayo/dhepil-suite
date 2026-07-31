@@ -45,4 +45,12 @@ describe('Header', () => {
 
     expect(screen.getByRole('button', { name: 'Refresh items' })).toBeDisabled();
   });
+
+  it('renders an optional extra control beside its actions', () => {
+    render(
+      <Header {...sampleHeaderProps} extra={<button aria-label="Theme control">Theme</button>} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Theme control' })).toBeInTheDocument();
+  });
 });

@@ -14,6 +14,7 @@ export function Header({
   title,
   subtitle,
   actions,
+  extra,
 }: HeaderProps) {
   const availableActions = new Set(availableActionIds);
   const actionStates = new Map(
@@ -40,8 +41,9 @@ export function Header({
         ) : null}
       </div>
 
-      {sortedActions.length > 0 ? (
+      {sortedActions.length > 0 || extra ? (
         <div className="core-ui-header__actions" aria-label="Aksi header">
+          {extra}
           {sortedActions.map((action) => {
             const state = actionStates.get(action.actionId);
             const handlerAvailable =

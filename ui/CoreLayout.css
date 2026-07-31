@@ -6,13 +6,15 @@
   min-height: 0;
   overflow: hidden;
   flex-direction: column;
-  background: radial-gradient(circle at 85% 0%, rgb(40 112 255 / 18%), transparent 28rem), #f4f6f9;
+  background:
+    radial-gradient(circle at 85% 0%, var(--ant-color-primary-bg), transparent 28rem),
+    var(--ant-color-bg-layout);
 }
 
 .core-ui-layout__header-shell {
   flex: 0 0 auto;
-  background: #071426;
-  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  background: var(--ant-color-bg-elevated);
+  border-bottom: 1px solid var(--ant-color-border-secondary);
 }
 
 .core-ui-layout__workspace {

@@ -3,6 +3,7 @@ import { CopyOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 
 import type { DataGridProps, DataGridRowViewModel, DataGridSortMode } from '../contracts';
+import { ThemeToggle } from '../theme/ThemeToggle';
 import './DataGrid.css';
 
 export function DataGrid({
@@ -25,8 +26,17 @@ export function DataGrid({
           onChange={(e) => onUpdateColumnTitle?.(col.id, e.target.value)}
           aria-label={`Title for column ${col.title}`}
         />
-        <Popconfirm title="Delete column?" onConfirm={() => onDeleteColumn?.(col.id)} trigger="click">
-          <Button type="text" danger icon={<DeleteOutlined />} aria-label={`Delete column ${col.title}`} />
+        <Popconfirm
+          title="Delete column?"
+          onConfirm={() => onDeleteColumn?.(col.id)}
+          trigger="click"
+        >
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            aria-label={`Delete column ${col.title}`}
+          />
         </Popconfirm>
       </div>
     ),
@@ -42,7 +52,7 @@ export function DataGrid({
           aria-label={`Cell in row ${row.id}, column ${col.title}`}
         />
         <Button
-          type="text"
+          type="primary"
           icon={<CopyOutlined />}
           onClick={() => onCopyCell?.(text || '')}
           aria-label={`Copy cell content`}
@@ -94,6 +104,9 @@ export function DataGrid({
             Add Row
           </Button>
         </Space>
+        <div className="core-ui-data-grid__theme-toggle">
+          <ThemeToggle />
+        </div>
       </div>
 
       <Table

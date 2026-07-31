@@ -34,8 +34,8 @@
 .core-ui-grid__skeleton {
   min-height: 280px;
   padding: 20px;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border);
   border-radius: 12px;
 }
 

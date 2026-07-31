@@ -10,14 +10,19 @@
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 8px;
-  
+
   /* Membuat toolbar menempel di atas saat scroll */
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #ffffff; /* Mencegah transparan saat menimpa tabel */
+  background-color: var(--ant-color-bg-container); /* Mencegah transparan saat menimpa tabel */
   padding-bottom: 8px;
   padding-top: 8px;
+}
+
+.core-ui-data-grid__theme-toggle {
+  margin-left: auto;
+  padding-right: 16px;
 }
 
 .core-ui-data-grid__header-cell {
