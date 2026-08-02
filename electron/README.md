@@ -10,6 +10,7 @@ Folder ini adalah implementasi desktop terpusat Dhepil Suite. Sumber kebenaran a
 - Build menghasilkan artifact standalone per app di `release/<id>/`.
 - Renderer selalu dibangun dengan base relatif agar asset bekerja melalui `file://`.
 - Temporary staging berada di OS temp supaya dependency root tidak ikut masuk ke `app.asar`.
+- Desktop packaging membaca `apps/<id>/package.json#version`, tetapi tidak pernah mengubah version, changelog, commit, atau tag.
 
 ## Struktur
 
@@ -53,7 +54,7 @@ npm run desktop:build --workspace @dhepil-suite/clipboard
 
 ## Menambahkan App Desktop
 
-Panduan canonical dan troubleshooting lengkap berada di [`PLAYBOOK.md` Section 10](../PLAYBOOK.md#10-electron-desktop-packaging).
+Panduan canonical dan troubleshooting lengkap berada di [`PLAYBOOK.md` Section 10](../PLAYBOOK.md#10-electron-desktop-packaging). Semua app baru juga wajib mengikuti inherited rules `apps/AGENTS.md` dan automatic release contract di [`PLAYBOOK.md` Section 11](../PLAYBOOK.md#11-automatic-app-versioning-dan-changelog).
 
 ### 1. Pastikan app siap
 
@@ -65,6 +66,7 @@ App harus berupa direct child `apps/<id>/` dengan:
 - `vite.config.ts`;
 - renderer Vite yang lulus typecheck;
 - stable port di `config/app-ports.lock.json` untuk desktop dev.
+- package version bootstrap `0.1.0`; bump berikutnya dimiliki automation root.
 
 ### 2. Aktifkan manifest
 
@@ -96,18 +98,31 @@ App harus berupa direct child `apps/<id>/` dengan:
 }
 ```
 
-### 4. Validasi berurutan
+### 4. Validasi dan unpacked smoke build
 
 ```bash
 npm run typecheck --workspace @dhepil-suite/my-new-app
 npm run desktop:dev -- my-new-app
 npm run desktop:build -- my-new-app --dir
+```
+
+Periksa executable unpacked sebelum membuat installer final. Smoke build tidak menaikkan version.
+
+### 5. Release version otomatis, lalu installer final
+
+Setelah source app di-commit dan working tree bersih:
+
+```bash
+npm run release:check
+npm run release:app -- my-new-app
 npm run desktop:build -- my-new-app
 ```
 
-Periksa executable unpacked sebelum membuat installer final. Build berikutnya membersihkan seluruh `release/<app-id>/`, jadi jangan menyimpan file manual di sana.
+Jika perubahan shared Electron sengaja menjadi bagian release app, gunakan `npm run release:app -- my-new-app --include-electron`. Jangan bump package version, mengedit/membuat changelog, atau membuat tag manual. Release automation memvalidasi app dan membuat commit/tag lokal tanpa push; packaging sesudahnya hanya membaca version hasil release.
 
-Jangan menambahkan Electron, electron-builder, main process, preload, atau build config ke package app.
+Build berikutnya membersihkan seluruh `release/<app-id>/`, jadi jangan menyimpan file manual di sana.
+
+Jangan menambahkan Electron, electron-builder, main process, preload, atau build config ke package app. `CHANGELOG.md` juga tidak perlu dibuat saat scaffold; release pertama akan membuat baseline jika file belum ada.
 
 ## Current Desktop Apps
 

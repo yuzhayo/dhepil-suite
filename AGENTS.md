@@ -17,9 +17,10 @@ Do NOT modify ANY files or plan ANY architecture before reading these documents.
 2. **Engine Flat Children**: The `src/engine/children/` folder must remain completely flat. No subfolders.
 3. **No Presenters**: We do not use a presenter layer. `ControlCenterScreen.tsx` maps raw engine data to generic CoreUI slots and props directly.
 4. **.ai Folder Tracking**: The `.ai` folder is ONLY used for transient session tracking (`implementation_plan.md` and `handoff.md`). Do NOT store long-term architecture docs here. When finishing a task, update the handoff document.
-5. **Creating New Apps**: To add an app, create a direct child `apps/<id>/`, add `app.manifest.json` and a `package.json` with a `dev` script, run the root control center, then Refresh to allocate its stable port. No manual app registry.
+5. **Creating New Apps**: To add an app, follow `apps/AGENTS.md` and `PLAYBOOK.md` Section 4. Create a direct child `apps/<id>/`, start `package.json#version` at `0.1.0`, add a valid manifest and `dev` script, then Refresh the root control center to allocate its stable port. No manual app registry, version bump, changelog entry, or release tag.
 6. **Ant Design (AntD) Required**: Any agent creating a new app or modifying UI components MUST actively use Ant Design 6 (AntD). Do not invent custom UI components from scratch if AntD already provides a suitable base component.
 7. **Centralized Electron Ownership**: Semua source, dependency, installer helper, dan build orchestration Electron hanya boleh berada di `electron/`. App hanya boleh opt-in melalui metadata `desktop` dan thin scripts di package app; jangan menambahkan Electron dependency atau main/preload ke `apps/<id>/`. Ikuti prosedur lengkap `PLAYBOOK.md` Section 10.
+8. **Automatic App Releases**: Jangan menaikkan `apps/<id>/package.json#version`, mengedit changelog, atau membuat release tag secara manual. Gunakan tooling root di `tooling/release/` dan prosedur `PLAYBOOK.md` Section 11. Perubahan Electron tidak menaikkan versi app kecuali release dijalankan eksplisit dengan `--include-electron`.
 
 ## Commands (run from root, in order)
 
@@ -37,6 +38,13 @@ Untuk desktop, jalankan unpacked smoke build sebelum installer:
 ```bash
 npm run desktop:build -- <app-id> --dir
 npm run desktop:build -- <app-id>
+```
+
+Untuk version/changelog app, jangan edit file manual:
+
+```bash
+npm run release:check
+npm run release:app -- <app-id>
 ```
 
 _For detailed explanations of these rules, architecture, and diagrams, read `PLAYBOOK.md`._

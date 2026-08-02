@@ -77,6 +77,7 @@ npx --yes antd lint . --format json
 4. Visual reusable berada di root `ui/` dan menerima kontrak generik dari `ui/contracts.ts`.
 5. App tidak boleh meng-import source app lain atau business logic root control center.
 6. UI baru wajib memakai Ant Design 6 jika primitive yang sesuai sudah tersedia.
+7. Seluruh app mewarisi `apps/AGENTS.md`; tambahkan `apps/<id>/AGENTS.md` untuk ownership/aturan khusus app, bukan untuk mengganti kontrak parent.
 
 ### 4.2 File minimum
 
@@ -114,6 +115,10 @@ Buat `package.json` dengan minimum:
 
 App Vite juga memerlukan `index.html`, `vite.config.ts`, `tsconfig.json`, dan entry React-nya.
 
+`0.1.0` adalah version bootstrap app baru. Setelah package dibuat, jangan bump version atau menulis `CHANGELOG.md` manual. `CHANGELOG.md` boleh belum ada; automation root akan membuat baseline ketika release pertama. Jangan menambahkan version lain ke `app.manifest.json` karena `schemaVersion` hanya versi format manifest.
+
+Tambahkan `apps/<id>/AGENTS.md` minimal yang menyatakan folder tersebut dimiliki app, melarang import root/app lain, dan merujuk kembali ke `apps/AGENTS.md`. Jangan menyalin seluruh playbook ke dalam app.
+
 ### 4.3 Discovery dan stable port
 
 1. Jalankan `npm install` dari root agar workspace baru tertaut.
@@ -123,6 +128,33 @@ App Vite juga memerlukan `index.html`, `vite.config.ts`, `tsconfig.json`, dan en
 5. Jangan mengedit atau menghapus assignment `config/app-ports.lock.json` hanya untuk mengganti port.
 
 Tidak ada file registry app manual. App baru muncul dari folder + manifest + package yang valid.
+
+### 4.4 Validation dan release pertama
+
+Validasi app baru sebelum source di-commit:
+
+```bash
+npm run typecheck --workspace @dhepil-suite/my-new-app
+npm run build --workspace @dhepil-suite/my-new-app
+npx --yes antd lint apps/my-new-app/src --format json
+```
+
+Commit source app menggunakan pesan conventional yang menjelaskan perubahan. Setelah working tree bersih, release pertama hanya memerlukan:
+
+```bash
+npm run release:check
+npm run release:app -- my-new-app
+```
+
+Run pertama membuat baseline/tag `my-new-app-v0.1.0` tanpa menghitung atau menaikkan version manual. Release berikutnya menentukan bump dari commit relevan, memperbarui package/lock/changelog, memvalidasi app, lalu membuat commit dan tag lokal. Tooling tidak pernah push.
+
+Jika app desktop juga sengaja merilis perubahan shared Electron, gunakan:
+
+```bash
+npm run release:app -- my-new-app --include-electron
+```
+
+`desktop:build` bukan pengganti command release dan tidak mengubah version/changelog.
 
 ---
 
@@ -146,6 +178,7 @@ dhepil-suite/
 │  ├─ App.tsx
 │  └─ main.tsx
 ├─ apps/
+│  ├─ AGENTS.md          ← inherited rules untuk seluruh app baru
 │  ├─ clipboard/          ← desktop-enabled app
 │  ├─ dhepil/             ← web/dev app
 │  └─ spreadsheet-minimal/ ← web/dev app
@@ -158,7 +191,7 @@ dhepil-suite/
 ├─ config/
 │  └─ app-ports.lock.json ← port assignment permanen (2000-2999)
 ├─ scripts/               ← Vite middleware plugin (Node.js API)
-├─ tooling/               ← ESLint boundary configs
+├─ tooling/               ← ESLint boundaries + automatic app release engine
 ├─ test/                  ← architecture boundary tests
 ├─ .ai/                   ← transient implementation status + handoff
 └─ PLAYBOOK.md            ← File ini (Master Guide)
@@ -378,18 +411,24 @@ Periksa minimum:
 - tidak ada preload error;
 - menutup app tidak meninggalkan process.
 
-#### Langkah 6 — buat installer final
+#### Langkah 6 — siapkan version release dan buat installer final
+
+Smoke build boleh dilakukan kapan saja dan tidak menaikkan version. Untuk artifact final, commit source sampai working tree bersih, biarkan release automation menentukan version/changelog, lalu build installer:
 
 ```bash
+npm run release:check
+npm run release:app -- my-new-app
 npm run desktop:build -- my-new-app
 ```
+
+Tambahkan `--include-electron` pada command release hanya bila perubahan shared `electron/` memang bagian dari release app tersebut. Jangan edit `package.json#version` atau `CHANGELOG.md` untuk menamai installer.
 
 Hasil:
 
 ```text
 electron/release/my-new-app/
-├─ My New App-Setup-0.1.0.exe
-├─ My New App-Setup-0.1.0.exe.blockmap
+├─ My New App-Setup-<package-version>.exe
+├─ My New App-Setup-<package-version>.exe.blockmap
 └─ win-unpacked/
 ```
 
@@ -424,6 +463,7 @@ Perilaku command:
 - Runtime compile berada di `electron/dist/`.
 - Release berada di `electron/release/<app-id>/`.
 - Temporary staging berada di OS temp agar production dependency root tidak ikut masuk `app.asar`.
+- Desktop build membaca version app yang sudah ada; build tidak bump version, menulis changelog, membuat tag, atau melakukan push.
 
 Dev launcher selalu membuang `ELECTRON_RUN_AS_NODE` hanya dari child environment agar Electron tidak salah berjalan sebagai Node. Data development tiap app diisolasi melalui ID app; release menggunakan metadata ID yang sama.
 
@@ -467,3 +507,68 @@ Lokasi dapat diganti dengan `ELECTRON_LOCAL_SEED_DIR`. Jika seed tidak ada, scri
 | Ingin mengubah main/preload untuk satu app | Jangan duplikasi shell; perluas shared contract generik setelah use case terbukti. |
 
 Target packaging saat ini sengaja **Windows NSIS x64**. Dukungan macOS/Linux harus ditambahkan satu kali di `electron/scripts/desktop.mjs`, bukan diduplikasi di setiap app.
+
+---
+
+## 11. Automatic App Versioning dan Changelog
+
+Versi setiap app berdiri sendiri. Source of truth-nya adalah `apps/<id>/package.json#version`; field `schemaVersion` pada manifest hanya versi format manifest, bukan versi release app. Root package dan package Electron adalah metadata toolchain bersama dan tidak ikut naik saat satu app dirilis.
+
+Developer tidak perlu menghitung versi, mengedit `CHANGELOG.md`, membuat commit release, atau membuat tag secara manual. Jalankan salah satu command root:
+
+```bash
+npm run release:check
+npm run release:changed
+npm run release:app -- clipboard
+```
+
+- `release:check` hanya menampilkan rencana dan tidak menulis file.
+- `release:changed` merilis semua app yang mempunyai commit relevan sejak tag masing-masing.
+- `release:app -- <id>` memproses satu app saja.
+- Tambahkan `--include-electron` hanya bila perubahan shared Electron memang harus dianggap sebagai perubahan app desktop tersebut.
+
+Automation menemukan app langsung dari `apps/*`; tidak ada registry release manual. Perubahan di `apps/<id>/` hanya memengaruhi app itu. Perubahan di shared `ui/` dianggap memengaruhi semua app. Folder `electron/` sengaja tidak dihitung secara default karena perubahan runtime Electron tidak selalu berarti app harus dibangun atau dirilis ulang.
+
+### 11.1 Aturan versi otomatis
+
+| Commit relevan                                                | Bump  |
+| ------------------------------------------------------------- | ----- |
+| `!` atau footer `BREAKING CHANGE`                             | major |
+| `feat`                                                        | minor |
+| `fix`, `perf`, `refactor`, `revert`, `build`, atau `security` | patch |
+| `chore(deps)`                                                 | patch |
+| commit non-conventional                                       | patch |
+| `docs`, `test`, `style`, `ci`, atau `chore` biasa             | none  |
+
+Bump tertinggi menang. Commit `chore(release): ...` selalu diabaikan agar release tidak memicu release berikutnya.
+
+Tag memakai format `<app-id>-v<version>`, misalnya `clipboard-v0.2.0`. Jika app belum memiliki tag, run pertama membuat tag bootstrap pada versi package saat ini tanpa bump. Setelah itu package version dan tag terakhir harus sama; mismatch dianggap drift dan command berhenti.
+
+### 11.2 Guardrail dan hasil release
+
+Release nyata hanya berjalan pada working tree yang bersih. Tooling kemudian:
+
+1. menghitung commit relevan dan versi berikutnya;
+2. memperbarui package app, entri workspace pada `package-lock.json`, dan changelog app;
+3. menjalankan typecheck dan renderer build hanya untuk app terdampak;
+4. memulihkan file release ke kondisi awal jika validasi gagal;
+5. membuat commit release lokal dan annotated tag lokal;
+6. tidak pernah melakukan push.
+
+Build atau installer Electron juga tidak dijalankan otomatis. Setelah release berhasil, packaging tetap command terpisah:
+
+```bash
+npm run desktop:build -- clipboard --dir
+npm run desktop:build -- clipboard
+```
+
+Untuk app baru, cukup mulai dari version semver valid pada `package.json`. `CHANGELOG.md` boleh belum ada; automation akan membuat baseline saat release pertama.
+
+Kontrak khusus app baru:
+
+1. scaffold selalu mulai dari `0.1.0`;
+2. source app divalidasi dan di-commit lebih dahulu;
+3. working tree harus bersih sebelum release nyata;
+4. agent/developer hanya menjalankan command release—tidak memilih version atau menulis changelog;
+5. app plan tidak boleh berisi todo manual untuk bump version, edit changelog, atau membuat tag;
+6. packaging Electron dijalankan setelah release hanya ketika artifact installer memang dibutuhkan.
