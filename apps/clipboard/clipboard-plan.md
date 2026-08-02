@@ -8,6 +8,7 @@
 | --------------- | ------------------------------------------- |
 | App ID          | `clipboard`                                 |
 | Package         | `@dhepil-suite/clipboard`                   |
+| App version     | `0.1.0` — dimiliki release automation       |
 | Runtime         | Vite + React 19 + Ant Design 6              |
 | Stable port     | `2002`                                      |
 | Persistence     | Browser/Electron renderer `localStorage`    |
@@ -34,6 +35,7 @@ dhepil-suite/
 │     └─ useSharedTheme.ts
 ├─ apps/clipboard/
 │  ├─ AGENTS.md
+│  ├─ CHANGELOG.md        # generated/updated by root release tooling
 │  ├─ app.manifest.json
 │  ├─ index.html
 │  ├─ package.json
@@ -131,7 +133,20 @@ npm run desktop:build -- clipboard --dir
 npm run desktop:build -- clipboard
 ```
 
-## 7. Backlog Terverifikasi
+## 7. Automatic Release Contract
+
+Clipboard mewarisi `apps/AGENTS.md` dan `PLAYBOOK.md` Section 11. Version package, `CHANGELOG.md`, release commit, dan tag tidak boleh menjadi pekerjaan manual dalam backlog app.
+
+Setelah perubahan Clipboard divalidasi, di-commit, dan working tree bersih:
+
+```bash
+npm run release:check
+npm run release:app -- clipboard
+```
+
+Gunakan `--include-electron` hanya jika perubahan shared `electron/` sengaja menjadi bagian release Clipboard. `desktop:build` tetap command terpisah dan hanya membaca version yang sudah ditentukan automation. Tooling release membuat commit/tag lokal tanpa push.
+
+## 8. Backlog Terverifikasi
 
 Backlog berikut belum ada di source aktual:
 
