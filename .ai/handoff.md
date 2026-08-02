@@ -1,32 +1,43 @@
 # Dhepil Suite — Current Handoff
 
-> **Snapshot:** 2026-08-01. Dokumen ini mencatat kondisi repository aktual setelah konsolidasi WIP. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser launcher dimiliki `browser-plan.md`.
+> **Snapshot:** 2026-08-02. Dokumen ini mencatat kondisi repository aktual setelah WIP release tooling di-commit dan scaffold app dihapus. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser launcher dimiliki `browser-plan.md` di root.
 
 ## Status Repository
 
 Dhepil Suite adalah monorepo development control center pada port `1999`. App di `apps/*` ditemukan dari `app.manifest.json`, memperoleh stable port dari `config/app-ports.lock.json`, dan dapat dibangun mandiri bila opt-in desktop.
 
-| App                   | Port | Desktop  |
-| --------------------- | ---- | -------- |
-| `dhepil`              | 2000 | disabled |
-| `spreadsheet-minimal` | 2001 | disabled |
-| `clipboard`           | 2002 | enabled  |
+| App         | Port | Desktop |
+| ----------- | ---- | ------- |
+| `clipboard` | 2002 | enabled |
+
+`dhepil` dan `spreadsheet-minimal` dihapus pada `3dbd01f`; keduanya hanya scaffold welcome-screen tanpa business logic. Entry port keduanya sengaja dibiarkan di `config/app-ports.lock.json` karena auto-assign bersifat additive-only — entry tersisa menjaga port `2000`/`2001` tetap terpesan. Root package tetap bernama `dhepil-suite`.
 
 Root control center tidak menjadi runtime dependency artifact final. Source app tidak mengimpor root atau app lain.
 
 ## Checkpoint yang Sudah Di-commit
 
+Sesi 2026-08-02 meng-commit seluruh WIP yang sebelumnya menggantung:
+
 ```text
+3dbd01f chore(apps): remove dhepil and spreadsheet-minimal scaffolds
+8c9524b docs(browser): promote canonical launcher plan to root
+d53972b docs(clipboard): move plan into app and add release contract
+4f337e1 docs: document automatic release contract
+d3d5c8f docs(apps): add inherited workspace guardrails
+4a6401d feat(release): add automatic app versioning and changelog tooling
+```
+
+Checkpoint sebelumnya:
+
+```text
+da2448f docs: add clipboard app implementation and backlog documentation
 75dabbd feat(electron): centralize per-app desktop builds
-e84ac0b docs(clipboard): add app ownership guardrails
-68c04ab test: stabilize local validation baseline
 4dfba07 feat(ui): centralize shared Ant Design theme
 fde197f fix(ui): contain grid card actions
-6d89b66 docs: sync architecture and desktop playbook
 94bb5e7 docs(browser): add standalone launcher implementation plan
 ```
 
-Perubahan tersebut mencakup:
+Belum ada push. Perubahan tersebut mencakup:
 
 - shared Electron build/runtime ownership di `electron/`;
 - per-app desktop opt-in melalui manifest dan thin scripts;
@@ -66,22 +77,23 @@ Tooling modular di `tooling/release/` kini mengelola version, per-app `CHANGELOG
 
 Workflow app baru sudah disinkronkan di root `AGENTS.md`, `apps/AGENTS.md`, `PLAYBOOK.md`, Electron README/AGENTS, dan plan app yang membuat package baru. Scaffold dimulai dari `0.1.0`; `CHANGELOG.md` boleh belum ada; agent tidak boleh membuat todo manual untuk bump version/changelog/tag.
 
-Dry-run aktual menemukan `clipboard`, `dhepil`, dan `spreadsheet-minimal` sebagai bootstrap `0.1.0` tanpa mutasi. Tag belum dibuat karena release nyata sengaja tidak dijalankan pada working tree WIP.
+Dry-run aktual hanya menemukan `clipboard` sebagai bootstrap `0.1.0` tanpa mutasi. **Belum ada satu pun tag release.** Ketiga app sempat memiliki `CHANGELOG.md` bertanggal 2026-08-01 hasil release run yang berhenti sebelum tagging; file-file itu dihapus agar tooling membuat baseline dengan tanggal yang benar pada release pertama.
 
 ## Validation Aktual
 
+Dijalankan 2026-08-02 dari WSL pada tree bersih setelah penghapusan app:
+
 - `npm run format:check`: PASS.
 - `npm run lint`: PASS.
-- `npm run typecheck`: PASS.
-- `npm run test -- --maxWorkers=2`: PASS, 30 files / 146 tests. Termasuk temporary-repo integration untuk release sukses dan expected build-failure rollback.
-- `npm run build`: PASS; warning chunk Vite lebih dari 500 kB tetap non-blocking.
-- `npx --yes antd lint . --format json`: PASS, 0 issue.
-- `npm run release:check`: PASS; 3 app ditemukan, dry-run tidak memutasi file/tag.
-- Markdown app-creation contract audit: PASS; seluruh 9 dokumen yang mengatur/membuat app merujuk automatic release dan tidak meminta version/changelog manual.
-- Build renderer `clipboard`: PASS.
-- Build renderer `spreadsheet-minimal`: PASS.
+- `npm run typecheck`: PASS, termasuk `tooling/`.
+- `npx --yes @ant-design/cli lint . --format json`: PASS, 0 issue.
+- `npm run release:check`: PASS; hanya `clipboard` yang direncanakan bootstrap `v0.1.0`.
 
-Browser visual QA belum dijalankan karena browser-control runtime tidak tersedia pada sesi konsolidasi. Jangan menganggap layout visual PASS hanya dari build/test lokal.
+**Belum terverifikasi:** `npm run test` dan `npm run build` **tidak dapat dijalankan dari WSL**. `node_modules` dipasang dari Windows dan hanya memiliki `@rolldown/binding-win32-x64-msvc`, sehingga Vite 8 gagal dengan `Cannot find module '../rolldown-binding.linux-x64-gnu.node'`. Ini batasan environment, bukan defect kode. Jalankan kedua gate itu dari Windows sebelum push. Jangan menjalankan `npm install` polos dari WSL karena akan menukar binding native dan merusak toolchain Windows; gunakan `npm install --package-lock-only --ignore-scripts` bila hanya perlu sinkronisasi lock.
+
+Baseline terakhir yang pernah PASS penuh adalah 2026-08-01 dari Windows: 30 file / 146 test. Angka itu belum diverifikasi ulang setelah dua app dihapus.
+
+Browser visual QA belum dijalankan karena browser-control runtime tidak tersedia. Jangan menganggap layout visual PASS hanya dari build/test lokal.
 
 ## Warning yang Masih Terbuka
 
