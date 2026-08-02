@@ -16,13 +16,11 @@ Root control center berjalan tetap di port `1999`. Dashboard React 19 + antd 6 i
 
 ### Kondisi package aktual
 
-| Package                    | Peran                       | Stable port | Electron |
-| -------------------------- | --------------------------- | ----------- | -------- |
-| Root `dhepil-suite`        | Local development manager   | `1999`      | N/A      |
-| `apps/dhepil`              | App Vite                    | `2000`      | Disabled |
-| `apps/spreadsheet-minimal` | App Vite                    | `2001`      | Disabled |
-| `apps/clipboard`           | App Vite + desktop opt-in   | `2002`      | Enabled  |
-| `electron`                 | Shared runtime/build system | N/A         | Owner    |
+| Package             | Peran                       | Stable port | Electron |
+| ------------------- | --------------------------- | ----------- | -------- |
+| Root `dhepil-suite` | Local development manager   | `1999`      | N/A      |
+| `apps/clipboard`    | App Vite + desktop opt-in   | `2002`      | Enabled  |
+| `electron`          | Shared runtime/build system | N/A         | Owner    |
 
 Port app tersimpan permanen di `config/app-ports.lock.json`. Root tidak mengganti assignment yang sudah ada secara diam-diam.
 
@@ -179,9 +177,7 @@ dhepil-suite/
 │  └─ main.tsx
 ├─ apps/
 │  ├─ AGENTS.md          ← inherited rules untuk seluruh app baru
-│  ├─ clipboard/          ← desktop-enabled app
-│  ├─ dhepil/             ← web/dev app
-│  └─ spreadsheet-minimal/ ← web/dev app
+│  └─ clipboard/          ← desktop-enabled app
 ├─ electron/              ← shared desktop runtime + build/release orchestrator
 │  ├─ main/               ← generic Electron main process
 │  ├─ preload/            ← sandbox-compatible shared preload

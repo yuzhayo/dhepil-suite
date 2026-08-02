@@ -126,11 +126,9 @@ Jangan menambahkan Electron, electron-builder, main process, preload, atau build
 
 ## Current Desktop Apps
 
-| App                   | Port   | Desktop  |
-| --------------------- | ------ | -------- |
-| `clipboard`           | `2002` | Enabled  |
-| `dhepil`              | `2000` | Disabled |
-| `spreadsheet-minimal` | `2001` | Disabled |
+| App         | Port   | Desktop |
+| ----------- | ------ | ------- |
+| `clipboard` | `2002` | Enabled |
 
 ## Output Clipboard Saat Ini
 
