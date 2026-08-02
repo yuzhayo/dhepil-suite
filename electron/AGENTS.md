@@ -10,3 +10,5 @@ Aturan root `AGENTS.md` dan `PLAYBOOK.md` tetap berlaku.
 - Jangan mengubah stable port; dev desktop membaca `config/app-ports.lock.json`.
 - Jangan mengubah system environment. `ELECTRON_RUN_AS_NODE` hanya boleh dibuang dari environment child process.
 - Artifact `dist/` dan `release/` tidak boleh di-commit.
+- Desktop build hanya membaca version app. Dilarang menambahkan auto-bump, changelog writer, Git commit/tag, atau push ke orchestrator Electron.
+- Version/changelog app baru tetap dimiliki `tooling/release/` sesuai `apps/AGENTS.md` dan `PLAYBOOK.md` Section 11; sertakan `--include-electron` hanya saat perubahan shared Electron memang relevan.
