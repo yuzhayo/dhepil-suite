@@ -50,14 +50,34 @@ Checkpoint sebelumnya membuktikan installer NSIS x64, packaged executable, sandb
 
 Artifact generated bukan source of truth dan dapat berubah setelah build berikutnya. Prosedur opt-in app baru ada di `PLAYBOOK.md` Section 10 dan `electron/README.md`.
 
+## Automatic App Releases
+
+Tooling modular di `tooling/release/` kini mengelola version, per-app `CHANGELOG.md`, validasi app, release commit, dan annotated tag secara otomatis. Kontrak canonical berada di `PLAYBOOK.md` Section 11.
+
+- `npm run release:check`: dry-run semua app yang berubah.
+- `npm run release:changed`: release semua app terdampak.
+- `npm run release:app -- <id>`: release satu app.
+- Git tag memakai `<app-id>-v<version>` dan run pertama melakukan bootstrap tanpa bump.
+- `apps/<id>/` memengaruhi app tersebut; shared `ui/` memengaruhi semua app.
+- `electron/` hanya dihitung dengan `--include-electron` untuk app desktop-enabled.
+- Release tidak pernah push atau menjalankan packaging Electron.
+- Working tree harus bersih; file version/lock/changelog dipulihkan bila validasi gagal.
+- `apps/AGENTS.md` sekarang menjadi inherited guardrail untuk setiap app baru, bahkan sebelum app mempunyai `AGENTS.md` lokal.
+
+Workflow app baru sudah disinkronkan di root `AGENTS.md`, `apps/AGENTS.md`, `PLAYBOOK.md`, Electron README/AGENTS, dan plan app yang membuat package baru. Scaffold dimulai dari `0.1.0`; `CHANGELOG.md` boleh belum ada; agent tidak boleh membuat todo manual untuk bump version/changelog/tag.
+
+Dry-run aktual menemukan `clipboard`, `dhepil`, dan `spreadsheet-minimal` sebagai bootstrap `0.1.0` tanpa mutasi. Tag belum dibuat karena release nyata sengaja tidak dijalankan pada working tree WIP.
+
 ## Validation Aktual
 
 - `npm run format:check`: PASS.
 - `npm run lint`: PASS.
 - `npm run typecheck`: PASS.
-- `npm run test -- --maxWorkers=2`: PASS, 21 files / 104 tests.
+- `npm run test -- --maxWorkers=2`: PASS, 30 files / 146 tests. Termasuk temporary-repo integration untuk release sukses dan expected build-failure rollback.
 - `npm run build`: PASS; warning chunk Vite lebih dari 500 kB tetap non-blocking.
 - `npx --yes antd lint . --format json`: PASS, 0 issue.
+- `npm run release:check`: PASS; 3 app ditemukan, dry-run tidak memutasi file/tag.
+- Markdown app-creation contract audit: PASS; seluruh 9 dokumen yang mengatur/membuat app merujuk automatic release dan tidak meminta version/changelog manual.
 - Build renderer `clipboard`: PASS.
 - Build renderer `spreadsheet-minimal`: PASS.
 

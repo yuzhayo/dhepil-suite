@@ -2,6 +2,8 @@
 
 > **Status:** COMPLETE pada 2026-08-01. File ini mencatat pekerjaan konsolidasi yang sudah dijalankan; bukan sumber keputusan arsitektur baru.
 
+> **Addendum app baru:** Setelah ledger ini selesai, release automation menjadi kontrak canonical. Semua app baru mewarisi `apps/AGENTS.md` dan wajib mengikuti `PLAYBOOK.md` Sections 4, 10, dan 11; jangan membuat workflow version/changelog manual dari isi historis ledger ini.
+
 ## Objective
 
 Mengaudit seluruh tracked/untracked WIP, mempertahankan perubahan yang benar, memperbaiki blocker validation, dan membuat checkpoint commit kecil tanpa push atau destructive Git operation.
@@ -48,7 +50,8 @@ Expected recorded result: seluruh command PASS; test 21 files / 104 tests; Ant D
 Tidak ada source WIP yang sengaja ditinggalkan oleh konsolidasi ini. Pekerjaan produk berikutnya harus memakai plan kanonisnya sendiri:
 
 - browser launcher: mulai `browser-plan.md` Fase 0;
-- app desktop baru: ikuti `PLAYBOOK.md` Section 4 dan Section 10;
+- app baru: ikuti `apps/AGENTS.md` serta `PLAYBOOK.md` Sections 4 dan 11;
+- app desktop baru: tambahkan `PLAYBOOK.md` Section 10, lalu release version secara otomatis sebelum installer final;
 - dependency vulnerability remediation: audit terpisah, jangan memakai forced upgrade sebagai bagian cleanup umum.
 
 File ini tidak mengotorisasi implementasi fase browser launcher atau perubahan source app berikutnya.
