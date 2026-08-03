@@ -2,7 +2,7 @@ import { browserProjectWindow } from './browserWindow';
 import { httpProjectManagerClient } from './httpClient';
 import type { ProjectSummary, ProjectManagerClient, ProjectWindow } from './contracts';
 import { quickKillProject } from './children/quickKill';
-import { refreshProjects } from './children/projectRefresh';
+import { pollProjects, refreshProjects } from './children/projectRefresh';
 import {
   startAndOpenProject,
   stopProject,
@@ -11,6 +11,7 @@ import {
 } from './children/projectLifecycle';
 
 export interface ControlCenterRuntime {
+  poll(signal?: AbortSignal): Promise<ProjectSummary[]>;
   refresh(signal?: AbortSignal): Promise<ProjectSummary[]>;
   startAndOpen(input: {
     project: ProjectSummary;
@@ -40,6 +41,9 @@ export function createControlCenterRuntime(
   const readiness = dependencies.readiness ?? createStartupReadinessRunner();
 
   return {
+    poll(signal) {
+      return pollProjects(client, signal);
+    },
     refresh(signal) {
       return refreshProjects(client, signal);
     },

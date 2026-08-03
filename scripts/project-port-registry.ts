@@ -58,16 +58,20 @@ export function parsePortRegistry(raw: string): PortRegistry {
   };
 }
 
-export async function assignProjectPorts(
+export async function reconcileProjectPorts(
   registry: PortRegistry,
-  projectIds: string[],
+  presentProjectIds: string[],
+  assignableProjectIds: string[],
   isPortUnavailable: (port: number) => Promise<boolean>,
 ): Promise<{ registry: PortRegistry; changed: boolean }> {
-  const assignments = { ...registry.assignments };
+  const presentProjects = new Set(presentProjectIds);
+  const assignments = Object.fromEntries(
+    Object.entries(registry.assignments).filter(([projectId]) => presentProjects.has(projectId)),
+  );
   const reservedPorts = new Set(Object.values(assignments));
-  let changed = false;
+  let changed = Object.keys(assignments).length !== Object.keys(registry.assignments).length;
 
-  for (const projectId of [...new Set(projectIds)].sort((first, second) =>
+  for (const projectId of [...new Set(assignableProjectIds)].sort((first, second) =>
     first.localeCompare(second, 'en'),
   )) {
     if (assignments[projectId] !== undefined) {
@@ -135,13 +139,19 @@ async function writeRegistryAtomically(registryPath: string, registry: PortRegis
   }
 }
 
-export async function loadAndAssignProjectPorts(
+export async function loadAndReconcileProjectPorts(
   registryPath: string,
-  projectIds: string[],
+  presentProjectIds: string[],
+  assignableProjectIds: string[],
   isPortUnavailable: (port: number) => Promise<boolean>,
 ): Promise<PortRegistry> {
   const current = await readRegistry(registryPath);
-  const result = await assignProjectPorts(current, projectIds, isPortUnavailable);
+  const result = await reconcileProjectPorts(
+    current,
+    presentProjectIds,
+    assignableProjectIds,
+    isPortUnavailable,
+  );
 
   if (result.changed) {
     await writeRegistryAtomically(registryPath, result.registry);

@@ -22,7 +22,9 @@ Root control center berjalan tetap di port `1999`. Dashboard React 19 + antd 6 i
 | `apps/clipboard`    | App Vite + desktop opt-in   | `2002`      | Enabled  |
 | `electron`          | Shared runtime/build system | N/A         | Owner    |
 
-Port app tersimpan permanen di `config/app-ports.lock.json`. Root tidak mengganti assignment yang sudah ada secara diam-diam.
+Port app aktif tersimpan di `config/app-ports.lock.json`. Assignment app yang masih ada tetap
+stabil; assignment app yang foldernya sudah hilang dibuang saat scan dan port tersebut dapat
+dipakai app baru.
 
 ## 2. Aturan Pengeditan File (Strict Rules for Agents)
 
@@ -124,6 +126,21 @@ Tambahkan `apps/<id>/AGENTS.md` minimal yang menyatakan folder tersebut dimiliki
 3. Buka `http://127.0.0.1:1999`, lalu tekan **Refresh**.
 4. Root memindai `apps/*`, memvalidasi manifest/package, lalu mengalokasikan port kosong permanen pada range `2000–2999`.
 5. Jangan mengedit atau menghapus assignment `config/app-ports.lock.json` hanya untuk mengganti port.
+
+`app.manifest.json` adalah tanda opt-in katalog. Direct-child folder tanpa manifest diabaikan.
+Folder dengan manifest yang rusak tetap tampil sebagai app invalid agar error dapat diperbaiki.
+Katalog dipindai sekali saat initial load dan saat tombol **Refresh** ditekan; polling status tidak
+membaca ulang directory, manifest, atau package. Hasil invalid tetap berada di cache sampai scan
+berikutnya.
+
+Pada setiap scan, registry mempertahankan port app yang masih ditemukan, membuang assignment app
+yang sudah hilang, lalu memberikan port kosong terendah kepada app valid baru. Port app aktif tidak
+dipadatkan atau dipindahkan.
+
+Root menjalankan `npm run workspace:clean` otomatis sebelum `dev`, `test`, dan `build`.
+Cleaner ini memindai direct-child directory di `apps/` lalu menghapus reference
+`./apps/<id>/tsconfig.json` dari root `tsconfig.json` hanya ketika folder app tersebut sudah tidak
+ada. Cleaner tidak menghapus folder, source, package lock, process, atau stable port assignment.
 
 Tidak ada file registry app manual. App baru muncul dari folder + manifest + package yang valid.
 

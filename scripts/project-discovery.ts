@@ -175,10 +175,17 @@ export async function discoverProjects(
         throw new Error('Folder app harus merupakan direct child dari apps/.');
       }
 
-      const [manifestRaw, packageRaw] = await Promise.all([
-        readFile(resolve(directory, 'app.manifest.json'), 'utf8'),
-        readFile(resolve(directory, 'package.json'), 'utf8'),
-      ]);
+      let manifestRaw: string;
+      try {
+        manifestRaw = await readFile(resolve(directory, 'app.manifest.json'), 'utf8');
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+          continue;
+        }
+        throw error;
+      }
+
+      const packageRaw = await readFile(resolve(directory, 'package.json'), 'utf8');
       const validated = validateProjectFiles(entry.name, manifestRaw, packageRaw);
 
       discovered.push({

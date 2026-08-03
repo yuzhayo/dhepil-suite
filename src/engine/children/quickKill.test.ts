@@ -17,6 +17,7 @@ describe('quickKill', () => {
 
     const mockClient: ProjectManagerClient = {
       list: vi.fn(),
+      refresh: vi.fn(),
       start: vi.fn(),
       stop: vi.fn().mockResolvedValue(undefined),
     };
@@ -44,6 +45,7 @@ describe('quickKill', () => {
 
     const mockClient: ProjectManagerClient = {
       list: vi.fn(),
+      refresh: vi.fn(),
       start: vi.fn(),
       stop: vi.fn(),
     };

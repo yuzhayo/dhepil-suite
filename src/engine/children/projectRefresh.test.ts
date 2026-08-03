@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { refreshProjects } from './projectRefresh';
+import { pollProjects, refreshProjects } from './projectRefresh';
 import type { ProjectManagerClient, ProjectSummary } from '../contracts';
 
 describe('projectRefresh', () => {
@@ -19,6 +19,7 @@ describe('projectRefresh', () => {
 
     const mockClient: ProjectManagerClient = {
       list: vi.fn().mockResolvedValue(mockProjects),
+      refresh: vi.fn().mockResolvedValue(mockProjects),
       start: vi.fn(),
       stop: vi.fn(),
     };
@@ -26,7 +27,10 @@ describe('projectRefresh', () => {
     const controller = new AbortController();
     const result = await refreshProjects(mockClient, controller.signal);
 
-    expect(mockClient.list).toHaveBeenCalledWith(controller.signal);
+    expect(mockClient.refresh).toHaveBeenCalledWith(controller.signal);
     expect(result).toEqual(mockProjects);
+
+    await pollProjects(mockClient, controller.signal);
+    expect(mockClient.list).toHaveBeenCalledWith(controller.signal);
   });
 });

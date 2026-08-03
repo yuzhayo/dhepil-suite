@@ -36,7 +36,7 @@ async function createApp(rootDirectory: string, id: string, valid = true) {
 }
 
 describe('ProjectManager discovery', () => {
-  it('menemukan app baru, menyembunyikan folder yang dihapus, dan memakai ulang port lock', async () => {
+  it('memakai katalog cache sampai refresh lalu memberikan port app yang hilang ke app baru', async () => {
     const rootDirectory = await mkdtemp(join(tmpdir(), 'dhepil-suite-manager-'));
     await mkdir(join(rootDirectory, 'apps'));
 
@@ -59,10 +59,15 @@ describe('ProjectManager discovery', () => {
         recursive: true,
         force: true,
       });
-      expect(await manager.list()).toEqual([]);
+      await createApp(rootDirectory, 'new-app');
+
+      expect(await manager.list()).toMatchObject([{ id: 'sample-app' }]);
+      expect(await manager.refresh()).toMatchObject([{ id: 'new-app', port: assignedPort }]);
 
       await createApp(rootDirectory, 'sample-app');
-      expect((await manager.list())[0]?.port).toBe(assignedPort);
+      const refreshed = await manager.refresh();
+      expect(refreshed.find(({ id }) => id === 'new-app')?.port).toBe(assignedPort);
+      expect(refreshed.find(({ id }) => id === 'sample-app')?.port).not.toBe(assignedPort);
     } finally {
       await rm(rootDirectory, { recursive: true, force: true });
     }
@@ -225,6 +230,10 @@ describe('ProjectManager discovery', () => {
           managed: false,
         },
       ]);
+
+      await createApp(rootDirectory, 'broken-app');
+      expect(await manager.list()).toMatchObject([{ id: 'broken-app', status: 'invalid' }]);
+      expect(await manager.refresh()).toMatchObject([{ id: 'broken-app', status: 'stopped' }]);
     } finally {
       await rm(rootDirectory, { recursive: true, force: true });
     }

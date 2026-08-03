@@ -8,7 +8,13 @@ import { controlCenterBoundaryConfigs } from './tooling/eslint/controlCenterBoun
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', 'electron/release/**'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      'electron/release/**',
+      'apps/tampermonyet/tampermonkey/**',
+    ],
   },
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx,cts,mts}'],

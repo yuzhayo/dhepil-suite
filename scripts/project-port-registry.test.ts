@@ -5,41 +5,62 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  assignProjectPorts,
-  loadAndAssignProjectPorts,
+  loadAndReconcileProjectPorts,
   parsePortRegistry,
+  reconcileProjectPorts,
 } from './project-port-registry';
 
 describe('project port registry', () => {
-  it('memberikan port berurutan dan mempertahankan assignment lama', async () => {
-    const result = await assignProjectPorts(
+  it('memakai kembali port app yang hilang tanpa memindahkan assignment app yang masih ada', async () => {
+    const result = await reconcileProjectPorts(
       {
         schemaVersion: 1,
         assignments: {
-          dhepil: 2000,
+          'deleted-app': 2000,
+          'existing-app': 2001,
         },
       },
-      ['spreadsheet-minimal', 'dhepil'],
+      ['existing-app', 'new-app'],
+      ['existing-app', 'new-app'],
       async () => false,
     );
 
     expect(result.registry.assignments).toEqual({
-      dhepil: 2000,
-      'spreadsheet-minimal': 2001,
+      'existing-app': 2001,
+      'new-app': 2000,
     });
+    expect(result.changed).toBe(true);
   });
 
   it('melewati port yang sedang tidak tersedia untuk assignment baru', async () => {
-    const result = await assignProjectPorts(
+    const result = await reconcileProjectPorts(
       {
         schemaVersion: 1,
         assignments: {},
       },
       ['sample-app'],
+      ['sample-app'],
       async (port) => port === 2000,
     );
 
     expect(result.registry.assignments['sample-app']).toBe(2001);
+  });
+
+  it('mempertahankan assignment app invalid selama folder app masih ditemukan', async () => {
+    const result = await reconcileProjectPorts(
+      {
+        schemaVersion: 1,
+        assignments: {
+          'invalid-app': 2000,
+        },
+      },
+      ['invalid-app'],
+      [],
+      async () => false,
+    );
+
+    expect(result.registry.assignments).toEqual({ 'invalid-app': 2000 });
+    expect(result.changed).toBe(false);
   });
 
   it('menolak duplicate port dan assignment di luar rentang', () => {
@@ -72,18 +93,21 @@ describe('project port registry', () => {
     const registryPath = join(temporaryDirectory, 'config', 'app-ports.lock.json');
 
     try {
-      const first = await loadAndAssignProjectPorts(
+      const first = await loadAndReconcileProjectPorts(
         registryPath,
+        ['sample-app'],
         ['sample-app'],
         async () => false,
       );
-      const second = await loadAndAssignProjectPorts(
+      const second = await loadAndReconcileProjectPorts(
         registryPath,
+        ['sample-app'],
         ['sample-app'],
         async () => true,
       );
-      const third = await loadAndAssignProjectPorts(
+      const third = await loadAndReconcileProjectPorts(
         registryPath,
+        ['sample-app', 'new-app'],
         ['sample-app', 'new-app'],
         async () => false,
       );

@@ -40,8 +40,28 @@
   line-height: 1.4;
 }
 
-.core-ui-card__actions,
-.core-ui-card__tags {
+.core-ui-card__extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.core-ui-card__info-button.ant-btn {
+  color: var(--ant-color-text-secondary);
+}
+
+.core-ui-card__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: min(320px, calc(100vw - 48px));
+}
+
+.core-ui-card__metadata .ant-tag {
+  margin-inline-end: 0;
+}
+
+.core-ui-card__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;

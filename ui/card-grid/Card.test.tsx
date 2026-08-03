@@ -50,7 +50,7 @@ const sampleCardViewModel: CardViewModel = {
 const availableActionIds = ['project.start-open', 'project.stop', 'project.quick-kill'];
 
 describe('Card', () => {
-  it('renders card title, status, tags, alerts, and terminal log', () => {
+  it('keeps metadata in a click popover while status remains visible', async () => {
     render(
       <Card
         viewModel={sampleCardViewModel}
@@ -61,11 +61,30 @@ describe('Card', () => {
 
     expect(screen.getByRole('article', { name: 'Project Manga Reader' })).toBeInTheDocument();
     expect(screen.getByText('Aktif')).toBeInTheDocument();
-    expect(screen.getByText('Port 2000')).toBeInTheDocument();
-    expect(screen.getByText('Path apps/manga-reader')).toBeInTheDocument();
+    expect(screen.queryByText('Port 2000')).not.toBeInTheDocument();
     expect(screen.getByText('Process gagal')).toBeInTheDocument();
     expect(screen.getByText('stderr detail')).toBeInTheDocument();
     expect(screen.getByLabelText('Output process')).toHaveTextContent('ready on port 2000');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Informasi Manga Reader' }));
+
+    expect(await screen.findByText('Port 2000')).toBeInTheDocument();
+    expect(screen.getByText('Path apps/manga-reader')).toBeInTheDocument();
+  });
+
+  it('omits the information button when the card has no metadata', () => {
+    render(
+      <Card
+        viewModel={{ ...sampleCardViewModel, tags: [] }}
+        availableActionIds={availableActionIds}
+        onAction={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Informasi Manga Reader' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Aktif')).toBeInTheDocument();
   });
 
   it('renders actions and forwards action ID plus item ID on click', () => {

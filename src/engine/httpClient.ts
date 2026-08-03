@@ -9,28 +9,20 @@ import {
 
 export function httpProjectManagerClient(): ProjectManagerClient {
   return {
-    async list(signal) {
-      const response = await request(
+    list(signal) {
+      return readProjects(
         '/api/projects',
         { headers: { Accept: 'application/json' }, signal },
         'list',
       );
-      if (!response.ok) {
-        throw requestError(
-          response.status,
-          'list',
-          'http',
-          `Gagal membaca status project (${response.status}).`,
-        );
-      }
+    },
 
-      const payload = await readJson(response, 'list', signal);
-
-      try {
-        return parseProjectsResponse(payload);
-      } catch (error) {
-        throw malformedResponseError(response.status, 'list', error);
-      }
+    refresh(signal) {
+      return readProjects(
+        '/api/projects/refresh',
+        { method: 'POST', headers: { Accept: 'application/json' }, signal },
+        'refresh',
+      );
     },
 
     async start(projectId, signal) {
@@ -41,6 +33,29 @@ export function httpProjectManagerClient(): ProjectManagerClient {
       await runAction(projectId, 'stop', signal);
     },
   };
+}
+
+async function readProjects(
+  input: string,
+  init: RequestInit,
+  action: 'list' | 'refresh',
+): Promise<ReturnType<typeof parseProjectsResponse>> {
+  const response = await request(input, init, action);
+  if (!response.ok) {
+    throw requestError(
+      response.status,
+      action,
+      'http',
+      `Gagal membaca status project (${response.status}).`,
+    );
+  }
+
+  const payload = await readJson(response, action, init.signal ?? undefined);
+  try {
+    return parseProjectsResponse(payload);
+  } catch (error) {
+    throw malformedResponseError(response.status, action, error);
+  }
 }
 
 async function runAction(

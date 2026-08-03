@@ -2,15 +2,50 @@
 
 > **Snapshot:** 2026-08-02. Dokumen ini mencatat kondisi repository aktual setelah WIP release tooling di-commit dan scaffold app dihapus. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser launcher dimiliki `browser-plan.md` di root.
 
+## Update 2026-08-04 — Legacy Tampermonkey Archive
+
+Folder lokal lama `apps/tampermonkey` dipindahkan ke
+`apps/tampermonyet/tampermonkey` sebagai arsip referensi yang tidak diimpor ke runtime. ESLint,
+root/app Vitest, Prettier, dan Git mengabaikan arsip tersebut agar source lama tidak mengganggu
+validation app baru. Migrasi module ke `public/require/` tetap harus dilakukan eksplisit dan
+bertahap.
+
+## Update 2026-08-04 — Card Metadata Popover
+
+Reusable `ui/card-grid/Card.tsx` sekarang menampilkan tombol ikon informasi di header card ketika
+metadata tersedia. Port, path, PID, ownership process, dan kesiapan Electron tidak lagi memenuhi
+body card; metadata yang sama ditampilkan melalui Ant Design `Popover` saat ikon diklik. Status
+project dan terminal process tetap selalu terlihat. Perubahan tidak menambah kontrak Gate atau
+dependency baru.
+
+## Update 2026-08-04 — Preboot Tsconfig Cleanup
+
+Root sekarang mempunyai `scripts/project-tsconfig-cleaner.ts`. Hook `predev`, `pretest`, dan
+`prebuild` memindai direct-child directory `apps/*` dan membuang reference app dari root
+`tsconfig.json` bila folder app terkait sudah tidak ada. Cleanup bersifat idempotent dan tidak
+menghapus source, package lock, process, atau port app aktif. Test fokus berada di
+`scripts/project-tsconfig-cleaner.test.ts`.
+
+## Update 2026-08-04 — Cached App Catalog dan Port Reuse
+
+`app.manifest.json` sekarang menjadi opt-in katalog. Folder tanpa manifest diabaikan; manifest yang
+ada tetapi rusak tetap muncul sebagai invalid dan disimpan di cache sampai initial/manual Refresh
+berikutnya. Polling 1,5 detik hanya membaca katalog cache dan status process/HTTP. Scan eksplisit
+merapikan port assignment app yang foldernya hilang sehingga port dapat dipakai app baru tanpa
+memindahkan port app yang masih ada.
+
 ## Status Repository
 
 Dhepil Suite adalah monorepo development control center pada port `1999`. App di `apps/*` ditemukan dari `app.manifest.json`, memperoleh stable port dari `config/app-ports.lock.json`, dan dapat dibangun mandiri bila opt-in desktop.
 
-| App         | Port | Desktop |
-| ----------- | ---- | ------- |
-| `clipboard` | 2002 | enabled |
+| App            | Port | Desktop  |
+| -------------- | ---- | -------- |
+| `clipboard`    | 2002 | enabled  |
+| `tampermonyet` | 2003 | disabled |
 
-`dhepil` dan `spreadsheet-minimal` dihapus pada `3dbd01f`; keduanya hanya scaffold welcome-screen tanpa business logic. Entry port keduanya sengaja dibiarkan di `config/app-ports.lock.json` karena auto-assign bersifat additive-only — entry tersisa menjaga port `2000`/`2001` tetap terpesan. Root package tetap bernama `dhepil-suite`.
+`dhepil` dan `spreadsheet-minimal` dihapus pada `3dbd01f`; keduanya hanya scaffold welcome-screen
+tanpa business logic. Assignment lama `2000`/`2001` sudah dibersihkan oleh rekonsiliasi katalog
+dan sekarang tersedia untuk app baru. Root package tetap bernama `dhepil-suite`.
 
 Root control center tidak menjadi runtime dependency artifact final. Source app tidak mengimpor root atau app lain.
 

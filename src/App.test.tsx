@@ -13,7 +13,7 @@ const projectsResponse = {
       status: 'invalid',
       managed: false,
       logs: [],
-      error: 'app.manifest.json tidak ditemukan.',
+      error: 'app.manifest.json bukan JSON yang valid.',
       desktop: {
         enabled: false,
         script: 'desktop:dev',
@@ -92,6 +92,10 @@ describe('App', () => {
         { name: 'Stop server' },
       ),
     ).toBeEnabled();
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/projects/refresh',
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 
   it('memfilter project dan mengganti mode tampilan', async () => {

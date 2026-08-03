@@ -1,4 +1,5 @@
-import { Alert, Badge, Button, Card as AntCard, Tag, Typography } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { Alert, Badge, Button, Card as AntCard, Popover, Tag, Typography } from 'antd';
 
 import type { AlertViewModel, CardProps, TagViewModel, UiAction } from '../contracts';
 import { Terminal } from './Terminal';
@@ -24,7 +25,31 @@ export function Card({ viewModel, availableActionIds = [], onAction = () => {} }
           {viewModel.name}
         </Title>
       }
-      extra={<Badge status={statusBadge} text={statusLabel} />}
+      extra={
+        <div className="core-ui-card__extra">
+          {viewModel.tags.length > 0 ? (
+            <Popover
+              content={
+                <div className="core-ui-card__metadata" aria-label={`Metadata ${viewModel.name}`}>
+                  {viewModel.tags.map((tag, index) => renderTag(tag, index))}
+                </div>
+              }
+              title={`Detail ${viewModel.name}`}
+              trigger="click"
+            >
+              <Button
+                className="core-ui-card__info-button"
+                aria-label={`Informasi ${viewModel.name}`}
+                icon={<InfoCircleOutlined />}
+                shape="circle"
+                size="small"
+                type="text"
+              />
+            </Popover>
+          ) : null}
+          <Badge status={statusBadge} text={statusLabel} />
+        </div>
+      }
       variant="outlined"
     >
       <div className="core-ui-card__actions" aria-label={`Aksi ${viewModel.name}`}>
@@ -32,12 +57,6 @@ export function Card({ viewModel, availableActionIds = [], onAction = () => {} }
           renderAction(action, viewModel, availableActions, onAction),
         )}
       </div>
-
-      {viewModel.tags.length > 0 ? (
-        <div className="core-ui-card__tags" aria-label={`Metadata ${viewModel.name}`}>
-          {viewModel.tags.map((tag, index) => renderTag(tag, index))}
-        </div>
-      ) : null}
 
       {viewModel.alerts.length > 0 ? (
         <div className="core-ui-card__alerts">

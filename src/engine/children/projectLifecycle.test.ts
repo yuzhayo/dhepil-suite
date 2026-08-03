@@ -114,6 +114,7 @@ describe('projectLifecycle', () => {
 
       const mockClient: ProjectManagerClient = {
         list: vi.fn(),
+        refresh: vi.fn(),
         start: vi.fn(),
         stop: vi.fn(),
       };
@@ -164,6 +165,7 @@ describe('projectLifecycle', () => {
 
       const mockClient: ProjectManagerClient = {
         list: vi.fn(),
+        refresh: vi.fn(),
         start: vi.fn().mockResolvedValue(undefined),
         stop: vi.fn(),
       };
@@ -202,6 +204,7 @@ describe('projectLifecycle', () => {
 
       const mockClient: ProjectManagerClient = {
         list: vi.fn(),
+        refresh: vi.fn(),
         start: vi.fn(),
         stop: vi.fn().mockResolvedValue(undefined),
       };
@@ -229,6 +232,7 @@ describe('projectLifecycle', () => {
 
       const mockClient: ProjectManagerClient = {
         list: vi.fn(),
+        refresh: vi.fn(),
         start: vi.fn(),
         stop: vi.fn(),
       };

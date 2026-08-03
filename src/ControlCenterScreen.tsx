@@ -265,6 +265,7 @@ function createActiveServerItem(
 
 // --- Controller utilities ---
 interface RefreshOptions {
+  scan?: boolean;
   signal?: AbortSignal;
   supersede?: boolean;
 }
@@ -366,12 +367,14 @@ export function ControlCenterScreen({
       const { controller, release } = createLinkedAbortController(options.signal);
 
       const promise = (async () => {
-        if (mountedRef.current) {
+        if (mountedRef.current && options.scan) {
           setRefreshPending(true);
         }
 
         try {
-          const nextProjects = await runtime.refresh(controller.signal);
+          const nextProjects = options.scan
+            ? await runtime.refresh(controller.signal)
+            : await runtime.poll(controller.signal);
           if (mountedRef.current && sequence === latestRefreshSequenceRef.current) {
             projectsRef.current = nextProjects;
             setProjects(nextProjects);
@@ -396,7 +399,9 @@ export function ControlCenterScreen({
           if (inFlightRefreshRef.current?.sequence === sequence) {
             inFlightRefreshRef.current = null;
             if (mountedRef.current) {
-              setRefreshPending(false);
+              if (options.scan) {
+                setRefreshPending(false);
+              }
               setLoading(false);
             }
           }
@@ -457,7 +462,7 @@ export function ControlCenterScreen({
   );
 
   const refreshCapability = useCallback(
-    () => requestRefresh({ supersede: true }),
+    () => requestRefresh({ scan: true, supersede: true }),
     [requestRefresh],
   );
 
@@ -540,7 +545,7 @@ export function ControlCenterScreen({
   useEffect(() => {
     mountedRef.current = true;
     const actionControllers = actionControllersRef.current;
-    void requestRefresh().catch(() => undefined);
+    void requestRefresh({ scan: true }).catch(() => undefined);
     const interval = globalThis.setInterval(() => {
       void requestRefresh().catch(() => undefined);
     }, CONTROL_CENTER_POLL_INTERVAL_MILLISECONDS);

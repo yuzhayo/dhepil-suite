@@ -13,7 +13,7 @@ import type {
   RuntimeRecord,
 } from './project-contracts';
 import { discoverProjects } from './project-discovery';
-import { loadAndAssignProjectPorts } from './project-port-registry';
+import { loadAndReconcileProjectPorts } from './project-port-registry';
 import {
   appendLog,
   isHttpReachable,
@@ -47,6 +47,8 @@ export class ProjectManager {
 
   private readonly lastKnownProjects = new Map<string, ProjectConfig>();
 
+  private catalog?: SynchronizedProjects;
+
   private synchronizeInFlight?: Promise<SynchronizedProjects>;
 
   constructor(options: ProjectManagerOptions = {}) {
@@ -74,7 +76,10 @@ export class ProjectManager {
       return this.synchronizeInFlight;
     }
 
-    const synchronization = this.synchronizeProjects();
+    const synchronization = this.synchronizeProjects().then((catalog) => {
+      this.catalog = catalog;
+      return catalog;
+    });
     this.synchronizeInFlight = synchronization;
     void synchronization.then(
       () => {
@@ -96,8 +101,9 @@ export class ProjectManager {
     const validDiscovered = discovered.filter(
       (project): project is DiscoveredProject & { valid: true } => project.valid,
     );
-    const registry = await loadAndAssignProjectPorts(
+    const registry = await loadAndReconcileProjectPorts(
       this.portRegistryPath,
+      discovered.map(({ id }) => id),
       validDiscovered.map(({ id }) => id),
       isTcpPortOccupied,
     );
@@ -141,8 +147,11 @@ export class ProjectManager {
     };
   }
 
-  async list(): Promise<ProjectState[]> {
-    const projects = await this.synchronize();
+  private catalogProjects(): Promise<SynchronizedProjects> {
+    return this.catalog ? Promise.resolve(this.catalog) : this.synchronize();
+  }
+
+  private async statesFor(projects: SynchronizedProjects): Promise<ProjectState[]> {
     const states = await Promise.all([
       ...projects.validProjects.map((project) => this.stateFor(project, true)),
       ...projects.invalidProjects.map((project) => this.stateForInvalid(project)),
@@ -156,8 +165,16 @@ export class ProjectManager {
     );
   }
 
+  async list(): Promise<ProjectState[]> {
+    return this.statesFor(await this.catalogProjects());
+  }
+
+  async refresh(): Promise<ProjectState[]> {
+    return this.statesFor(await this.synchronize());
+  }
+
   async start(projectId: string): Promise<ProjectState> {
-    const projects = await this.synchronize();
+    const projects = await this.catalogProjects();
     const project = projects.validProjects.find((candidate) => candidate.id === projectId);
     if (!project) {
       const invalid = projects.invalidProjects.find((candidate) => candidate.id === projectId);
@@ -253,7 +270,7 @@ export class ProjectManager {
   }
 
   async stop(projectId: string): Promise<ProjectState> {
-    const projects = await this.synchronize();
+    const projects = await this.catalogProjects();
     const availableProject =
       projects.validProjects.find((candidate) => candidate.id === projectId) ??
       projects.tombstoneProjects.find((candidate) => candidate.id === projectId);
@@ -403,6 +420,15 @@ export function projectManagerPlugin(): Plugin {
         try {
           if (request.method === 'GET' && pathname === '/api/projects') {
             sendJson(response, 200, { projects: await manager.list() });
+            return;
+          }
+
+          if (request.method === 'POST' && pathname === '/api/projects/refresh') {
+            if (!acceptsRequestOrigin(request)) {
+              sendJson(response, 403, { error: 'Origin request tidak diizinkan.' });
+              return;
+            }
+            sendJson(response, 200, { projects: await manager.refresh() });
             return;
           }
 

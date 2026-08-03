@@ -1,6 +1,10 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import { validateProjectFiles } from './project-discovery';
+import { discoverProjects, validateProjectFiles } from './project-discovery';
 
 const validManifest = JSON.stringify({
   schemaVersion: 1,
@@ -63,5 +67,29 @@ describe('validateProjectFiles', () => {
         validPackage,
       ),
     ).toThrow('hanya "vite"');
+  });
+
+  it('mengabaikan folder tanpa manifest dan mempertahankan manifest rusak sebagai invalid', async () => {
+    const rootDirectory = await mkdtemp(join(tmpdir(), 'dhepil-discovery-'));
+    const appsDirectory = join(rootDirectory, 'apps');
+
+    try {
+      await mkdir(join(appsDirectory, 'unmanaged-folder'), { recursive: true });
+      await mkdir(join(appsDirectory, 'broken-app'), { recursive: true });
+      await writeFile(join(appsDirectory, 'broken-app', 'app.manifest.json'), '{', 'utf8');
+      await writeFile(join(appsDirectory, 'broken-app', 'package.json'), validPackage, 'utf8');
+
+      const projects = await discoverProjects(rootDirectory, appsDirectory);
+
+      expect(projects).toMatchObject([
+        {
+          id: 'broken-app',
+          valid: false,
+          validationError: 'app.manifest.json bukan JSON yang valid.',
+        },
+      ]);
+    } finally {
+      await rm(rootDirectory, { recursive: true, force: true });
+    }
   });
 });

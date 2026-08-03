@@ -5,9 +5,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./test/setup.ts'],
-    css: true,
-    exclude: [...configDefaults.exclude, 'apps/tampermonyet/tampermonkey/**'],
+    exclude: [...configDefaults.exclude, 'tampermonkey/**'],
   },
 });

@@ -1,6 +1,6 @@
 import type { ProjectStatus, ProjectSummary } from './contracts';
 
-export type ProjectManagerAction = 'list' | 'start' | 'stop';
+export type ProjectManagerAction = 'list' | 'refresh' | 'start' | 'stop';
 export type ProjectManagerRequestErrorKind =
   'network' | 'http' | 'invalid-json' | 'malformed-response' | 'cancelled';
 
