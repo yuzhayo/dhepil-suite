@@ -2,6 +2,45 @@
 
 > **Snapshot:** 2026-08-02. Dokumen ini mencatat kondisi repository aktual setelah WIP release tooling di-commit dan scaffold app dihapus. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser launcher dimiliki `browser-plan.md` di root.
 
+## Update 2026-08-04 — Tampermonyet AgentRouter Dashboard + Token + Usage Log Require
+
+Satu loader installable `public/require/agentrouter/agent.router.user.js` versi `0.8.0` memuat page
+module Dashboard, Token, dan Usage Log. Dashboard membaca nama akun serta `Current balance`. Token scanner
+versi `0.2.0` membuka masked Key secara otomatis, membaca real key beserta metadata row, lalu
+mengembalikan input ke masked. Identitas akun ketiga halaman dimiliki helper situs
+`agentrouter/account.js`.
+
+Usage Log versi `0.1.0` hanya membaca row dengan Type tepat `System`; partial match dan semua type
+lain diabaikan. Snapshot menyimpan Time, Type, dan Details sesuai teks yang tampil tanpa parsing
+waktu atau terjemahan, tidak membaca pagination, lalu me-rewrite `usage-log:last` untuk akun aktif.
+
+Helper generik berada di `shared/`: DOM, finite polling, JSON storage, owner-checked rewrite-log,
+downloader, dan Shadow DOM UI. `agentrouter/userJson.js` menggabungkan hasil Dashboard, Token, dan
+Usage Log menjadi satu JSON localStorage per akun. Downloader memakai grant `GM_xmlhttpRequest` dengan
+`@connect 127.0.0.1`, sehingga request lokal dimiliki Tampermonkey dan tidak memicu izin Local
+Network Access untuk origin AgentRouter. Downloader mengirim JSON ke endpoint host lokal; plugin
+Vite `server/databaseWriter.ts` menulis ulang file tetap
+`apps/tampermonyet/database/agentrouter/<account>.json`. Folder database mengabaikan seluruh JSON
+melalui `.gitignore`.
+
+Dashboard, Token, dan Usage Log tetap mempunyai record terbaru masing-masing (`dashboard:last`,
+`token:last`, dan `usage-log:last`) serta hanya mengizinkan read/rewrite ketika owner cocok dengan akun yang terlihat.
+Polling berjalan setiap 500 ms maksimal lima menit lalu berhenti saat berhasil, timeout, atau
+keluar route. Tombol scan ulang menjadi fallback manual. Clear-log button tetap technical debt;
+operasi `storageRewriteLog.remove()` sudah tersedia tetapi belum dihubungkan ke UI.
+
+Validasi Windows: app test PASS (7 file/22 test), root test PASS (38 file/172 test), ESLint PASS,
+typecheck/build root dan app PASS, Prettier PASS, `git diff --check` PASS, dan AntD lint
+`apps/tampermonyet/src` PASS. Inspeksi read-only Chrome pada `/console/log` memverifikasi tabel nyata
+berada di `main`, memakai role `grid`, mempunyai `tbody`, serta header Time, Type, dan Details yang
+cocok dengan selector. Akun saat inspeksi mempunyai nol row, sehingga filter System pada row nyata
+belum dapat diverifikasi melalui browser. Pemeriksaan AgentRouter Token
+nyata membuktikan visibility mengubah input masked menjadi real key dan dapat dikembalikan ke
+masked tanpa mencetak nilainya. Endpoint port `2003` berhasil menulis/rewrite payload dummy ke
+path database yang benar; file smoke sudah dihapus. Seluruh URL require baru merespons HTTP 200
+`text/javascript`. Instalasi/update loader versi `0.8.0` dan alur penuh melalui Tampermonkey masih
+perlu diuji.
+
 ## Update 2026-08-04 — Legacy Tampermonkey Archive
 
 Folder lokal lama `apps/tampermonkey` dipindahkan ke

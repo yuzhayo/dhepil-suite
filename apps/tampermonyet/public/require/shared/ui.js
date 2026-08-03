@@ -1,0 +1,134 @@
+// Lightweight Shadow DOM panel shared by site-specific require modules.
+(function (root) {
+  'use strict';
+
+  const namespace = (root.DhepilTampermonyet ||= {});
+
+  function safeId(value) {
+    const id = String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, '-');
+    if (!id) throw new TypeError('UI.mount membutuhkan id.');
+    return id;
+  }
+
+  function mount(options = {}) {
+    const document = options.document || root.document;
+    const parent = document.documentElement || document.body;
+    if (!parent) throw new Error('Document belum siap untuk memasang UI.');
+
+    const id = `tampermonyet-${safeId(options.id)}`;
+    document.getElementById(id)?.remove();
+
+    const host = document.createElement('div');
+    host.id = id;
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>
+        :host { all: initial; }
+        .panel {
+          position: fixed;
+          right: 16px;
+          bottom: 16px;
+          z-index: 2147483647;
+          width: min(320px, calc(100vw - 32px));
+          overflow: hidden;
+          color: #f4f7fb;
+          background: #17191e;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 12px;
+          box-shadow: 0 18px 52px rgba(0, 0, 0, 0.42);
+          font: 14px/1.45 Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h2 { margin: 0; color: #fff; font-size: 15px; line-height: 1.3; }
+        .status { display: flex; align-items: center; gap: 7px; color: #aeb8c7; font-size: 12px; }
+        .dot { width: 8px; height: 8px; border-radius: 999px; background: #8c8c8c; }
+        .status[data-tone='loading'] .dot { background: #1677ff; }
+        .status[data-tone='success'] .dot { background: #52c41a; }
+        .status[data-tone='warning'] .dot { background: #faad14; }
+        .status[data-tone='error'] .dot { background: #ff4d4f; }
+        .body { padding: 14px 16px 16px; }
+        dl { display: grid; gap: 10px; margin: 0 0 14px; }
+        dl:empty { display: none; }
+        .field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+        dt { color: #8f9bad; }
+        dd { margin: 0; color: #fff; font-weight: 600; overflow-wrap: anywhere; text-align: right; }
+        button {
+          width: 100%;
+          padding: 9px 12px;
+          color: #fff;
+          background: #1677ff;
+          border: 0;
+          border-radius: 8px;
+          font: inherit;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        button:hover { background: #4096ff; }
+        button:focus-visible { outline: 2px solid #91caff; outline-offset: 2px; }
+        button:disabled { cursor: not-allowed; opacity: 0.55; }
+      </style>
+      <section class="panel" aria-label="Tampermonyet scanner">
+        <header>
+          <h2 data-role="title"></h2>
+          <div class="status" data-role="status" data-tone="idle" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            <span data-role="status-text"></span>
+          </div>
+        </header>
+        <div class="body">
+          <dl data-role="fields"></dl>
+          <button type="button" data-role="action"></button>
+        </div>
+      </section>
+    `;
+
+    const title = shadow.querySelector('[data-role="title"]');
+    const status = shadow.querySelector('[data-role="status"]');
+    const statusText = shadow.querySelector('[data-role="status-text"]');
+    const fields = shadow.querySelector('[data-role="fields"]');
+    const action = shadow.querySelector('[data-role="action"]');
+    let currentFields = [];
+
+    title.textContent = String(options.title || 'Tampermonyet');
+    action.textContent = String(options.actionLabel || 'Refresh');
+    action.addEventListener('click', () => options.onAction?.());
+
+    function render(state = {}) {
+      if (Array.isArray(state.fields)) currentFields = state.fields;
+      status.dataset.tone = state.tone || 'idle';
+      statusText.textContent = String(state.status || 'Siap');
+      action.disabled = Boolean(state.actionDisabled);
+      fields.replaceChildren();
+
+      for (const field of currentFields) {
+        const row = document.createElement('div');
+        const label = document.createElement('dt');
+        const value = document.createElement('dd');
+        row.className = 'field';
+        label.textContent = String(field.label || '');
+        value.textContent = String(field.value ?? '—');
+        row.append(label, value);
+        fields.append(row);
+      }
+    }
+
+    function destroy() {
+      host.remove();
+    }
+
+    parent.append(host);
+    render(options.initialState);
+    return Object.freeze({ host, shadowRoot: shadow, render, destroy });
+  }
+
+  namespace.ui = Object.freeze({ mount });
+})(globalThis);

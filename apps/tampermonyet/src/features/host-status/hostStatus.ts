@@ -3,6 +3,7 @@ export interface HostStatus {
   port: string;
   healthUrl: string;
   requireRootUrl: string;
+  agentRouterUserscriptUrl: string;
   moduleCount: number;
 }
 
@@ -12,6 +13,10 @@ export function createHostStatus(location: Pick<Location, 'origin' | 'port'>): H
     port: location.port || 'default',
     healthUrl: new URL('/health.json', location.origin).toString(),
     requireRootUrl: new URL('/require/', location.origin).toString(),
-    moduleCount: 0,
+    agentRouterUserscriptUrl: new URL(
+      '/require/agentrouter/agent.router.user.js',
+      location.origin,
+    ).toString(),
+    moduleCount: 3,
   };
 }

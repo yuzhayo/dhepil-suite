@@ -112,6 +112,12 @@ a {
   overflow-wrap: anywhere;
 }
 
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 36px 0;
