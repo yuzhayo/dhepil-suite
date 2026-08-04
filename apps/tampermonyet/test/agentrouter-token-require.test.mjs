@@ -31,7 +31,9 @@ function createRuntime(pathname, html, options = {}) {
 
   dom.window.console.info = () => {};
   dom.window.console.warn = () => {};
+  dom.window.AgentRouterDatabaseWrites = [];
   dom.window.GM_xmlhttpRequest = (details) => {
+    dom.window.AgentRouterDatabaseWrites.push(JSON.parse(details.data));
     details.onload({
       status: 200,
       response: { ok: true, file: 'database/agentrouter/test.json' },
@@ -45,14 +47,18 @@ function createRuntime(pathname, html, options = {}) {
 function tokenPage(accountName, rows) {
   return `
     <header><button type="button"><span>G${accountName}</span></button></header>
-    <main><table role="grid">
+    <main>
+      <button type="button">Create token</button>
+      <button type="button">Query</button>
+      <table role="grid">
       <thead><tr>
         <th></th><th>Name</th><th>Status</th><th>Group</th><th>Key</th>
         <th>Available models</th><th>IP restrictions</th><th>Creation Time</th>
         <th>Expiration time</th>
       </tr></thead>
-      <tbody>${rows}</tbody>
-    </table></main>
+        <tbody>${rows}</tbody>
+      </table>
+    </main>
   `;
 }
 
@@ -186,6 +192,90 @@ describe('AgentRouter Token require slice', () => {
     );
     expect(host.shadowRoot.querySelector('[data-role="fields"]').textContent).toContain(
       '1 tersimpan',
+    );
+    token.stop();
+  });
+
+  it('clears Token data, disables auto scan, and keeps manual scan available', async () => {
+    const dom = createRuntime(
+      '/console/token',
+      tokenPage('github_token_clear', tokenRow({ name: 'me', key: 'sk-TOKENCLEARREAL01' })),
+      { pollInterval: 5, timeout: 100 },
+    );
+    const token = dom.window.DhepilTampermonyet.agentRouterToken;
+
+    token.start();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+
+    const shadow = dom.window.document.getElementById('tampermonyet-agentrouter-token').shadowRoot;
+    const autoScan = shadow.querySelector('[data-role="auto-scan"]');
+    expect(autoScan.checked).toBe(true);
+
+    shadow.querySelector('[data-role="secondary-action"]').click();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+
+    expect(autoScan.checked).toBe(false);
+    expect(token.isAutoScanEnabled()).toBe(false);
+    expect(JSON.parse(dom.window.localStorage.getItem(token.autoScanStorageKey))).toBe(false);
+    expect(token.readLast()).toBeNull();
+    expect(
+      dom.window.DhepilTampermonyet.agentRouterUserJson.read('github_token_clear').token,
+    ).toBeNull();
+    expect(dom.window.AgentRouterDatabaseWrites.at(-1).value.token).toBeNull();
+
+    token.activate();
+    expect(token.readLast()).toBeNull();
+    shadow.querySelector('[data-role="action"]').click();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+
+    expect(token.readLast().data.tokens).toHaveLength(1);
+    expect(autoScan.checked).toBe(false);
+    token.stop();
+  });
+
+  it('automatically clears stale Token data when its grid stays missing', async () => {
+    const dom = createRuntime(
+      '/console/token',
+      tokenPage('github_token_missing', tokenRow({ name: 'me', key: 'sk-TOKENMISSING01' })),
+      { pollInterval: 5, timeout: 100 },
+    );
+    const token = dom.window.DhepilTampermonyet.agentRouterToken;
+
+    token.start();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+    expect(token.readLast().data.tokens).toHaveLength(1);
+
+    dom.window.document.querySelector('input').value = 'sk-TOKEN**********0001';
+    token.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(token.readLast().data.tokens).toHaveLength(1);
+
+    dom.window.document.querySelector('table').remove();
+    for (const button of dom.window.document.querySelectorAll('main > button')) button.remove();
+    token.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(token.readLast().data.tokens).toHaveLength(1);
+
+    dom.window.document.querySelector('main').setAttribute('aria-busy', 'true');
+    dom.window.document
+      .querySelector('main')
+      .insertAdjacentHTML('afterbegin', '<button>Create token</button><button>Query</button>');
+    token.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(token.readLast().data.tokens).toHaveLength(1);
+
+    dom.window.document.querySelector('main').removeAttribute('aria-busy');
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 10));
+
+    const shadow = dom.window.document.getElementById('tampermonyet-agentrouter-token').shadowRoot;
+    expect(token.readLast()).toBeNull();
+    expect(token.isAutoScanEnabled()).toBe(true);
+    expect(
+      dom.window.DhepilTampermonyet.agentRouterUserJson.read('github_token_missing').token,
+    ).toBeNull();
+    expect(dom.window.AgentRouterDatabaseWrites.at(-1).value.token).toBeNull();
+    expect(shadow.querySelector('[data-role="status-text"]').textContent).toContain(
+      'Elemen Token tidak ditemukan; log dibersihkan',
     );
     token.stop();
   });

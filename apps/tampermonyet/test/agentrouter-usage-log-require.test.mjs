@@ -36,6 +36,8 @@ function usagePage(accountName, rows) {
   return `
     <header><button type="button"><span>G${accountName}</span></button></header>
     <main>
+      <button type="button">Query</button>
+      <button type="button">Column settings</button>
       <table role="grid">
         <thead><tr>
           <th>Time</th><th>Tokens</th><th>Group</th><th>Type</th><th>Model</th>
@@ -57,7 +59,9 @@ function createRuntime(pathname, html, options = {}) {
 
   dom.window.console.info = () => {};
   dom.window.console.warn = () => {};
+  dom.window.AgentRouterDatabaseWrites = [];
   dom.window.GM_xmlhttpRequest = (details) => {
+    dom.window.AgentRouterDatabaseWrites.push(JSON.parse(details.data));
     details.onload({
       status: 200,
       response: { ok: true, file: 'database/agentrouter/test.json' },
@@ -168,6 +172,107 @@ describe('AgentRouter Usage Log require slice', () => {
     usageLog.start();
     expect(usageLog.readLast('github_usage_a')).toBeNull();
     expect(usageLog.readLast('github_usage_b').data.accountName).toBe('github_usage_b');
+    usageLog.stop();
+  });
+
+  it('clears Usage Log data, disables auto scan, and resumes when checked again', async () => {
+    const dom = createRuntime(
+      '/console/log',
+      usagePage(
+        'github_usage_clear',
+        usageRow({
+          time: '2026-08-04 00:28:53',
+          type: 'System',
+          details: '保持原文',
+        }),
+      ),
+      { pollInterval: 5, timeout: 100 },
+    );
+    const usageLog = dom.window.DhepilTampermonyet.agentRouterUsageLog;
+
+    usageLog.start();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+
+    const shadow = dom.window.document.getElementById(
+      'tampermonyet-agentrouter-usage-log',
+    ).shadowRoot;
+    const autoScan = shadow.querySelector('[data-role="auto-scan"]');
+    expect(autoScan.checked).toBe(true);
+
+    shadow.querySelector('[data-role="secondary-action"]').click();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+
+    expect(autoScan.checked).toBe(false);
+    expect(usageLog.isAutoScanEnabled()).toBe(false);
+    expect(JSON.parse(dom.window.localStorage.getItem(usageLog.autoScanStorageKey))).toBe(false);
+    expect(usageLog.readLast()).toBeNull();
+    expect(
+      dom.window.DhepilTampermonyet.agentRouterUserJson.read('github_usage_clear').usageLog,
+    ).toBeNull();
+    expect(dom.window.AgentRouterDatabaseWrites.at(-1).value.usageLog).toBeNull();
+
+    autoScan.checked = true;
+    autoScan.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+
+    expect(usageLog.isAutoScanEnabled()).toBe(true);
+    expect(usageLog.readLast().data.entries).toHaveLength(1);
+    usageLog.stop();
+  });
+
+  it('automatically clears stale Usage Log data when its grid stays missing', async () => {
+    const dom = createRuntime(
+      '/console/log',
+      usagePage(
+        'github_usage_missing',
+        usageRow({
+          time: '2026-08-04 00:28:53',
+          type: 'System',
+          details: '保持原文',
+        }),
+      ),
+      { pollInterval: 5, timeout: 100 },
+    );
+    const usageLog = dom.window.DhepilTampermonyet.agentRouterUsageLog;
+
+    usageLog.start();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+    expect(usageLog.readLast().data.entries).toHaveLength(1);
+
+    dom.window.document.querySelector('tbody').replaceChildren();
+    usageLog.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(usageLog.readLast().data.entries).toHaveLength(1);
+
+    dom.window.document.querySelector('table').remove();
+    for (const button of dom.window.document.querySelectorAll('main > button')) button.remove();
+    usageLog.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(usageLog.readLast().data.entries).toHaveLength(1);
+
+    dom.window.document.querySelector('main').setAttribute('aria-busy', 'true');
+    dom.window.document
+      .querySelector('main')
+      .insertAdjacentHTML('afterbegin', '<button>Query</button><button>Column settings</button>');
+    usageLog.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(usageLog.readLast().data.entries).toHaveLength(1);
+
+    dom.window.document.querySelector('main').removeAttribute('aria-busy');
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 10));
+
+    const shadow = dom.window.document.getElementById(
+      'tampermonyet-agentrouter-usage-log',
+    ).shadowRoot;
+    expect(usageLog.readLast()).toBeNull();
+    expect(usageLog.isAutoScanEnabled()).toBe(true);
+    expect(
+      dom.window.DhepilTampermonyet.agentRouterUserJson.read('github_usage_missing').usageLog,
+    ).toBeNull();
+    expect(dom.window.AgentRouterDatabaseWrites.at(-1).value.usageLog).toBeNull();
+    expect(shadow.querySelector('[data-role="status-text"]').textContent).toContain(
+      'Elemen Usage Log tidak ditemukan; log dibersihkan',
+    );
     usageLog.stop();
   });
 

@@ -31,7 +31,9 @@ function createRuntime(pathname, html, options = {}) {
 
   dom.window.console.info = () => {};
   dom.window.console.warn = () => {};
+  dom.window.AgentRouterDatabaseWrites = [];
   dom.window.GM_xmlhttpRequest = (details) => {
+    dom.window.AgentRouterDatabaseWrites.push(JSON.parse(details.data));
     details.onload({
       status: 200,
       response: { ok: true, file: 'database/agentrouter/test.json' },
@@ -81,13 +83,14 @@ describe('AgentRouter Dashboard require slice', () => {
     });
   });
 
-  it('reads only the account name and Current balance', () => {
+  it('reads account, Current balance, and Consumption without unrelated statistics', () => {
     const dom = createRuntime(
       '/console',
       `<main>
         <h2>👋Good evening，github_251501</h2>
         <section><span>Current balance</span><strong>$150.47</strong></section>
         <section><span>Consumption</span><strong>$199.53</strong></section>
+        <section><span>Number of Requests</span><strong>562</strong></section>
       </main>`,
     );
 
@@ -96,7 +99,9 @@ describe('AgentRouter Dashboard require slice', () => {
     expect(result.accountName).toBe('github_251501');
     expect(result.currentBalance.raw).toBe('$150.47');
     expect(result.currentBalance.value).toBe(150.47);
-    expect(JSON.stringify(result)).not.toContain('199.53');
+    expect(result.consumption.raw).toBe('$199.53');
+    expect(result.consumption.value).toBe(199.53);
+    expect(JSON.stringify(result)).not.toContain('562');
   });
 
   it('polls until Dashboard is ready and stops after the first successful scan', async () => {
@@ -155,6 +160,118 @@ describe('AgentRouter Dashboard require slice', () => {
 
     expect(dashboard.readLast().data.currentBalance.value).toBe(20);
     expect(shadow.querySelector('[data-role="fields"]').textContent).toContain('$20.00');
+    dashboard.stop();
+  });
+
+  it('turns auto scan off on clear, rewrites JSON, and keeps the scan button manual', async () => {
+    const dom = createRuntime(
+      '/console',
+      `<main>
+        <h2>Good evening, clear_account</h2>
+        <section><span>Current balance</span><strong>$18.75</strong></section>
+      </main>`,
+      { pollInterval: 5, timeout: 100 },
+    );
+    const dashboard = dom.window.DhepilTampermonyet.agentRouterDashboard;
+
+    dashboard.start();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+
+    const host = dom.window.document.getElementById('tampermonyet-agentrouter-dashboard');
+    const shadow = host.shadowRoot;
+    const autoScan = shadow.querySelector('[data-role="auto-scan"]');
+    const scanButton = shadow.querySelector('[data-role="action"]');
+    const clearButton = shadow.querySelector('[data-role="secondary-action"]');
+    expect(autoScan.checked).toBe(true);
+
+    clearButton.click();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+
+    expect(autoScan.checked).toBe(false);
+    expect(dashboard.isAutoScanEnabled()).toBe(false);
+    expect(JSON.parse(dom.window.localStorage.getItem(dashboard.autoScanStorageKey))).toBe(false);
+    expect(dashboard.readLast()).toBeNull();
+    expect(
+      dom.window.DhepilTampermonyet.agentRouterUserJson.read('clear_account').dashboard,
+    ).toBeNull();
+    expect(dom.window.AgentRouterDatabaseWrites.at(-1).value.dashboard).toBeNull();
+
+    dom.window.document.querySelector('strong').textContent = '$20.00';
+    dashboard.activate();
+    expect(dashboard.readLast()).toBeNull();
+    expect(shadow.querySelector('[data-role="status-text"]').textContent).toBe(
+      'Auto scan nonaktif',
+    );
+
+    scanButton.click();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+    expect(dashboard.readLast().data.currentBalance.value).toBe(20);
+    expect(autoScan.checked).toBe(false);
+
+    clearButton.click();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+    dom.window.document.querySelector('strong').textContent = '$30.00';
+    autoScan.checked = true;
+    autoScan.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+
+    expect(dashboard.isAutoScanEnabled()).toBe(true);
+    expect(dashboard.readLast().data.currentBalance.value).toBe(30);
+    dashboard.stop();
+  });
+
+  it('automatically clears stale Dashboard data when its source element stays missing', async () => {
+    const dom = createRuntime(
+      '/console',
+      `<main>
+        <h2>Good evening, missing_dashboard</h2>
+        <div data-ready-marker>Account Data</div>
+        <div data-ready-marker>Usage Statistics</div>
+        <section data-source><span>Current balance</span><strong>$18.75</strong></section>
+      </main>`,
+      { pollInterval: 5, timeout: 100 },
+    );
+    const dashboard = dom.window.DhepilTampermonyet.agentRouterDashboard;
+
+    dashboard.start();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 5));
+    expect(dashboard.readLast().data.currentBalance.value).toBe(18.75);
+
+    dom.window.document.querySelector('strong').textContent = 'Loading';
+    dashboard.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(dashboard.readLast().data.currentBalance.value).toBe(18.75);
+
+    dom.window.document.querySelector('[data-source]').remove();
+    for (const marker of dom.window.document.querySelectorAll('[data-ready-marker]'))
+      marker.remove();
+    dashboard.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(dashboard.readLast().data.currentBalance.value).toBe(18.75);
+
+    dom.window.document.querySelector('main').setAttribute('aria-busy', 'true');
+    dom.window.document
+      .querySelector('main')
+      .insertAdjacentHTML('beforeend', '<div>Account Data</div><div>Usage Statistics</div>');
+    dashboard.activate();
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 15));
+    expect(dashboard.readLast().data.currentBalance.value).toBe(18.75);
+
+    dom.window.document.querySelector('main').removeAttribute('aria-busy');
+    await new Promise((resolve) => dom.window.setTimeout(resolve, 10));
+
+    const shadow = dom.window.document.getElementById(
+      'tampermonyet-agentrouter-dashboard',
+    ).shadowRoot;
+    expect(dashboard.readLast()).toBeNull();
+    expect(dashboard.isAutoScanEnabled()).toBe(true);
+    expect(
+      dom.window.DhepilTampermonyet.agentRouterUserJson.read('missing_dashboard').dashboard,
+    ).toBeNull();
+    expect(dom.window.AgentRouterDatabaseWrites.at(-1).value.dashboard).toBeNull();
+    expect(shadow.querySelector('[data-role="status-text"]').textContent).toContain(
+      'Elemen Dashboard tidak ditemukan; log dibersihkan',
+    );
     dashboard.stop();
   });
 
@@ -224,17 +341,20 @@ describe('AgentRouter Dashboard require slice', () => {
       'utf8',
     );
 
-    expect(loader).toContain('/require/shared/dom.js?v=0.1.0');
+    expect(loader).toContain('/require/shared/dom.js?v=0.2.0');
     expect(loader).toContain('/require/shared/polling.js?v=0.1.0');
     expect(loader).toContain('/require/shared/storage.js?v=0.1.0');
     expect(loader).toContain('/require/shared/storageRewriteLog.js?v=0.1.0');
     expect(loader).toContain('/require/shared/downloader.js?v=0.2.0');
-    expect(loader).toContain('/require/shared/ui.js?v=0.1.0');
+    expect(loader).toContain('/require/shared/uiSection.js?v=0.2.0');
+    expect(loader).toContain('/require/shared/ui.js?v=0.5.0');
     expect(loader).toContain('/require/agentrouter/account.js?v=0.1.0');
-    expect(loader).toContain('/require/agentrouter/userJson.js?v=0.1.0');
-    expect(loader).toContain('/require/agentrouter/dashboard.js?v=0.6.0');
-    expect(loader).toContain('/require/agentrouter/token.js?v=0.2.0');
-    expect(loader).toContain('/require/agentrouter/usageLog.js?v=0.1.0');
+    expect(loader).toContain('/require/agentrouter/userJson.js?v=0.2.0');
+    expect(loader).toContain('/require/agentrouter/controller.js?v=0.3.0');
+    expect(loader).toContain('/require/agentrouter/dashboard.js?v=0.12.0');
+    expect(loader).toContain('/require/agentrouter/token.js?v=0.7.0');
+    expect(loader).toContain('/require/agentrouter/usageLog.js?v=0.6.0');
+    expect(loader).toContain('agentRouterController.activate()');
     expect(loader).toContain('// @connect      127.0.0.1');
     expect(loader).toContain('// @grant        GM_xmlhttpRequest');
     expect(loader).not.toContain('// @grant        none');

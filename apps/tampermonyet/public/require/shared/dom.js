@@ -54,9 +54,23 @@
     );
   }
 
+  function isLoading(scope) {
+    const document = scope?.nodeType === 9 ? scope : scope?.ownerDocument;
+    if (!document || (scope?.nodeType === 9 && document.readyState === 'loading')) return true;
+
+    const queryScope =
+      scope?.nodeType === 9 ? document.querySelector('main') || document.body : scope;
+    const loadingSelector =
+      '[aria-busy="true"], [data-loading="true"], [role="progressbar"], .ant-spin-spinning, .is-loading';
+    return Boolean(
+      queryScope?.matches?.(loadingSelector) || queryScope?.querySelector(loadingSelector),
+    );
+  }
+
   namespace.dom = Object.freeze({
     normalize,
     readText,
     findExact,
+    isLoading,
   });
 })(globalThis);

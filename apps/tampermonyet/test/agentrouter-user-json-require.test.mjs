@@ -97,4 +97,42 @@ describe('AgentRouter complete per-user JSON', () => {
       value: complete,
     });
   });
+
+  it('clears only one page while preserving the stable per-user JSON contract', () => {
+    const dom = new JSDOM(
+      '<header><button><span>Ggithub_clear</span></button></header><main></main>',
+      {
+        url: 'https://agentrouter.org/console',
+        runScripts: 'outside-only',
+      },
+    );
+    dom.window.GM_xmlhttpRequest = () => {};
+    for (const source of sources) dom.window.eval(source);
+
+    const userJson = dom.window.DhepilTampermonyet.agentRouterUserJson;
+    userJson.update({
+      version: 1,
+      page: 'dashboard',
+      pathname: '/console',
+      capturedAt: '2026-08-04T01:00:00.000Z',
+      data: { accountName: 'github_clear', currentBalance: { raw: '$10.00', value: 10 } },
+    });
+    userJson.update({
+      version: 2,
+      page: 'token',
+      pathname: '/console/token',
+      capturedAt: '2026-08-04T01:01:00.000Z',
+      data: { accountName: 'github_clear', tokens: [{ name: 'primary', key: 'sk-CLEARREAL01' }] },
+    });
+
+    const cleared = userJson.clearPage('github_clear', 'dashboard', '2026-08-04T01:02:00.000Z');
+
+    expect(cleared.dashboard).toBeNull();
+    expect(cleared.token.tokens[0].key).toBe('sk-CLEARREAL01');
+    expect(cleared.usageLog).toBeNull();
+    expect(cleared.updatedAt).toBe('2026-08-04T01:02:00.000Z');
+    expect(userJson.read('github_clear')).toEqual(cleared);
+    expect(userJson.clearPage('another_account', 'dashboard')).toBeNull();
+    expect(userJson.clearPage('github_clear', 'unknown')).toBeNull();
+  });
 });

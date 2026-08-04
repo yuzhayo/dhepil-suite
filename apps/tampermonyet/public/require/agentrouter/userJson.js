@@ -16,6 +16,7 @@
     prefix: 'tampermonyet:agentrouter:',
   });
   const downloader = Downloader.create(root.AgentRouterDownloaderOptions || {});
+  const pages = Object.freeze(['dashboard', 'token', 'usageLog']);
 
   function ownerKey(accountName) {
     return String(accountName || '')
@@ -43,7 +44,7 @@
   function update(pageResult) {
     const accountName = pageResult?.data?.accountName;
     const accountKey = ownerKey(accountName);
-    if (!accountKey || !['dashboard', 'token', 'usageLog'].includes(pageResult?.page)) return null;
+    if (!accountKey || !pages.includes(pageResult?.page)) return null;
 
     const current = read(accountName) || {
       version: 1,
@@ -71,6 +72,21 @@
     return store.write(storageName(accountName), next) ? next : null;
   }
 
+  function clearPage(accountName, page, capturedAt = new Date().toISOString()) {
+    if (!ownerKey(accountName) || !pages.includes(page)) return null;
+
+    const current = read(accountName);
+    if (!current) return null;
+
+    const next = {
+      ...current,
+      accountName,
+      updatedAt: capturedAt,
+      [page]: null,
+    };
+    return store.write(storageName(accountName), next) ? next : null;
+  }
+
   function save(value) {
     if (!value?.accountName) return Promise.reject(new Error('User JSON belum tersedia.'));
     return downloader.saveJson({ owner: value.accountName, value });
@@ -79,6 +95,7 @@
   namespace.agentRouterUserJson = Object.freeze({
     read,
     update,
+    clearPage,
     save,
     storageKey,
   });

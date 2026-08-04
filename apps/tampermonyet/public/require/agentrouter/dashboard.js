@@ -22,6 +22,7 @@
 
   const options = root.AgentRouterDashboardScanOptions || {};
   const storageName = 'dashboard:last';
+  const autoScanStorageName = 'dashboard:auto-scan';
   const store = Storage.create({
     backend: root.localStorage,
     prefix: 'tampermonyet:agentrouter:',
@@ -32,8 +33,11 @@
     readOwner: (result) => result?.data?.accountName,
   });
   const storageKey = rewriteLog.key;
+  const autoScanStorageKey = store.key(autoScanStorageName);
   const resultEvent = 'agentrouter:dashboard-scan';
   const routeEvent = 'agentrouter:dashboard-routechange';
+  const missingSourceResult = Object.freeze({ missingSource: true });
+  let autoScanEnabled = store.read(autoScanStorageName, true) !== false;
   let pollingTask = null;
   let panel = null;
 
@@ -41,8 +45,8 @@
     return pathname === '/console' || pathname === '/console/';
   }
 
-  function readCurrentBalance(scope) {
-    const label = Dom.findExact(scope, 'Current balance');
+  function readCurrency(scope, labelText) {
+    const label = Dom.findExact(scope, labelText);
     if (!label) return null;
 
     let owner = label.parentElement;
@@ -52,7 +56,7 @@
       depth += 1, owner = owner.parentElement
     ) {
       const text = Dom.readText(owner);
-      const remainder = Dom.normalize(text.replace(/current balance/i, ''));
+      const remainder = Dom.normalize(text.replace(new RegExp(labelText, 'i'), ''));
       const match = remainder.match(/[-+]?\s*(?:[$€£¥]|Rp\.?)\s*\d[\d,.]*/i);
       if (!match) continue;
 
@@ -64,21 +68,70 @@
     return null;
   }
 
+  function readCurrentBalance(scope) {
+    return readCurrency(scope, 'Current balance');
+  }
+
+  function readConsumption(scope) {
+    return readCurrency(scope, 'Consumption');
+  }
+
+  function hasSourceElement(document) {
+    const scope = document.querySelector('main') || document.body;
+    return Boolean(scope && Dom.findExact(scope, 'Current balance'));
+  }
+
+  function hasPageReadyMarkers(document) {
+    const scope = document.querySelector('main') || document.body;
+    return Boolean(
+      scope && Dom.findExact(scope, 'Account Data') && Dom.findExact(scope, 'Usage Statistics'),
+    );
+  }
+
   function scan(document) {
     const scope = document.querySelector('main') || document.body;
     if (!scope) return null;
 
     const accountName = Account.read(document);
     const currentBalance = readCurrentBalance(scope);
-    return accountName && currentBalance ? { accountName, currentBalance } : null;
+    const consumption = readConsumption(scope);
+    return accountName && currentBalance ? { accountName, currentBalance, consumption } : null;
+  }
+
+  function pollScan(document, clearMissingImmediately) {
+    const data = scan(document);
+    if (data) return data;
+    if (
+      !clearMissingImmediately ||
+      Dom.isLoading(document) ||
+      !readPageAccountName() ||
+      !hasPageReadyMarkers(document)
+    ) {
+      return null;
+    }
+    return hasSourceElement(document) ? null : missingSourceResult;
   }
 
   function readPageAccountName() {
     return Account.read(root.document);
   }
 
+  function samePageAccount(accountName) {
+    return readPageAccountName().toLowerCase() === String(accountName || '').toLowerCase();
+  }
+
   function readLast(accountName = readPageAccountName()) {
     return rewriteLog.read(accountName);
+  }
+
+  function isAutoScanEnabled() {
+    return autoScanEnabled;
+  }
+
+  function setAutoScanEnabled(enabled) {
+    autoScanEnabled = Boolean(enabled);
+    store.write(autoScanStorageName, autoScanEnabled);
+    return autoScanEnabled;
   }
 
   function fieldsFrom(result) {
@@ -86,18 +139,29 @@
     return [
       { label: 'Account', value: result.data.accountName },
       { label: 'Current balance', value: result.data.currentBalance.raw },
+      { label: 'Consumption', value: result.data.consumption?.raw || '—' },
     ];
   }
 
   function ensurePanel() {
     if (panel) return panel;
 
+    const managedPanel = namespace.agentRouterController?.pagePanel?.('dashboard');
+    if (managedPanel) {
+      panel = managedPanel;
+      return panel;
+    }
+
     panel = UI.mount({
       document: root.document,
       id: 'agentrouter-dashboard',
       title: 'AgentRouter Dashboard',
       actionLabel: 'Scan ulang',
-      onAction: start,
+      onAction: scanNow,
+      autoScanLabel: 'Auto scan',
+      secondaryActionLabel: 'Clear hasil scan',
+      onAutoScanChange: handleAutoScanChange,
+      onSecondaryAction: clearResult,
     });
     return panel;
   }
@@ -107,11 +171,19 @@
     panel = null;
   }
 
-  function renderStatus(status, tone, actionDisabled = false, result = readLast()) {
+  function renderStatus(
+    status,
+    tone,
+    actionDisabled = false,
+    result = readLast(),
+    secondaryActionDisabled = actionDisabled,
+  ) {
     ensurePanel().render({
       status,
       tone,
       actionDisabled,
+      secondaryActionDisabled,
+      autoScanChecked: isAutoScanEnabled(),
       fields: fieldsFrom(result),
     });
   }
@@ -149,19 +221,11 @@
     if (userJson) {
       UserJson.save(userJson)
         .then((download) => {
-          if (
-            !supports(root.location.pathname) ||
-            readPageAccountName().toLowerCase() !== data.accountName.toLowerCase()
-          )
-            return;
+          if (!supports(root.location.pathname) || !samePageAccount(data.accountName)) return;
           renderStatus(`JSON tersimpan: ${download.file}`, 'success', false, result);
         })
         .catch((error) => {
-          if (
-            !supports(root.location.pathname) ||
-            readPageAccountName().toLowerCase() !== data.accountName.toLowerCase()
-          )
-            return;
+          if (!supports(root.location.pathname) || !samePageAccount(data.accountName)) return;
           renderStatus('Saldo tersimpan; file JSON gagal ditulis', 'warning', false, result);
           root.console.error('[Tampermonyet Dashboard Scan] File JSON gagal ditulis.', error);
         });
@@ -178,27 +242,117 @@
     return null;
   }
 
+  function handleAutoScanChange(enabled) {
+    setAutoScanEnabled(enabled);
+    if (enabled) return start();
+
+    stop();
+    renderStatus('Auto scan nonaktif', 'idle');
+    return null;
+  }
+
+  async function clearStoredResult({ disableAutoScan = true, automatic = false } = {}) {
+    if (!supports(root.location.pathname)) return null;
+
+    stop();
+    if (disableAutoScan) setAutoScanEnabled(false);
+    const accountName = readPageAccountName();
+    if (!accountName) {
+      renderStatus(
+        automatic ? 'Elemen Dashboard tidak ditemukan; akun belum tersedia' : 'Akun belum tersedia',
+        'warning',
+        false,
+        null,
+      );
+      return null;
+    }
+
+    renderStatus(
+      automatic
+        ? 'Elemen Dashboard tidak ditemukan; membersihkan log…'
+        : 'Membersihkan data lokal…',
+      'loading',
+      true,
+      null,
+      true,
+    );
+    const snapshot = readLast(accountName);
+    const snapshotRemoved = !snapshot || rewriteLog.remove();
+    const userJson = UserJson.clearPage(accountName, 'dashboard');
+    if (!snapshotRemoved || !userJson) {
+      renderStatus(
+        automatic
+          ? 'Elemen Dashboard tidak ditemukan; tidak ada log tersimpan'
+          : 'Data lokal belum tersedia untuk dibersihkan',
+        'warning',
+        false,
+        null,
+      );
+      return null;
+    }
+
+    try {
+      const download = await UserJson.save(userJson);
+      if (supports(root.location.pathname) && samePageAccount(accountName)) {
+        renderStatus(
+          automatic
+            ? `Elemen Dashboard tidak ditemukan; log dibersihkan: ${download.file}`
+            : `Data dibersihkan; JSON diperbarui: ${download.file}`,
+          'success',
+          false,
+          null,
+        );
+      }
+    } catch (error) {
+      if (supports(root.location.pathname) && samePageAccount(accountName)) {
+        renderStatus(
+          automatic
+            ? 'Log lokal bersih; file JSON gagal diperbarui'
+            : 'Data lokal bersih; file JSON gagal diperbarui',
+          'warning',
+          false,
+          null,
+        );
+        root.console.error('[Tampermonyet Dashboard Scan] Clear JSON gagal.', error);
+      }
+    }
+    return userJson;
+  }
+
+  function clearResult() {
+    return clearStoredResult();
+  }
+
   function stop() {
     pollingTask?.cancel();
     pollingTask = null;
   }
 
-  function start() {
+  function start(startOptions = {}) {
     stop();
     if (!supports(root.location.pathname)) return null;
 
+    const clearMissingImmediately = Boolean(startOptions.clearMissingImmediately);
     renderStatus('Mencari data…', 'loading');
     const task = Polling.start({
       intervalMs: options.pollInterval ?? 500,
       timeoutMs: options.timeout ?? 300000,
       shouldContinue: () => supports(root.location.pathname),
-      check: () => scan(root.document),
+      check: () => pollScan(root.document, clearMissingImmediately),
       onSuccess(data) {
         pollingTask = null;
+        if (data === missingSourceResult) {
+          void clearStoredResult({ disableAutoScan: false, automatic: true });
+          return;
+        }
         publish(data);
       },
       onTimeout() {
         pollingTask = null;
+        if (!hasSourceElement(root.document)) {
+          void clearStoredResult({ disableAutoScan: false, automatic: true });
+          return;
+        }
         renderStatus('Dashboard belum siap setelah 5 menit', 'error');
         root.console.warn('[Tampermonyet Dashboard Scan] Dashboard timeout setelah 5 menit.');
       },
@@ -213,8 +367,17 @@
     return pollingTask;
   }
 
+  function activate() {
+    stop();
+    if (!supports(root.location.pathname)) return null;
+    if (isAutoScanEnabled()) return start({ clearMissingImmediately: true });
+
+    renderStatus('Auto scan nonaktif', 'idle');
+    return null;
+  }
+
   function handleRouteChange() {
-    if (supports(root.location.pathname)) start();
+    if (supports(root.location.pathname)) activate();
     else {
       stop();
       destroyPanel();
@@ -222,6 +385,7 @@
   }
 
   function installRouteHook() {
+    if (namespace.agentRouterController?.managed) return;
     if (root.__tampermonyetAgentRouterDashboardRouteHookV1) return;
     root.__tampermonyetAgentRouterDashboardRouteHookV1 = true;
 
@@ -252,11 +416,15 @@
     id: 'dashboard',
     supports,
     scan,
+    activate,
     start,
     stop,
     scanNow,
+    clearResult,
     readLast,
+    isAutoScanEnabled,
     storageKey,
+    autoScanStorageKey,
     resultEvent,
   });
 })(globalThis);

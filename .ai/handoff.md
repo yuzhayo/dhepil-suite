@@ -1,10 +1,83 @@
 # Dhepil Suite — Current Handoff
 
-> **Snapshot:** 2026-08-02. Dokumen ini mencatat kondisi repository aktual setelah WIP release tooling di-commit dan scaffold app dihapus. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser launcher dimiliki `browser-plan.md` di root.
+> **Snapshot:** 2026-08-04. Dokumen ini mencatat kondisi repository aktual setelah scanner
+> AgentRouter di-commit. Keputusan arsitektur tetap dimiliki `PLAYBOOK.md`; rencana browser
+> launcher dimiliki `browser-plan.md` di root.
+
+## Plan 2026-08-04 — Tampermonyet Manifest V3 Extension
+
+Plan jangka panjang khusus extension sekarang berada di
+`apps/tampermonyet/extension-plan.md`. Plan tersebut memigrasikan scanner AgentRouter dari
+Tampermonkey ke satu extension Manifest V3 dengan content script, `chrome.storage.local`, service
+worker, dan writer localhost yang sudah ada. JSON AgentRouter di disk dipertahankan tanpa perubahan
+kontrak selama migrasi. Userscript `public/require/` tetap menjadi fallback sampai browser
+acceptance dan rollback extension lulus.
+
+Boundary-nya tegas: extension hanya memiliki DOM scan, stacked UI, storage scanner, message
+validation, dan writer client. Discovery Chrome profile, mapping path, process launch,
+backup/restore, serta corruption recovery tidak masuk plan extension dan tetap dimiliki scope
+Browser Launcher. Belum ada source extension yang diimplementasikan.
+
+## Immediate Handoff — AgentRouter Browser Acceptance
+
+Branch `main` berada pada commit `f3bd17b` dan sama dengan `origin/main` sebelum pembaruan handoff
+ini. Commit tersebut sudah memuat host database lokal, shared require modules, serta scanner
+Dashboard, Token, dan Usage Log. Working tree bersih sebelum file handoff ini diperbarui.
+
+Langkah acceptance berikutnya:
+
+1. Jalankan Tampermonyet pada stable port `2003`.
+2. Install atau update loader versi `0.15.0` dari
+   `http://127.0.0.1:2003/require/agentrouter/agent.router.user.js`.
+3. Reload `/console`, `/console/token`, dan `/console/log`; pastikan satu panel AgentRouter tetap
+   tampil dan menumpuk section Dashboard, API Token, serta Usage Log. Section aktif harus berpindah
+   mengikuti route, tombol scan/clear harus menyebut halaman aktif, dan checkbox **Auto scan**
+   memulai scan saat dicentang.
+4. Pada Usage Log, pastikan hanya row dengan Type tepat `System` yang tersimpan. Time, Type, dan
+   Details harus tetap sesuai teks asli tanpa translasi; type lain, kolom lain, dan pagination tidak
+   boleh masuk JSON.
+5. Verifikasi file akun di `apps/tampermonyet/database/agentrouter/<account>.json` memuat bagian
+   `dashboard`, `token`, dan `usageLog` tanpa mencampur data antar akun.
+6. Klik tombol Clear pada tiap halaman; pastikan Auto scan global langsung tidak tercentang, hanya
+   section halaman aktif menjadi `null` dalam JSON akun yang sama, dan reload/navigation tidak
+   memindai lagi sampai Auto scan dicentang atau tombol scan ditekan manual.
+7. Untuk clear otomatis, reload saat elemen sumber halaman tidak tersedia. Nama akun saja belum
+   cukup: page-shell marker serta document/spinner/progress/busy state harus selesai lebih dahulu.
+   Setelah shell siap log harus langsung dibersihkan; bila belum siap scanner menunggu maksimal
+   lima menit. Hanya section page aktif yang menjadi `null`, dan Auto scan tetap aktif.
+
+Batas yang masih terbuka:
+
+- actual System row pada Usage Log belum terverifikasi end-to-end karena akun saat inspeksi Chrome
+  mempunyai nol row;
+- jangan menambahkan pagination atau translasi otomatis pada Usage Log tanpa keputusan baru.
+
+## Update 2026-08-04 — AgentRouter Stacked UI dan Global Auto Scan
+
+Loader versi `0.15.0` menambahkan `shared/uiSection.js` sebagai renderer section generik dan
+`agentrouter/controller.js` sebagai pemilik satu panel, satu route hook, dan satu persisted Auto
+scan state untuk seluruh AgentRouter. Dashboard, API Token, dan Usage Log selalu terlihat sebagai
+stacked sections; section tanpa snapshot menampilkan status belum ada data dan section aktif
+ditandai tanpa menghapus cached section lain. Tombol scan dan clear mengikuti halaman aktif. Clear
+mematikan Auto scan global tetapi tetap mengosongkan hanya section halaman aktif dalam kontrak JSON
+akun yang sudah ada. Page scanner lama tetap dapat berdiri sendiri sebagai fallback, tetapi loader
+gabungan memakai controller sehingga tidak memasang tiga panel atau tiga route hook.
+
+Header panel memakai tepat dua baris: account serta status/dot English (`Saved`, `Scanning`,
+`Warning`, atau `Error`) di row pertama dan full path database di row kedua. Section Dashboard
+menampilkan Current balance dan Consumption, bukan captured timestamp. Section API Token
+menampilkan jumlah token dan preview key yang dimasking; real key di JSON tidak diubah. Status dan
+empty-state pada stacked panel menggunakan English.
+
+Validasi Windows untuk perubahan ini: app test PASS (7 file/30 test), root test PASS (38 file/180
+test), Prettier PASS, ESLint PASS, root typecheck/build PASS, app typecheck/build PASS, `git diff
+--check` PASS, dan AntD lint root PASS tanpa issue. URL loader, controller, shared UI, serta shared
+section merespons HTTP 200 dari port `2003`. Browser/Tampermonkey visual QA masih perlu dijalankan
+setelah loader `0.15.0` di-update karena browser-control tidak tersedia pada sesi ini.
 
 ## Update 2026-08-04 — Tampermonyet AgentRouter Dashboard + Token + Usage Log Require
 
-Satu loader installable `public/require/agentrouter/agent.router.user.js` versi `0.8.0` memuat page
+Satu loader installable `public/require/agentrouter/agent.router.user.js` versi `0.12.0` memuat page
 module Dashboard, Token, dan Usage Log. Dashboard membaca nama akun serta `Current balance`. Token scanner
 versi `0.2.0` membuka masked Key secara otomatis, membaca real key beserta metadata row, lalu
 mengembalikan input ke masked. Identitas akun ketiga halaman dimiliki helper situs
@@ -26,20 +99,35 @@ melalui `.gitignore`.
 Dashboard, Token, dan Usage Log tetap mempunyai record terbaru masing-masing (`dashboard:last`,
 `token:last`, dan `usage-log:last`) serta hanya mengizinkan read/rewrite ketika owner cocok dengan akun yang terlihat.
 Polling berjalan setiap 500 ms maksimal lima menit lalu berhenti saat berhasil, timeout, atau
-keluar route. Tombol scan ulang menjadi fallback manual. Clear-log button tetap technical debt;
-operasi `storageRewriteLog.remove()` sudah tersedia tetapi belum dihubungkan ke UI.
+keluar route. Setiap page scanner mempunyai checkbox Auto scan persisten yang aktif secara default.
+Checkbox yang dicentang memulai scan segera; tombol Scan ulang tetap fallback manual tanpa
+mengaktifkan Auto scan. Clear hasil scan mematikan Auto scan page tersebut, menghapus snapshot
+page untuk akun aktif, dan me-rewrite file JSON akun yang sama dengan section page bernilai `null`.
+Pada reload atau route activation, scanner menunggu page-shell marker sebelum elemen sumber yang
+hilang boleh memicu clear otomatis: Dashboard memakai Account Data + Usage Statistics, Token
+memakai Create token + Query, dan Usage Log memakai Column settings + Query. Ini mencegah clear
+ketika nama akun muncul lebih dahulu daripada konten page. Document/spinner/progress/busy state
+atau shell yang belum siap tetap ditunggu maksimal lima menit. Clear otomatis tidak mematikan Auto
+scan dan hanya mengubah section page aktif. Bila elemen sumber masih ada tetapi belum dapat dibaca,
+scanner hanya melaporkan timeout dan mempertahankan data sebelumnya.
 
-Validasi Windows: app test PASS (7 file/22 test), root test PASS (38 file/172 test), ESLint PASS,
-typecheck/build root dan app PASS, Prettier PASS, `git diff --check` PASS, dan AntD lint
-`apps/tampermonyet/src` PASS. Inspeksi read-only Chrome pada `/console/log` memverifikasi tabel nyata
+Validasi Windows setelah automatic stale clear: app test PASS (7 file/29 test), root test PASS (38
+file/179 test), ESLint PASS, typecheck/build root PASS, Prettier PASS, `git diff --check` PASS, dan
+AntD lint root PASS tanpa issue. Seluruh loader dan URL require yang berubah merespons HTTP 200
+`text/javascript` dari port `2003`. Inspeksi read-only Chrome sebelumnya pada `/console/log`
+memverifikasi tabel nyata
 berada di `main`, memakai role `grid`, mempunyai `tbody`, serta header Time, Type, dan Details yang
 cocok dengan selector. Akun saat inspeksi mempunyai nol row, sehingga filter System pada row nyata
 belum dapat diverifikasi melalui browser. Pemeriksaan AgentRouter Token
 nyata membuktikan visibility mengubah input masked menjadi real key dan dapat dikembalikan ke
 masked tanpa mencetak nilainya. Endpoint port `2003` berhasil menulis/rewrite payload dummy ke
-path database yang benar; file smoke sudah dihapus. Seluruh URL require baru merespons HTTP 200
-`text/javascript`. Instalasi/update loader versi `0.8.0` dan alur penuh melalui Tampermonkey masih
-perlu diuji.
+path database yang benar; file smoke sudah dihapus. Inspeksi Chrome untuk slice baru berhasil
+membuka Dashboard dalam sesi login, tetapi userscript tidak terinjeksi pada tab kontrol tersebut,
+sehingga visual panel Auto scan/Clear belum dinyatakan PASS. Inspeksi DOM live berikutnya
+memverifikasi marker Dashboard `Account Data` + `Usage Statistics`, Token `Create token` + `Query`,
+serta Usage Log `Column settings` + `Query` memang ada setelah masing-masing page selesai render.
+Automatic stale clear tidak mengubah layout UI dan belum diuji end-to-end melalui Tampermonkey.
+Instalasi/update loader versi `0.12.0` dan alur penuh melalui Tampermonkey masih perlu diuji.
 
 ## Update 2026-08-04 — Legacy Tampermonkey Archive
 

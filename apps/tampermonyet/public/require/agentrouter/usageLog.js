@@ -22,6 +22,7 @@
 
   const options = root.AgentRouterUsageLogScanOptions || {};
   const storageName = 'usage-log:last';
+  const autoScanStorageName = 'usage-log:auto-scan';
   const store = Storage.create({
     backend: root.localStorage,
     prefix: 'tampermonyet:agentrouter:',
@@ -32,8 +33,11 @@
     readOwner: (result) => result?.data?.accountName,
   });
   const storageKey = rewriteLog.key;
+  const autoScanStorageKey = store.key(autoScanStorageName);
   const resultEvent = 'agentrouter:usage-log-scan';
   const routeEvent = 'agentrouter:usage-log-routechange';
+  const missingSourceResult = Object.freeze({ missingSource: true });
+  let autoScanEnabled = store.read(autoScanStorageName, true) !== false;
   let pollingTask = null;
   let panel = null;
 
@@ -60,6 +64,17 @@
           headerIndex(table, ['Type', '类型']) >= 0 &&
           headerIndex(table, ['Details', '详情']) >= 0,
       ) || null
+    );
+  }
+
+  function hasSourceElement(document) {
+    return Boolean(findUsageLogTable(document));
+  }
+
+  function hasPageReadyMarkers(document) {
+    const scope = document.querySelector('main') || document.body;
+    return Boolean(
+      scope && Dom.findExact(scope, 'Column settings') && Dom.findExact(scope, 'Query'),
     );
   }
 
@@ -94,13 +109,7 @@
     if (table.querySelectorAll('tbody tr').length) return true;
 
     const scope = document.querySelector('main') || table.parentElement || document.body;
-    if (
-      scope?.querySelector(
-        '[aria-busy="true"], [data-loading="true"], .ant-spin-spinning, .is-loading',
-      )
-    ) {
-      return false;
-    }
+    if (Dom.isLoading(scope)) return false;
 
     return ['No results found', 'No data', '暂无数据'].some((text) => Dom.findExact(scope, text));
   }
@@ -118,6 +127,20 @@
     };
   }
 
+  function pollScan(document, clearMissingImmediately) {
+    const data = scan(document);
+    if (data) return data;
+    if (
+      !clearMissingImmediately ||
+      Dom.isLoading(document) ||
+      !readPageAccountName() ||
+      !hasPageReadyMarkers(document)
+    ) {
+      return null;
+    }
+    return hasSourceElement(document) ? null : missingSourceResult;
+  }
+
   function readPageAccountName() {
     return Account.read(root.document);
   }
@@ -128,6 +151,16 @@
 
   function readLast(accountName = readPageAccountName()) {
     return rewriteLog.read(accountName);
+  }
+
+  function isAutoScanEnabled() {
+    return autoScanEnabled;
+  }
+
+  function setAutoScanEnabled(enabled) {
+    autoScanEnabled = Boolean(enabled);
+    store.write(autoScanStorageName, autoScanEnabled);
+    return autoScanEnabled;
   }
 
   function fieldsFrom(result) {
@@ -143,12 +176,22 @@
   function ensurePanel() {
     if (panel) return panel;
 
+    const managedPanel = namespace.agentRouterController?.pagePanel?.('usageLog');
+    if (managedPanel) {
+      panel = managedPanel;
+      return panel;
+    }
+
     panel = UI.mount({
       document: root.document,
       id: 'agentrouter-usage-log',
       title: 'AgentRouter Usage Log',
       actionLabel: 'Scan ulang',
-      onAction: start,
+      onAction: scanNow,
+      autoScanLabel: 'Auto scan',
+      secondaryActionLabel: 'Clear hasil scan',
+      onAutoScanChange: handleAutoScanChange,
+      onSecondaryAction: clearResult,
     });
     return panel;
   }
@@ -158,11 +201,19 @@
     panel = null;
   }
 
-  function renderStatus(status, tone, actionDisabled = false, result = readLast()) {
+  function renderStatus(
+    status,
+    tone,
+    actionDisabled = false,
+    result = readLast(),
+    secondaryActionDisabled = actionDisabled,
+  ) {
     ensurePanel().render({
       status,
       tone,
       actionDisabled,
+      secondaryActionDisabled,
+      autoScanChecked: isAutoScanEnabled(),
       fields: fieldsFrom(result),
     });
   }
@@ -229,27 +280,117 @@
     return start();
   }
 
+  function handleAutoScanChange(enabled) {
+    setAutoScanEnabled(enabled);
+    if (enabled) return start();
+
+    stop();
+    renderStatus('Auto scan nonaktif', 'idle');
+    return null;
+  }
+
+  async function clearStoredResult({ disableAutoScan = true, automatic = false } = {}) {
+    if (!supports(root.location.pathname)) return null;
+
+    stop();
+    if (disableAutoScan) setAutoScanEnabled(false);
+    const accountName = readPageAccountName();
+    if (!accountName) {
+      renderStatus(
+        automatic ? 'Elemen Usage Log tidak ditemukan; akun belum tersedia' : 'Akun belum tersedia',
+        'warning',
+        false,
+        null,
+      );
+      return null;
+    }
+
+    renderStatus(
+      automatic
+        ? 'Elemen Usage Log tidak ditemukan; membersihkan log…'
+        : 'Membersihkan data lokal…',
+      'loading',
+      true,
+      null,
+      true,
+    );
+    const snapshot = readLast(accountName);
+    const snapshotRemoved = !snapshot || rewriteLog.remove();
+    const userJson = UserJson.clearPage(accountName, 'usageLog');
+    if (!snapshotRemoved || !userJson) {
+      renderStatus(
+        automatic
+          ? 'Elemen Usage Log tidak ditemukan; tidak ada log tersimpan'
+          : 'Data lokal belum tersedia untuk dibersihkan',
+        'warning',
+        false,
+        null,
+      );
+      return null;
+    }
+
+    try {
+      const download = await UserJson.save(userJson);
+      if (supports(root.location.pathname) && samePageAccount(accountName)) {
+        renderStatus(
+          automatic
+            ? `Elemen Usage Log tidak ditemukan; log dibersihkan: ${download.file}`
+            : `Data dibersihkan; JSON diperbarui: ${download.file}`,
+          'success',
+          false,
+          null,
+        );
+      }
+    } catch (error) {
+      if (supports(root.location.pathname) && samePageAccount(accountName)) {
+        renderStatus(
+          automatic
+            ? 'Log lokal bersih; file JSON gagal diperbarui'
+            : 'Data lokal bersih; file JSON gagal diperbarui',
+          'warning',
+          false,
+          null,
+        );
+        root.console.error('[Tampermonyet Usage Log Scan] Clear JSON gagal.', error);
+      }
+    }
+    return userJson;
+  }
+
+  function clearResult() {
+    return clearStoredResult();
+  }
+
   function stop() {
     pollingTask?.cancel();
     pollingTask = null;
   }
 
-  function start() {
+  function start(startOptions = {}) {
     stop();
     if (!supports(root.location.pathname)) return null;
 
+    const clearMissingImmediately = Boolean(startOptions.clearMissingImmediately);
     renderStatus('Mencari System log…', 'loading');
     const task = Polling.start({
       intervalMs: options.pollInterval ?? 500,
       timeoutMs: options.timeout ?? 300000,
       shouldContinue: () => supports(root.location.pathname),
-      check: () => scan(root.document),
+      check: () => pollScan(root.document, clearMissingImmediately),
       onSuccess(data) {
         pollingTask = null;
+        if (data === missingSourceResult) {
+          void clearStoredResult({ disableAutoScan: false, automatic: true });
+          return;
+        }
         publish(data);
       },
       onTimeout() {
         pollingTask = null;
+        if (!hasSourceElement(root.document)) {
+          void clearStoredResult({ disableAutoScan: false, automatic: true });
+          return;
+        }
         renderStatus('Usage Log belum siap setelah 5 menit', 'error');
         root.console.warn('[Tampermonyet Usage Log Scan] Timeout setelah 5 menit.');
       },
@@ -264,8 +405,17 @@
     return pollingTask;
   }
 
+  function activate() {
+    stop();
+    if (!supports(root.location.pathname)) return null;
+    if (isAutoScanEnabled()) return start({ clearMissingImmediately: true });
+
+    renderStatus('Auto scan nonaktif', 'idle');
+    return null;
+  }
+
   function handleRouteChange() {
-    if (supports(root.location.pathname)) start();
+    if (supports(root.location.pathname)) activate();
     else {
       stop();
       destroyPanel();
@@ -273,6 +423,7 @@
   }
 
   function installRouteHook() {
+    if (namespace.agentRouterController?.managed) return;
     if (root.__tampermonyetAgentRouterUsageLogRouteHookV1) return;
     root.__tampermonyetAgentRouterUsageLogRouteHookV1 = true;
 
@@ -303,11 +454,15 @@
     id: 'usageLog',
     supports,
     scan,
+    activate,
     start,
     stop,
     scanNow,
+    clearResult,
     readLast,
+    isAutoScanEnabled,
     storageKey,
+    autoScanStorageKey,
     resultEvent,
   });
 })(globalThis);
