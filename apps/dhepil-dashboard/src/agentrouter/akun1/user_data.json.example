@@ -1,0 +1,16 @@
+{
+  "_comment": "Salin file ini jadi user_data.json lalu isi dengan data akunmu. user_data.json di-gitignore, jangan pernah di-commit.",
+
+  "auth": {
+    "_comment_user_id": "Nilai header 'New-API-User' saat dashboard resmi memanggil /api/user/self. Ambil dari DevTools > Network.",
+    "new_api_user_id": "ISI_DISINI",
+
+    "_comment_selector": "Selector CSS tombol login GitHub di halaman login. Cek ulang kalau alur login mereka berubah.",
+    "github_login_button_selector": "ISI_DISINI"
+  },
+
+  "quota": {
+    "_comment_quota": "Pembagi untuk mengubah angka quota mentah jadi USD. Ambil dari /api/status (field quota_per_unit). Jangan diisi 0.",
+    "quota_per_unit": 500000
+  }
+}
