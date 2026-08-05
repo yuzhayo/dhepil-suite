@@ -9,6 +9,9 @@
     },
     {
       "path": "./apps/clipboard/tsconfig.json"
+    },
+    {
+      "path": "./apps/dhepil-dashboard/tsconfig.json"
     }
   ]
 }
