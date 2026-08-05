@@ -53,3 +53,18 @@
 .core-ui-layout__content-slot > .core-ui-grid {
   height: 100%;
 }
+
+/* Layout with sidebar variant */
+.core-ui-layout--with-sidebar {
+  min-height: 100dvh;
+}
+
+.core-ui-layout__body {
+  min-height: calc(100dvh - 4rem);
+}
+
+.core-ui-layout__main-content {
+  min-width: 0;
+  overflow: auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "dhepil-dashboard",
+  "name": "Dhepil Dashboard",
+  "runtime": "vite",
+  "description": "Dashboard monitoring balance & usage akun API pribadi (AgentRouter, OpenRouter) via gate file.",
+  "desktop": {
+    "enabled": false,
+    "script": "desktop:dev"
+  }
+}

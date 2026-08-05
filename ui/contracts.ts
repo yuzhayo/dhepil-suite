@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { MenuProps } from 'antd';
 
 // --- Generic Presentational Types ---
 
@@ -173,6 +174,7 @@ export interface HeaderProps {
 
 export interface CoreLayoutProps {
   header?: ReactNode;
+  sidebar?: ReactNode;
   toolbar?: ReactNode;
   content?: ReactNode;
   pageAlert?: ReactNode;
@@ -207,4 +209,15 @@ export interface DataGridProps {
   onUpdateCell?: (rowId: string, columnId: string, text: string) => void;
   onCopyCell?: (text: string) => void;
   onSortChange?: (columnId: string | null, mode: DataGridSortMode) => void;
+}
+
+export interface SidebarProps {
+  collapsed: boolean;
+  mobile: boolean;
+  items: MenuProps['items'];
+  navigationLabel: string;
+  selectedKey: string;
+  onBreakpoint: (mobile: boolean) => void;
+  onCollapse: (collapsed: boolean) => void;
+  onNavigate: (path: string) => void;
 }

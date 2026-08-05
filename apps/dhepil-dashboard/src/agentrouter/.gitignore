@@ -1,0 +1,7 @@
+storage_state.json
+cookies.json
+log.txt
+data.json
+*.pyc
+__pycache__/
+user_data.json

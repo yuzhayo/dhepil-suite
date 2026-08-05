@@ -1,0 +1,12 @@
+.core-ui-sidebar {
+  overflow: auto;
+  border-inline-end: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.core-ui-sidebar__navigation {
+  padding-block: 0.75rem;
+}
+
+.core-ui-sidebar .ant-menu {
+  border-inline-end: 0;
+}
